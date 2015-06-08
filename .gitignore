@@ -1,6 +1,10 @@
 # nested repos
 lib/barrister
 
+# ide
+*.iml
+.idea
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
