@@ -160,13 +160,17 @@ class Stack:
         # using json, download any referenced files from s3 bucket? (or are they already there and we download bucket?)
         in_filepaths = []
 
-        # format the JSON-RPC request
-        # NOTE - this may be entirely valid JSON-RPC - if so add the correct tags as needed
+        # massage the JSON-RPC request
+        # NOTE - this may not be entirely valid JSON-RPC - if so add the correct tags as needed
+        default_service = input_json['serviceName']
         def _make_json_rpc(req):
             if 'jsonrpc' not in req:
                 req['jsonrpc'] = "2.0"
             if 'id' not in req:
                 req['id'] = str(uuid.uuid4())
+            # add the default interface if none exists
+            if req['method'].find('.') < 0:
+                req['method'] = "{}.{}".format(default_service, req['method'])
             return req
 
         if 'req' in input_json:
