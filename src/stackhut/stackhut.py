@@ -110,22 +110,6 @@ class Stack:
         # setup the logger
         logging.basicConfig(filename=LOG_NAME, level=logging.INFO)
 
-        # setup the service contracts
-        self.contract = barrister.contract_from_file('./service.json')
-        self.server = barrister.Server(self.contract)
-
-        # instance vars
-        self.aws_id = None
-        self.aws_key = None
-        self.task_id = None
-        self.conn = None
-        self.bucket = None
-
-
-    # called by service on startup
-    #
-    def _startup(self):
-        logging.debug('Starting up service')
         # parse cmd-args
         # aws_key[s], s3bucket id, --?
         # get AWS keys - hmm, how do we do this securly?
@@ -145,6 +129,16 @@ class Stack:
         # setup AWS
         self.conn = S3Connection(self.aws_id, self.aws_key)
         self.bucket = self.conn.get_bucket('stackhut-payloads')
+
+        # setup the service contracts
+        self.contract = barrister.contract_from_file('./service.json')
+        self.server = barrister.Server(self.contract)
+
+
+    # called by service on startup
+    #
+    def _startup(self):
+        logging.debug('Starting up service')
 
         if LOCAL:
             with open("./input.json", "r") as f:
