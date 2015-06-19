@@ -13,6 +13,7 @@ from boto.s3.connection import S3Connection, Location, Key
 import requests
 import barrister
 import uuid
+import yaml
 
 # TODO - add more service handling here...
 # different classes for common tasks
@@ -48,10 +49,7 @@ class NonZeroExitError(barrister.RpcException):
     def __init__(self, exitcode, stderr):
         code = -32001
         msg = 'Service sub-command returned a non-zero exit'
-        data = {
-            'exitcode': exitcode,
-            'stderr': stderr
-        }
+        data = dict(exitcode=exitcode, stderr=stderr)
         super(NonZeroExitError, self).__init__(code, msg, data)
 
 # File upload / download helpers
@@ -62,7 +60,7 @@ def download_file(url):
     r = requests.get(url, stream=True)
     with open(local_filename, 'wb') as f:
         for chunk in r.iter_content(chunk_size=1024):
-            if chunk: # filter out keep-alive new chunks
+            if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
     return local_filename
 
@@ -89,16 +87,12 @@ def call_strings(cmd, stdin):
         stdout, stderr= p.communicate(input=stdin.encode())
         exitcode = p.returncode
     except OSError as e:
-        raise ServerError(-32002, 'OS error', {
-            'error': e.strerror
-        })
+        raise ServerError(-32002, 'OS error', dict(error=e.strerror))
 
     if exitcode is not 0:
         raise NonZeroExitError(exitcode, stderr.decode())
     else:
-        return {
-            'stdout': stdout.decode()
-        }
+        return dict(stdout=stdout.decode())
 
 def call_files(cmd, stdin, stdout, stderr):
     ret_val = subprocess.call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
@@ -134,6 +128,8 @@ class Stack:
         self.contract = barrister.contract_from_file('./service.json')
         self.server = barrister.Server(self.contract)
 
+        # import the hutfile
+        self.hutfile = yaml.load(open('./Hutfile', 'r'))
 
     # called by service on startup
     #
@@ -158,7 +154,7 @@ class Stack:
         logging.info('Input - \n{}'.format(input_json))
 
         # using json, download any referenced files from s3 bucket? (or are they already there and we download bucket?)
-        in_filepaths = []
+        # in_filepaths = []
 
         # massage the JSON-RPC request
         # NOTE - this may not be entirely valid JSON-RPC - if so add the correct tags as needed
@@ -182,7 +178,7 @@ class Stack:
         else:
             raise ParseError()
 
-        return reqs, in_filepaths  # anything else
+        return reqs  # anything else
 
     # called by service on exit - clean the system, write all output data and return control back to docker
     # intended to upload all files into S#
@@ -214,11 +210,46 @@ class Stack:
         """Add a service handler to the system"""
         self.server.add_handler(iname, impl)
 
+    def run_ext(self, method, params):
+        """Make a pseudo-function call across languages"""
+        # TODO - optimise
+        # write the req
+        req = dict(method=method, params=params)
+        with open("./service_req.json", "w") as f:
+            f.write(json.dumps(req))
+
+        # select the stack
+        stack = self.hutfile['stack']
+        if stack == 'python3':
+            shim_exe = '/usr/bin/python3'
+        elif stack == 'nodejs':
+            shim_exe = '/usr/bin/node'
+        shim_cmd = [shim_exe, self.hutfile['entrypoint']]
+
+        # call out to sub process
+        try:
+            subprocess.check_output(shim_cmd, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            raise NonZeroExitError(e.returncode, e.output)
+
+        # read and return the resp
+        with open("./service_resp.json", "r") as f:
+            resp = json.loads(f.read())
+        # basic error handling
+        if 'error' in resp:
+            code = resp['error']
+            if code == barrister.ERR_METHOD_NOT_FOUND:
+                raise ServerError(code, "Method or service {} not found".format(method))
+            else:
+                raise ServerError(code, resp['msg'])
+        # return if no issue
+        return resp['result']
+
     def run(self):
         """Run the main rpc commands"""
         try:
-            req, in_files = self._startup()
-            resp = self.server.call(req)
+            req = self._startup()
+            resp = self.server.call(req, dict(callback=self.run_ext))
             self._shutdown(resp)
         except Exception as e:
             logging.exception("Shit, unhandled error! - {}".format(e))
@@ -228,29 +259,12 @@ class Stack:
         logging.info('Service call complete')
         exit(0)
 
-
-def _aws_test():
-    """Internal test functions for aws connection"""
-    id =''
-    key2 = ''
-
-    conn = S3Connection(id, key2)
-
-    allBuckets = conn.get_all_buckets()
-    for bucket in allBuckets:
-        print(str(bucket.name))
-
-    bucket = conn.get_bucket('stackhut-payloads')
-    # Location.EU
-    # 'eu-west-1'
-    data = open('./input.json', 'r')
-    k = Key(bucket)
-    k.key = 'input.json'
-    k.set_contents_from_filename('./input.json')
-
-    x = k.get_contents_as_string()
-    print(x)
-
 if __name__ == "__main__":
     """Manual execution"""
-    # aws_test()
+    print("In main")
+    s = Stack()
+    #s.add_handler()
+    s.run()
+
+
+

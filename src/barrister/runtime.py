@@ -396,36 +396,51 @@ class Server(object):
 
         iface_name, func_name = unpack_method(method)
 
-        if iface_name in self.handlers:
-            iface_impl = self.handlers[iface_name]
-            func = getattr(iface_impl, func_name)
-            if func:
-                if "params" in req:
-                    params = req["params"]
-                else:
-                    params = []
-
-                if self.validate_req:
-                    self.contract.validate_request(iface_name, func_name, params)
-
-                if hasattr(iface_impl, "barrister_pre"):
-                    pre_hook = getattr(iface_impl, "barrister_pre")
-                    pre_hook(context, params)
-
-                if params:
-                    result = func(*params)
-                else:
-                    result = func()
-
-                if self.validate_resp:
-                    self.contract.validate_response(iface_name, func_name, result)
-                return result
-            else:
-                msg = "Method '%s' not found" % method
-                raise RpcException(ERR_METHOD_NOT_FOUND, msg)
+        if "params" in req:
+            params = req["params"]
         else:
-            msg = "No implementation of '%s' found" % iface_name
-            raise RpcException(ERR_METHOD_NOT_FOUND, msg)
+            params = []
+
+        self.contract.validate_request(iface_name, func_name, params)
+
+        # call out here
+        result = context.props['callback'](method, params)
+
+        self.contract.validate_response(iface_name, func_name, result)
+        return result
+
+        # iface_name, func_name = unpack_method(method)
+        #
+        # if iface_name in self.handlers:
+        #     iface_impl = self.handlers[iface_name]
+        #     func = getattr(iface_impl, func_name)
+        #     if func:
+        #         if "params" in req:
+        #             params = req["params"]
+        #         else:
+        #             params = []
+        #
+        #         if self.validate_req:
+        #             self.contract.validate_request(iface_name, func_name, params)
+        #
+        #         if hasattr(iface_impl, "barrister_pre"):
+        #             pre_hook = getattr(iface_impl, "barrister_pre")
+        #             pre_hook(context, params)
+        #
+        #         if params:
+        #             result = func(*params)
+        #         else:
+        #             result = func()
+        #
+        #         if self.validate_resp:
+        #             self.contract.validate_response(iface_name, func_name, result)
+        #         return result
+        #     else:
+        #         msg = "Method '%s' not found" % method
+        #         raise RpcException(ERR_METHOD_NOT_FOUND, msg)
+        # else:
+        #     msg = "No implementation of '%s' found" % iface_name
+        #     raise RpcException(ERR_METHOD_NOT_FOUND, msg)
 
 
 class HttpTransport(object):
