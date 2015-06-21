@@ -1,5 +1,5 @@
-# service-runner
-StackHut Service Runner
+# StackHut app
+StackHut Control App
 
 TODO
 

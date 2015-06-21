@@ -1,11 +1,12 @@
 from boto.s3.connection import S3Connection, Key
 import json
-import logging
 import subprocess
 import uuid
 
 import barrister
 import stackhut.utils as utils
+from stackhut.utils import log
+
 
 class RunCmd(utils.BaseCmd):
     cmd_name = 'run'
@@ -17,36 +18,9 @@ class RunCmd(utils.BaseCmd):
         subparser.add_argument("aws_key", help="Key used to communicate with AWS", nargs='?')
         subparser.add_argument("--local", help="Run service locally", action="store_true")
 
-    def run(self, args):
-        super().run(args)
-        self.aws_id = args.aws_id
-        self.aws_key = args.aws_key
-        self.task_id = args.task_id
-        self.local = args.local
-
-        # setup AWS
-        self.conn = S3Connection(self.aws_id, self.aws_key)
-        self.bucket = self.conn.get_bucket('stackhut-payloads')
-        # setup the service contracts
-        self.contract = barrister.contract_from_file('./service.json')
-        self.server = barrister.Server(self.contract)
-
-        # Now run the main rpc commands
-        try:
-            req = self._startup()
-            resp = self.server.call(req, dict(callback=self.run_ext))
-            self._shutdown(resp)
-        except Exception as e:
-            utils.logging.exception("Shit, unhandled error! - {}".format(e))
-            exit(1)
-
-        # quit with correct exit code
-        logging.info('Service call complete')
-        return 0
-
     # called by service on startup
     def _startup(self):
-        logging.debug('Starting up service')
+        log.debug('Starting up service')
 
         if self.local:
             with open("./input.json", "r") as f:
@@ -56,14 +30,14 @@ class RunCmd(utils.BaseCmd):
             k = Key(self.bucket)
             k.key = '{}/input.json'.format(self.task_id)
             input_json_str = k.get_contents_as_string(encoding='utf-8')
-            logging.info("Downloaded input.json from S3")
+            log.info("Downloaded input.json from S3")
 
         # now parse the json
         try:
             input_json = json.loads(input_json_str)
         except:
             raise utils.ParseError()
-        logging.info('Input - \n{}'.format(input_json))
+        log.info('Input - \n{}'.format(input_json))
 
         # massage the JSON-RPC request
         # NOTE - this may not be entirely valid JSON-RPC - if so add the correct tags as needed
@@ -92,10 +66,10 @@ class RunCmd(utils.BaseCmd):
     # called by service on exit - clean the system, write all output data and return control back to docker
     # intended to upload all files into S#
     def _shutdown(self, res):
-        logging.info('Shutting down service')
+        log.info('Shutting down service')
 
         output_json = json.dumps(res)
-        logging.info('Output - \n{}'.format(output_json))
+        log.info('Output - \n{}'.format(output_json))
 
         if self.local:
             with open("./output.json", "w") as f:
@@ -105,7 +79,7 @@ class RunCmd(utils.BaseCmd):
             k = Key(self.bucket)
             k.key = '{}/output.json'.format(self.task_id)
             k.set_contents_from_string(output_json)
-            logging.info("Uploaded output.json to S3")
+            log.info("Uploaded output.json to S3")
 
             # upload output files to S3
 
@@ -114,10 +88,6 @@ class RunCmd(utils.BaseCmd):
             # upload log to S3
             k.key = '{}/{}'.format(self.task_id, utils.LOGFILE)
             k.set_contents_from_filename(utils.LOGFILE)
-
-    def add_handler(self, iname, impl):
-        """Add a service handler to the system"""
-        self.server.add_handler(iname, impl)
 
     def run_ext(self, method, params):
         """Make a pseudo-function call across languages"""
@@ -153,3 +123,36 @@ class RunCmd(utils.BaseCmd):
                 raise utils.ServerError(code, resp['msg'])
         # return if no issue
         return resp['result']
+
+    def run(self, args):
+        super().run(args)
+        self.aws_id = args.aws_id
+        self.aws_key = args.aws_key
+        self.task_id = args.task_id
+        self.local = args.local
+
+        # setup AWS
+        if not self.local:
+            self.conn = S3Connection(self.aws_id, self.aws_key)
+            self.bucket = self.conn.get_bucket('stackhut-payloads')
+
+        # setup the service contracts
+        self.contract = barrister.contract_from_file(utils.CONTRACTFILE)
+        self.server = barrister.Server(self.contract)
+
+        # Now run the main rpc commands
+        try:
+            req = self._startup()
+            resp = self.server.call(req, dict(callback=self.run_ext))
+            self._shutdown(resp)
+        except Exception as e:
+            log.exception("Shit, unhandled error! - {}".format(e))
+            exit(1)
+
+        # quit with correct exit code
+        log.info('Service call complete')
+        return 0
+
+    # def add_handler(self, iname, impl):
+    #     """Add a service handler to the system"""
+    #     self.server.add_handler(iname, impl)

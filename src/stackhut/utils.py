@@ -4,11 +4,36 @@ from boto.s3.connection import Key
 import requests
 import barrister
 import yaml
+import sys
 
-# constants
+# global constants
 LOGFILE = 'service.log'
 HUTFILE = 'Hutfile'
-CONTRACT = 'service.json'
+CONTRACTFILE = 'service.json'
+
+log = logging.getLogger('stackhut')
+# consoleHandler = logging.StreamHandler()
+# #consoleHandler.setFormatter(logFormatter)
+# log.addHandler(consoleHandler)
+
+def setup_logging(args_level):
+    # setup the logger
+    loglevel = logging.WARN
+    if args_level == 1:
+        loglevel = logging.INFO
+    elif args_level >= 2:
+        loglevel = logging.DEBUG
+    log.setLevel(loglevel)
+
+    logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s] %(message)s', '%H:%M:%S')
+    # file output
+    fileHandler = logging.FileHandler(LOGFILE, mode='w')
+    fileHandler.setFormatter(logFormatter)
+    log.addHandler(fileHandler)
+    # console
+    consoleHandler = logging.StreamHandler(stream=sys.stdout)
+    consoleHandler.setFormatter(logFormatter)
+    log.addHandler(consoleHandler)
 
 
 
