@@ -1,6 +1,6 @@
 import subprocess
 import logging
-from boto.s3.connection import Key
+from boto.s3.connection import Key, S3Connection
 import requests
 import barrister
 import yaml
@@ -10,6 +10,7 @@ import sys
 LOGFILE = 'service.log'
 HUTFILE = 'Hutfile'
 CONTRACTFILE = 'service.json'
+S3_BUCKET = 'stackhut-payloads'
 
 log = logging.getLogger('stackhut')
 # consoleHandler = logging.StreamHandler()
@@ -88,6 +89,84 @@ class NonZeroExitError(barrister.RpcException):
         super(NonZeroExitError, self).__init__(code, msg, data)
 
 
+import abc
+import uuid
+
+class FileStore:
+    @abc.abstractmethod
+    def get_string(self, name):
+        pass
+
+    @abc.abstractmethod
+    def get_file(self, name):
+        pass
+
+    @abc.abstractmethod
+    def put_string(self, s, name):
+        pass
+
+    @abc.abstractmethod
+    def put_file(self, fname):
+        pass
+
+
+class S3Store(FileStore):
+    def __init__(self, task_id, aws_id, aws_key):
+        # open connection to AWS
+        self.task_id = task_id
+        self.conn = S3Connection(aws_id, aws_key)
+        self.bucket = self.conn.get_bucket(S3_BUCKET)
+
+    def _create_key(self, name):
+        k = Key(self.bucket)
+        k.key = '{}/{}'.format(self.task_id, name)
+        return k
+
+    def get_string(self, name):
+        k = self._create_key(name)
+        s = k.get_contents_as_string(encoding='utf-8')
+        log.info("Downloaded {} from S3".format(name))
+        return s
+
+    def get_file(self, name):
+        pass
+
+    def put_string(self, s, name):
+        k = self._create_key(name)
+        k.set_contents_from_string(s)
+        log.info("Uploaded {} to S3".format(name))
+
+    def put_file(self, fname, make_public=False):
+        k = self._create_key(fname)
+        k.set_contents_from_filename(fname)
+        log.info("Uploaded {} to S3".format(fname))
+
+        res = k
+        if make_public:
+            k.set_acl('public-read')
+            k.make_public()
+            res = k.generate_url(expires_in=0, query_auth=False)
+        return res
+
+class LocalStore(FileStore):
+    def __init__(self):
+        pass
+
+    def get_string(self, name):
+        with open(name, "r") as f:
+            x = f.read()
+        return x
+
+    def get_file(self, name):
+        pass
+
+    def put_string(self, s, name):
+        with open(name, "w") as f:
+            f.write(s)
+
+    def put_file(self, fname, make_public=False):
+        return fname
+
 
 ## S3 helper functions
 # File upload / download helpers
@@ -102,37 +181,24 @@ def download_file(url):
                 f.write(chunk)
     return local_filename
 
-def upload_file(filename, task_id, bucket):
-    # NOTE - very hacky, move into a s3 upload/download class that can be mocked with local
-    if LOCAL:
-        res = filename
-    else:
-        logging.info("Uploading output file {}".format(filename))
-        # upload output.json to S3
-        k = Key(bucket)
-        k.key = "{}/{}".format(task_id, filename)
-        k.set_contents_from_filename(filename)
-        k.set_acl('public-read')
-        k.make_public()
-        res = k.generate_url(expires_in=0, query_auth=False)
 
-    return res
+class Subprocess:
+    """Subprocess helper functions"""
+    @staticmethod
+    def call_strings(cmd, stdin):
+        try:
+            p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr= p.communicate(input=stdin.encode())
+            exitcode = p.returncode
+        except OSError as e:
+            raise ServerError(-32002, 'OS error', dict(error=e.strerror))
 
-# Subprocess helper functions
-def call_strings(cmd, stdin):
-    try:
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr= p.communicate(input=stdin.encode())
-        exitcode = p.returncode
-    except OSError as e:
-        raise ServerError(-32002, 'OS error', dict(error=e.strerror))
+        if exitcode is not 0:
+            raise NonZeroExitError(exitcode, stderr.decode())
+        else:
+            return dict(stdout=stdout.decode())
 
-    if exitcode is not 0:
-        raise NonZeroExitError(exitcode, stderr.decode())
-    else:
-        return dict(stdout=stdout.decode())
-
-def call_files(cmd, stdin, stdout, stderr):
-    ret_val = subprocess.call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
-    return ret_val
-
+    @staticmethod
+    def call_files(cmd, stdin, stdout, stderr):
+        ret_val = subprocess.call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
+        return ret_val

@@ -22,17 +22,8 @@ class RunCmd(utils.BaseCmd):
     def _startup(self):
         log.debug('Starting up service')
 
-        if self.local:
-            with open("./input.json", "r") as f:
-                input_json_str = f.read()
-        else:
-            # download input.json from S3
-            k = Key(self.bucket)
-            k.key = '{}/input.json'.format(self.task_id)
-            input_json_str = k.get_contents_as_string(encoding='utf-8')
-            log.info("Downloaded input.json from S3")
-
-        # now parse the json
+        # get input
+        input_json_str = self.file_store.get_string('input.json')
         try:
             input_json = json.loads(input_json_str)
         except:
@@ -67,27 +58,11 @@ class RunCmd(utils.BaseCmd):
     # intended to upload all files into S#
     def _shutdown(self, res):
         log.info('Shutting down service')
-
         output_json = json.dumps(res)
         log.info('Output - \n{}'.format(output_json))
-
-        if self.local:
-            with open("./output.json", "w") as f:
-                f.write(output_json)
-        else:
-            # upload output.json to S3
-            k = Key(self.bucket)
-            k.key = '{}/output.json'.format(self.task_id)
-            k.set_contents_from_string(output_json)
-            log.info("Uploaded output.json to S3")
-
-            # upload output files to S3
-
-            # send completion message to SQS ?
-
-            # upload log to S3
-            k.key = '{}/{}'.format(self.task_id, utils.LOGFILE)
-            k.set_contents_from_filename(utils.LOGFILE)
+        # save output and log
+        self.file_store.put_string(output_json, 'output.json')
+        self.file_store.put_file(utils.LOGFILE)
 
     def run_ext(self, method, params):
         """Make a pseudo-function call across languages"""
@@ -126,15 +101,10 @@ class RunCmd(utils.BaseCmd):
 
     def run(self, args):
         super().run(args)
-        self.aws_id = args.aws_id
-        self.aws_key = args.aws_key
-        self.task_id = args.task_id
-        self.local = args.local
-
-        # setup AWS
-        if not self.local:
-            self.conn = S3Connection(self.aws_id, self.aws_key)
-            self.bucket = self.conn.get_bucket('stackhut-payloads')
+        if args.local:
+            self.file_store = utils.LocalStore()
+        else:
+            self.file_store = utils.S3Store(args.task_id, args.aws_key, args.aws_id)
 
         # setup the service contracts
         self.contract = barrister.contract_from_file(utils.CONTRACTFILE)
