@@ -1,14 +1,36 @@
-import sys
-import os
 import subprocess
 import logging
-import argparse
-import json
-from boto.s3.connection import S3Connection, Location, Key
+from boto.s3.connection import Key
 import requests
 import barrister
-import uuid
 import yaml
+
+# constants
+LOGFILE = 'service.log'
+HUTFILE = 'Hutfile'
+CONTRACT = 'service.json'
+
+
+
+class BaseCmd:
+    """The Base Command"""
+    cmd_name = ''
+
+    def __init__(self):
+        pass
+
+    def parse_cmds(self, subparsers, description):
+        sp = subparsers.add_parser(self.cmd_name, help=description, description=description)
+        sp.set_defaults(func=self.run)
+        return sp
+
+    def run(self, args):
+        """Main entry point for a command with parsed cmd args"""
+        # import the hutfile
+        self.hutfile = yaml.load(args.hutfile)
+
+        return 0
+
 
 
 # Error handling
