@@ -19,12 +19,64 @@ import yaml
 # different classes for common tasks
 # i.e. shell out, python code, etc.
 # & payload pattern matching helper classes
+class BaseCmd:
+    cmd_name = ''
 
-LOG_NAME = 'service.log'
-LOCAL = False  # do we debug locally
+    def __init__(self):
+        pass
+
+    def parse_cmds(self, subparsers, description):
+        sp = subparsers.add_parser(self.cmd_name, help=description, description=description)
+        sp.set_defaults(func=self.run)
+        return sp
+
+    def run(self, args):
+        """Main entry point for a command with parsed cmd args"""
+        pass
+
+class RunCmd(BaseCmd):
+    cmd_name = 'run'
+
+    def __init__(self):
+        super(RunCmd).__init__()
+
+    def parse_cmds(self, subparsers):
+        subparser = super(RunCmd, self).parse_cmds(subparsers, "Run a StackHut service")
+        subparser.add_argument('--foo')
+        subparser.add_argument("task_id", help="Id representing the specific task", type=str)
+        subparser.add_argument("aws_id", help="Key used to communicate with AWS", type=str)
+        subparser.add_argument("aws_key", help="Key used to communicate with AWS", type=str)
+        # subparser.add_argument("--local", help="Run system locally", action="store_true")
+
+    def run(self, args):
+        super(RunCmd, self).run(args)
+        self.aws_id = args.aws_id
+        self.aws_key = args.aws_key
+        self.task_id = args.task_id
+        global LOCAL
+        LOCAL = args.local
+
+class CompileCmd(BaseCmd):
+    cmd_name = 'compile'
+
+    def __init__(self):
+        super(BaseCmd).__init__()
+
+    def parse_cmds(self, subparsers):
+        subparser = super(CompileCmd, self).parse_cmds(subparsers, "Compile a StackHut service")
+        subparser.add_argument('--bar')
+
+    def run(self, args):
+        pass
 
 
-class Stack:
+# StackHut primary commands
+COMMANDS = [RunCmd(),
+            CompileCmd(),
+            # debug, push, pull, test, etc.
+            ]
+
+class RunCmd1(BaseCmd):
     def __init__(self):
         # setup AWS
         self.conn = S3Connection(self.aws_id, self.aws_key)

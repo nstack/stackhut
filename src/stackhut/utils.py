@@ -71,7 +71,8 @@ def upload_file(filename, task_id, bucket):
 
     return res
 
-# Subprocess helper functionsdef call_strings(cmd, stdin):
+# Subprocess helper functions
+def call_strings(cmd, stdin):
     try:
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr= p.communicate(input=stdin.encode())
