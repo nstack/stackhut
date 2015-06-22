@@ -3,6 +3,7 @@
 """
 StackHut service support
 """
+import sh
 
 import stackhut.utils as utils
 from stackhut.run_command import RunCloudCmd, RunLocalCmd
@@ -12,24 +13,32 @@ from stackhut.run_command import RunCloudCmd, RunLocalCmd
 # i.e. shell out, python code, etc.
 # & payload pattern matching helper classes
 
-class CompileCmd(utils.BaseCmd):
-    cmd_name = 'compile'
-
+class BuildCmd(utils.BaseCmd):
+    """Build StackHut service using docker"""
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(CompileCmd, CompileCmd).parse_cmds(subparser, 'compile', "Compile a StackHut service locally", RunLocalCmd)
+        subparser = super(BuildCmd, BuildCmd).parse_cmds(subparser, 'build',
+                                                         "Build a StackHut service", BuildCmd)
 
     def __init__(self, args):
         super().__init__(args)
 
     def run(self):
-        pass
+        super().run()
+        # move barrister call into process as running on py2.7 ?
+        sh.barrister(['-z', '-Gsize=8,5 -Glayout=twopi', '-d', 'service.html', '-p', 'service.png',
+                      '-t', self.hutfile['desc'], '-j', 'service.json', 'service.idl'])
+        sh.docker(['build', '-t', "{}:{}".format(self.hutfile['name'], self.hutfile['version']), '--rm', '.'])
+
+
+
+
 
 
 # StackHut primary commands
 COMMANDS = [RunLocalCmd,
             RunCloudCmd,
-            CompileCmd,
+            BuildCmd,
             # debug, push, pull, test, etc.
             ]
 
