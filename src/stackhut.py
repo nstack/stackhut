@@ -29,6 +29,8 @@ if __name__ == "__main__":
     utils.log.debug(args)
 
     # dispatch to correct subfunction - i.e. build, compile, run, etc.
-    retval = args.func(args)
+    subfunc = args.func(args)
+    retval = subfunc.run()
+
     # all done
     exit(retval)

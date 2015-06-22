@@ -5,7 +5,7 @@ StackHut service support
 """
 
 import stackhut.utils as utils
-from stackhut.run_command import RunCmd
+from stackhut.run_command import RunCloudCmd, RunLocalCmd
 
 # TODO - small commands go here...
 # different classes for common tasks
@@ -15,16 +15,21 @@ from stackhut.run_command import RunCmd
 class CompileCmd(utils.BaseCmd):
     cmd_name = 'compile'
 
-    def parse_cmds(self, subparsers):
-        subparser = super().parse_cmds(subparsers, "Compile a StackHut service")
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(CompileCmd, CompileCmd).parse_cmds(subparser, 'compile', "Compile a StackHut service locally", RunLocalCmd)
 
-    def run(self, args):
+    def __init__(self, args):
+        super().__init__(args)
+
+    def run(self):
         pass
 
 
 # StackHut primary commands
-COMMANDS = [RunCmd(),
-            CompileCmd(),
+COMMANDS = [RunLocalCmd,
+            RunCloudCmd,
+            CompileCmd,
             # debug, push, pull, test, etc.
             ]
 

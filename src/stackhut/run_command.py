@@ -9,21 +9,12 @@ import stackhut.utils as utils
 from stackhut.utils import log
 
 class RunCmd(utils.BaseCmd):
-    cmd_name = 'run'
-
-    def parse_cmds(self, subparsers):
-        subparser = super().parse_cmds(subparsers, "Run a StackHut service")
-        subparser.add_argument("task_id", help="Id representing the specific task", nargs='?')
-        subparser.add_argument("aws_id", help="Key used to communicate with AWS", nargs='?')
-        subparser.add_argument("aws_key", help="Key used to communicate with AWS", nargs='?')
-        subparser.add_argument("--local", help="Run service locally", action="store_true")
-
     # called by service on startup
     def _startup(self):
         utils.log.debug('Starting up service')
 
         try:
-            input_json = json.loads(self.file_store.get_string('input.json'))
+            input_json = json.loads(self.get_request())
         except:
             raise utils.ParseError()
         log.info('Input - \n{}'.format(input_json))
@@ -56,8 +47,8 @@ class RunCmd(utils.BaseCmd):
         log.info('Shutting down service')
         log.info('Output - \n{}'.format(res))
         # save output and log
-        self.file_store.put_string(json.dumps(res), 'output.json')
-        self.file_store.put_file(utils.LOGFILE)
+        self.put_response(json.dumps(res))
+        self.put_file(utils.LOGFILE)
 
     service_req_json = 'service_req.json'
     service_resp_json = 'service_resp.json'
@@ -94,22 +85,12 @@ class RunCmd(utils.BaseCmd):
         # return if no issue
         return resp['result']
 
-    def run(self, args):
-        super().run(args)
-
-        # HACK - bail out on args here - should be handled by argparse
-        if args.local:
-            self.file_store = utils.LocalStore()
-        elif args.task_id and args.aws_key and args.aws_key:
-            self.file_store = utils.S3Store(args.task_id, args.aws_key, args.aws_id)
-        else:
-            log.error("Missing arguments, run with --help")
-            return 1
+    def run(self):
+        super().run()
 
         # setup the service contracts
         self.contract = barrister.contract_from_file(utils.CONTRACTFILE)
         self.server = barrister.Server(self.contract)
-
 
         # select the stack
         stack = self.hutfile['stack']
@@ -138,11 +119,35 @@ class RunCmd(utils.BaseCmd):
         finally:
             os.remove(os.path.join(os.getcwd(), shim_file))
 
-
         # quit with correct exit code
         log.info('Service call complete')
         return 0
 
-    # def add_handler(self, iname, impl):
-    #     """Add a service handler to the system"""
-    #     self.server.add_handler(iname, impl)
+
+class RunLocalCmd(RunCmd, utils.LocalStore):
+    cmd_name = 'runlocal'
+
+    def __init__(self, args):
+        utils.LocalStore.__init__(self, args.infile)
+        RunCmd.__init__(self, args)
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(RunLocalCmd, RunLocalCmd).parse_cmds(subparser, 'runlocal', "Run a StackHut service locally", RunLocalCmd)
+        subparser.add_argument("--infile", '-i', default='input.json',
+                               help="Local file to use for input")
+
+class RunCloudCmd(RunCmd, utils.CloudStore):
+    cmd_name = 'run'
+
+    def __init__(self, args):
+        super(RunCmd, self).__init__(args)
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(RunCloudCmd, RunCloudCmd).parse_cmds(subparser, 'run', "Run a StackHut service", RunCloudCmd)
+        subparser.add_argument("task_id", help="Id representing the specific task")
+        subparser.add_argument("aws_id", help="Key used to communicate with AWS")
+        subparser.add_argument("aws_key", help="Key used to communicate with AWS")
+
+

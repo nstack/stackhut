@@ -9,14 +9,14 @@ import abc
 import uuid
 import os
 import shutil
+import redis
+
 
 # global constants
 LOGFILE = 'service.log'
 HUTFILE = 'Hutfile'
 CONTRACTFILE = 'service.json'
 S3_BUCKET = 'stackhut-payloads'
-INPUTFILE = 'input.json'
-OUTPUTFILE = 'output.json'
 
 # Logging
 def setup_logging():
@@ -48,26 +48,27 @@ def set_log_level(args_level):
 # Base command implementing common func
 class BaseCmd:
     """The Base Command"""
-    cmd_name = ''
+    @staticmethod
+    def parse_cmds(subparsers, cmd_name, description, cls):
+        sp = subparsers.add_parser(cmd_name, help=description, description=description)
+        sp.set_defaults(func=cls)
+        return sp
 
-    def __init__(self):
+    def __init__(self, args):
+        self.args = args
+
+        # import the hutfile
+        self.hutfile = yaml.load(args.hutfile)
+
         self.src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
         self.shim_dir = os.path.normpath(os.path.join(self.src_dir, '../res/shims'))
         log.debug("StackHut src dir is {}".format(self.src_dir))
         log.debug("StackHut shims dir is {}".format(self.shim_dir))
 
     @abc.abstractmethod
-    def parse_cmds(self, subparsers, description):
-        sp = subparsers.add_parser(self.cmd_name, help=description, description=description)
-        sp.set_defaults(func=self.run)
-        return sp
-
-    @abc.abstractmethod
-    def run(self, args):
+    def run(self):
         """Main entry point for a command with parsed cmd args"""
-        # import the hutfile
-        self.hutfile = yaml.load(args.hutfile)
-
+        pass
 
 
 # Error handling
@@ -100,52 +101,60 @@ class NonZeroExitError(barrister.RpcException):
         super(NonZeroExitError, self).__init__(code, msg, data)
 
 
-class FileStore:
-    """A base wrapper wrapper around S3 task state"""
+class IOStore:
+    """A base wrapper wrapper around common IO task state"""
     @abc.abstractmethod
-    def get_string(self, name):
+    def get_request(self):
+        pass
+
+    @abc.abstractmethod
+    def put_response(self, s):
         pass
 
     @abc.abstractmethod
     def get_file(self, name):
-        pass
-
-    @abc.abstractmethod
-    def put_string(self, s, name):
         pass
 
     @abc.abstractmethod
     def put_file(self, fname):
         pass
 
+class CloudStore(IOStore):
+    def __init__(self, service_name, task_id, aws_id, aws_key):
 
-class S3Store(FileStore):
-    def __init__(self, task_id, aws_id, aws_key):
+        self.service_name = service_name
         self.task_id = task_id
         # open connection to AWS
         self.conn = S3Connection(aws_id, aws_key)
         self.bucket = self.conn.get_bucket(S3_BUCKET)
+
+        redis_url = os.environ.get('REDIS_URL')
+        self.redis = redis.StrictRedis(host=redis_url, port=6379, db=0, password=None,
+                                       socket_timeout=None, connection_pool=None, charset='utf-8',
+                                       errors='strict', unix_socket_path=None)
+
+    def get_request(self):
+        """Get the request JSON"""
+        return self.redis.blpop(self.service_name, 0)
+
+    def put_response(self, s):
+        """Save the resposnce JSON"""
+        self.redis.lpush(self.task_id, s)
 
     def _create_key(self, name):
         k = Key(self.bucket)
         k.key = '{}/{}'.format(self.task_id, name)
         return k
 
-    def get_string(self, name):
-        k = self._create_key(name)
-        s = k.get_contents_as_string(encoding='utf-8')
-        log.info("Downloaded {} from S3".format(name))
-        return s
-
     def get_file(self, name):
+        # k = self._create_key(name)
+        # s = k.get_contents_as_string(encoding='utf-8')
+        # log.info("Downloaded {} from S3".format(name))
+        # return s
         pass
 
-    def put_string(self, s, name):
-        k = self._create_key(name)
-        k.set_contents_from_string(s)
-        log.info("Uploaded {} to S3".format(name))
-
     def put_file(self, fname, make_public=False):
+        """Upload file to S3"""
         k = self._create_key(fname)
         k.set_contents_from_filename(fname)
         log.info("Uploaded {} to S3".format(fname))
@@ -157,29 +166,30 @@ class S3Store(FileStore):
             res = k.generate_url(expires_in=0, query_auth=False)
         return res
 
-class LocalStore(FileStore):
+class LocalStore(IOStore):
     local_store = "local_task"
-
-    def __init__(self):
-        shutil.rmtree(self.local_store, ignore_errors=True)
-        os.mkdir(self.local_store)
-        # copy any files that should be there into the dir
-        shutil.copy(INPUTFILE, self.local_store)
 
     def _get_path(self, name):
         return "{}/{}".format(self.local_store, name)
 
-    def get_string(self, name):
-        with open(self._get_path(name), "r") as f:
+    def __init__(self, request_file):
+        shutil.rmtree(self.local_store, ignore_errors=True)
+        os.mkdir(self.local_store)
+        # copy any files that should be there into the dir
+        shutil.copy(request_file, self.local_store)
+        self.request_file = self._get_path(request_file)
+
+    def get_request(self):
+        with open(self.request_file, "r") as f:
             x = f.read()
         return x
 
+    def put_response(self, s):
+        with open(self._get_path('output.json'), "w") as f:
+            f.write(s)
+
     def get_file(self, name):
         pass
-
-    def put_string(self, s, name):
-        with open(self._get_path(name), "w") as f:
-            f.write(s)
 
     def put_file(self, fname, make_public=False):
         shutil.copy(fname, self.local_store)
