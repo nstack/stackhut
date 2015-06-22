@@ -1,12 +1,12 @@
-from boto.s3.connection import S3Connection, Key
 import json
 import subprocess
 import uuid
+import os
+import shutil
 
 import barrister
 import stackhut.utils as utils
 from stackhut.utils import log
-
 
 class RunCmd(utils.BaseCmd):
     cmd_name = 'run'
@@ -20,24 +20,20 @@ class RunCmd(utils.BaseCmd):
 
     # called by service on startup
     def _startup(self):
-        log.debug('Starting up service')
+        utils.log.debug('Starting up service')
 
-        # get input
-        input_json_str = self.file_store.get_string('input.json')
         try:
-            input_json = json.loads(input_json_str)
+            input_json = json.loads(self.file_store.get_string('input.json'))
         except:
             raise utils.ParseError()
         log.info('Input - \n{}'.format(input_json))
 
-        # massage the JSON-RPC request
-        # NOTE - this may not be entirely valid JSON-RPC - if so add the correct tags as needed
+        # massage the JSON-RPC request if we don't receieve an entirely valid req
         default_service = input_json['serviceName']
+
         def _make_json_rpc(req):
-            if 'jsonrpc' not in req:
-                req['jsonrpc'] = "2.0"
-            if 'id' not in req:
-                req['id'] = str(uuid.uuid4())
+            req['jsonrpc'] = "2.0" if 'jsonrpc' not in req else req['jsonrpc']
+            req['id'] = str(uuid.uuid4()) if 'id' not in req else req['id']
             # add the default interface if none exists
             if req['method'].find('.') < 0:
                 req['method'] = "{}.{}".format(default_service, req['method'])
@@ -58,37 +54,36 @@ class RunCmd(utils.BaseCmd):
     # intended to upload all files into S#
     def _shutdown(self, res):
         log.info('Shutting down service')
-        output_json = json.dumps(res)
-        log.info('Output - \n{}'.format(output_json))
+        log.info('Output - \n{}'.format(res))
         # save output and log
-        self.file_store.put_string(output_json, 'output.json')
+        self.file_store.put_string(json.dumps(res), 'output.json')
         self.file_store.put_file(utils.LOGFILE)
+
+    service_req_json = 'service_req.json'
+    service_resp_json = 'service_resp.json'
 
     def run_ext(self, method, params):
         """Make a pseudo-function call across languages"""
         # TODO - optimise
         # write the req
         req = dict(method=method, params=params)
-        with open("./service_req.json", "w") as f:
+        with open(self.service_req_json, "w") as f:
             f.write(json.dumps(req))
-
-        # select the stack
-        stack = self.hutfile['stack']
-        if stack == 'python3':
-            shim_exe = '/usr/bin/python3'
-        elif stack == 'nodejs':
-            shim_exe = '/usr/bin/node'
-        shim_cmd = [shim_exe, self.hutfile['entrypoint']]
 
         # call out to sub process
         try:
-            subprocess.check_output(shim_cmd, stderr=subprocess.STDOUT)
+            subprocess.check_output(self.shim_cmd, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             raise utils.NonZeroExitError(e.returncode, e.output)
 
         # read and return the resp
-        with open("./service_resp.json", "r") as f:
+        with open(self.service_resp_json, "r") as f:
             resp = json.loads(f.read())
+
+        # cleanup
+        os.remove(self.service_req_json)
+        os.remove(self.service_resp_json)
+
         # basic error handling
         if 'error' in resp:
             code = resp['error']
@@ -101,14 +96,36 @@ class RunCmd(utils.BaseCmd):
 
     def run(self, args):
         super().run(args)
+
+        # HACK - bail out on args here - should be handled by argparse
         if args.local:
             self.file_store = utils.LocalStore()
-        else:
+        elif args.task_id and args.aws_key and args.aws_key:
             self.file_store = utils.S3Store(args.task_id, args.aws_key, args.aws_id)
+        else:
+            log.error("Missing arguments, run with --help")
+            return 1
 
         # setup the service contracts
         self.contract = barrister.contract_from_file(utils.CONTRACTFILE)
         self.server = barrister.Server(self.contract)
+
+
+        # select the stack
+        stack = self.hutfile['stack']
+        shim_file = None
+        if stack == 'python3':
+            shim_exe = ['/usr/bin/python3']
+            shim_file = 'stackrun.py'
+        elif stack == 'nodejs':
+            shim_exe = ['/usr/bin/iojs', '--harmony']
+            shim_file = 'stackrun.js'
+        else:
+            log.error("Unknown stack")
+            return 1
+
+        shutil.copy(os.path.join(self.shim_dir, shim_file), os.getcwd())
+        self.shim_cmd = shim_exe + [shim_file]
 
         # Now run the main rpc commands
         try:
@@ -118,6 +135,9 @@ class RunCmd(utils.BaseCmd):
         except Exception as e:
             log.exception("Shit, unhandled error! - {}".format(e))
             exit(1)
+        finally:
+            os.remove(os.path.join(os.getcwd(), shim_file))
+
 
         # quit with correct exit code
         log.info('Service call complete')

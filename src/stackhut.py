@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # TODO - switch to python3 once OSX and Ubuntu/Redhat distros do
 import argparse
-import logging
-import sys
 from stackhut.commands import COMMANDS
 import stackhut.utils as utils
 
@@ -26,7 +24,7 @@ if __name__ == "__main__":
         parser.exit(0, "No command given")
 
     # General App Setup
-    utils.setup_logging(args.verbose)
+    utils.set_log_level(args.verbose)
     utils.log.info("Starting up StackHut")
     utils.log.debug(args)
 

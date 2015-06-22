@@ -5,27 +5,22 @@ import requests
 import barrister
 import yaml
 import sys
+import abc
+import uuid
+import os
+import shutil
 
 # global constants
 LOGFILE = 'service.log'
 HUTFILE = 'Hutfile'
 CONTRACTFILE = 'service.json'
 S3_BUCKET = 'stackhut-payloads'
+INPUTFILE = 'input.json'
+OUTPUTFILE = 'output.json'
 
-log = logging.getLogger('stackhut')
-# consoleHandler = logging.StreamHandler()
-# #consoleHandler.setFormatter(logFormatter)
-# log.addHandler(consoleHandler)
-
-def setup_logging(args_level):
-    # setup the logger
-    loglevel = logging.WARN
-    if args_level == 1:
-        loglevel = logging.INFO
-    elif args_level >= 2:
-        loglevel = logging.DEBUG
-    log.setLevel(loglevel)
-
+# Logging
+def setup_logging():
+    log = logging.getLogger('stackhut')
     logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s] %(message)s', '%H:%M:%S')
     # file output
     fileHandler = logging.FileHandler(LOGFILE, mode='w')
@@ -35,27 +30,43 @@ def setup_logging(args_level):
     consoleHandler = logging.StreamHandler(stream=sys.stdout)
     consoleHandler.setFormatter(logFormatter)
     log.addHandler(consoleHandler)
+    return log
+
+log = setup_logging()
+
+def set_log_level(args_level):
+    global log
+    # setup the logger
+    loglevel = logging.WARN
+    if args_level == 1:
+        loglevel = logging.INFO
+    elif args_level >= 2:
+        loglevel = logging.DEBUG
+    log.setLevel(loglevel)
 
 
-
+# Base command implementing common func
 class BaseCmd:
     """The Base Command"""
     cmd_name = ''
 
     def __init__(self):
-        pass
+        self.src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+        self.shim_dir = os.path.normpath(os.path.join(self.src_dir, '../res/shims'))
+        log.debug("StackHut src dir is {}".format(self.src_dir))
+        log.debug("StackHut shims dir is {}".format(self.shim_dir))
 
+    @abc.abstractmethod
     def parse_cmds(self, subparsers, description):
         sp = subparsers.add_parser(self.cmd_name, help=description, description=description)
         sp.set_defaults(func=self.run)
         return sp
 
+    @abc.abstractmethod
     def run(self, args):
         """Main entry point for a command with parsed cmd args"""
         # import the hutfile
         self.hutfile = yaml.load(args.hutfile)
-
-        return 0
 
 
 
@@ -89,10 +100,8 @@ class NonZeroExitError(barrister.RpcException):
         super(NonZeroExitError, self).__init__(code, msg, data)
 
 
-import abc
-import uuid
-
 class FileStore:
+    """A base wrapper wrapper around S3 task state"""
     @abc.abstractmethod
     def get_string(self, name):
         pass
@@ -112,8 +121,8 @@ class FileStore:
 
 class S3Store(FileStore):
     def __init__(self, task_id, aws_id, aws_key):
-        # open connection to AWS
         self.task_id = task_id
+        # open connection to AWS
         self.conn = S3Connection(aws_id, aws_key)
         self.bucket = self.conn.get_bucket(S3_BUCKET)
 
@@ -149,11 +158,19 @@ class S3Store(FileStore):
         return res
 
 class LocalStore(FileStore):
+    local_store = "local_task"
+
     def __init__(self):
-        pass
+        shutil.rmtree(self.local_store, ignore_errors=True)
+        os.mkdir(self.local_store)
+        # copy any files that should be there into the dir
+        shutil.copy(INPUTFILE, self.local_store)
+
+    def _get_path(self, name):
+        return "{}/{}".format(self.local_store, name)
 
     def get_string(self, name):
-        with open(name, "r") as f:
+        with open(self._get_path(name), "r") as f:
             x = f.read()
         return x
 
@@ -161,25 +178,26 @@ class LocalStore(FileStore):
         pass
 
     def put_string(self, s, name):
-        with open(name, "w") as f:
+        with open(self._get_path(name), "w") as f:
             f.write(s)
 
     def put_file(self, fname, make_public=False):
-        return fname
+        shutil.copy(fname, self.local_store)
+        return os.path.join(self.local_store, fname)
 
 
 ## S3 helper functions
 # File upload / download helpers
-def download_file(url):
+def download_file(url, fname=None):
     """from http://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py"""
-    local_filename = url.split('/')[-1]
-    logging.info("Downloading file {} from {}".format(local_filename, url))
+    fname = url.split('/')[-1] if fname is None else fname
+    logging.info("Downloading file {} from {}".format(fname, url))
     r = requests.get(url, stream=True)
-    with open(local_filename, 'wb') as f:
+    with open(fname, 'wb') as f:
         for chunk in r.iter_content(chunk_size=1024):
             if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
-    return local_filename
+    return fname
 
 
 class Subprocess:
