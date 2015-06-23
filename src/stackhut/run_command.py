@@ -24,10 +24,10 @@ class RunCmd(BaseCmd):
         # select the stack
         stack = self.hutfile['stack']
         if stack == 'python':
-            self.shim_exe = ['/usr/bin/python3']
+            self.shim_exe = ['/usr/bin/env', 'python3']
             self.shim_file = 'stackrun.py'
         elif stack == 'nodejs':
-            self.shim_exe = ['/usr/bin/iojs', '--harmony']
+            self.shim_exe = ['/usr/bin/env', 'iojs', '--harmony']
             self.shim_file = 'stackrun.js'
         else:
             log.error("Unknown stack")
