@@ -139,7 +139,7 @@ class CloudStore(IOStore):
     def get_request(self):
         """Get the request JSON"""
         log.debug("Waiting for task")
-        return self.redis.blpop(self.service_name, 0)[1].decode('utf-8').
+        return self.redis.blpop(self.service_name, 0)[1].decode('utf-8')
 
     def put_response(self, s):
         """Save the resposnce JSON"""
