@@ -9,8 +9,8 @@ from stackhut.utils import log, BaseCmd, CloudStore, LocalStore
 import stackhut.utils as utils
 
 # Module Consts
-SERVICE_REQ_FILE = 'service_req.json'
-SERVICE_RESP_FILE = 'service_resp.json'
+REQ_FIFO = 'req.json'
+RESP_FIFO = 'resp.json'
 
 class RunCmd(BaseCmd):
     """Base Run Command functionality"""
@@ -69,13 +69,19 @@ class RunCmd(BaseCmd):
             else:
                 raise utils.ParseError()
 
+            os.mkfifo(REQ_FIFO)
+            os.mkfifo(RESP_FIFO)
+
             return reqs  # anything else
 
         # called by service on exit - clean the system, write all output data and return control back to docker
         # intended to upload all files into S#
         def _shutdown(res):
-            log.info('Shutting down service')
             log.info('Output - \n{}'.format(res))
+            log.info('Shutting down service')
+            # cleanup
+            os.remove(REQ_FIFO)
+            os.remove(RESP_FIFO)
             # save output and log
             self.put_response(json.dumps(res))
             self.put_file(utils.LOGFILE)
@@ -85,22 +91,21 @@ class RunCmd(BaseCmd):
             # TODO - optimise
             # write the req
             req = dict(method=method, params=params)
-            with open(SERVICE_REQ_FILE, "w") as f:
-                f.write(json.dumps(req))
 
             # call out to sub process
-            try:
-                subprocess.check_output(self.shim_cmd, stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as e:
-                raise utils.NonZeroExitError(e.returncode, e.output)
-
-            # read and return the resp
-            with open(SERVICE_RESP_FILE, "r") as f:
+            p = subprocess.Popen(self.shim_cmd, shell=False, stderr=subprocess.STDOUT)
+            # blocking-wait to send the request
+            with open(REQ_FIFO, "w") as f:
+                f.write(json.dumps(req))
+            # blocking-wait to read the resp
+            with open(RESP_FIFO, "r") as f:
                 resp = json.loads(f.read())
 
-            # cleanup
-            os.remove(SERVICE_REQ_FILE)
-            os.remove(SERVICE_RESP_FILE)
+            # now wait for completion
+            # TODO - is this needed?
+            p.wait()
+            if p.returncode != 0:
+                raise utils.NonZeroExitError(p.returncode, p.stdout)
 
             # basic error handling
             if 'error' in resp:
@@ -139,7 +144,7 @@ class RunLocalCmd(RunCmd, utils.LocalStore):
     def parse_cmds(subparser):
         subparser = super(RunLocalCmd, RunLocalCmd).parse_cmds(subparser,
                                                                'runlocal', "Run a StackHut service locally", RunLocalCmd)
-        subparser.add_argument("--infile", '-i', default='input.json',
+        subparser.add_argument("--infile", '-i', default='demo_input.json',
                                help="Local file to use for input")
 
 class RunCloudCmd(RunCmd, utils.CloudStore):

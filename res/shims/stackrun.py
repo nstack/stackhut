@@ -33,7 +33,7 @@ def run(req):
 
 if __name__ == "__main__":
     # open the input
-    with open("./service_req.json", "r") as f:
+    with open("req.json", "r") as f:
         req = json.loads(f.read())
 
     # run the command
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         resp = gen_error(-32000, str(e))
 
     # save the output
-    with open("./service_resp.json", "w") as f:
+    with open("resp.json", "w") as f:
         f.write(json.dumps(resp))
 
     exit(0)
