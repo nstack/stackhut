@@ -44,13 +44,15 @@ class RunCmd(BaseCmd):
             log.debug('Starting up service')
 
             try:
-                input_json = json.loads(self.get_request())
+                in_str = self.get_request()
+                input_json = json.loads(in_str)
             except:
                 raise utils.ParseError()
             log.info('Input - \n{}'.format(input_json))
 
             # massage the JSON-RPC request if we don't receieve an entirely valid req
             default_service = input_json['serviceName']
+            self.set_task_id(input_json['id'])
 
             def _make_json_rpc(req):
                 req['jsonrpc'] = "2.0" if 'jsonrpc' not in req else req['jsonrpc']
@@ -133,11 +135,11 @@ class RunCmd(BaseCmd):
         return 0
 
 
-class RunLocalCmd(RunCmd, utils.LocalStore):
+class RunLocalCmd(RunCmd, LocalStore):
     """"Concrete Run Command using local files for dev"""
 
     def __init__(self, args):
-        utils.LocalStore.__init__(self, args.infile)
+        LocalStore.__init__(self, args.infile)
         RunCmd.__init__(self, args)
 
     @staticmethod
@@ -147,15 +149,15 @@ class RunLocalCmd(RunCmd, utils.LocalStore):
         subparser.add_argument("--infile", '-i', default='demo_input.json',
                                help="Local file to use for input")
 
-class RunCloudCmd(RunCmd, utils.CloudStore):
+class RunCloudCmd(RunCmd, CloudStore):
     """Concrete Run Command using Cloud systems for prod"""
 
     def __init__(self, args):
-        super(RunCmd, self).__init__(args)
+        RunCmd.__init__(self, args)
+        CloudStore.__init__(self, self.hutfile['name'], args.aws_id, args.aws_key)
 
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(RunCloudCmd, RunCloudCmd).parse_cmds(subparser, 'run', "Run a StackHut service", RunCloudCmd)
-        subparser.add_argument("task_id", help="Id representing the specific task")
         subparser.add_argument("aws_id", help="Key used to communicate with AWS")
         subparser.add_argument("aws_key", help="Key used to communicate with AWS")

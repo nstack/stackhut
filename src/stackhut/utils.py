@@ -119,27 +119,32 @@ class IOStore:
     def put_file(self, fname):
         pass
 
-class CloudStore(IOStore):
-    def __init__(self, service_name, task_id, aws_id, aws_key):
-
-        self.service_name = service_name
+    def set_task_id(self, task_id):
+        log.debug("Task id is {}".format(task_id))
         self.task_id = task_id
+
+
+class CloudStore(IOStore):
+    def __init__(self, service_name, aws_id, aws_key):
+        self.service_name = service_name
         # open connection to AWS
         self.conn = S3Connection(aws_id, aws_key)
         self.bucket = self.conn.get_bucket(S3_BUCKET)
 
-        redis_url = os.environ.get('REDIS_URL')
+        redis_url = os.environ.get('REDIS_URL', 'localhost')
         self.redis = redis.StrictRedis(host=redis_url, port=6379, db=0, password=None,
                                        socket_timeout=None, connection_pool=None, charset='utf-8',
                                        errors='strict', unix_socket_path=None)
 
     def get_request(self):
         """Get the request JSON"""
-        return self.redis.blpop(self.service_name, 0)
+        log.debug("Waiting for task")
+        return self.redis.blpop(self.service_name, 0)[1].decode('utf-8').
 
     def put_response(self, s):
         """Save the resposnce JSON"""
-        self.redis.lpush(self.task_id, s)
+        log.debug("Pushing task result")
+        self.redis.lpush(self.task_id, s.encode('utf-8'))
 
     def _create_key(self, name):
         k = Key(self.bucket)
