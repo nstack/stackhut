@@ -23,7 +23,7 @@ class RunCmd(BaseCmd):
 
         # select the stack
         stack = self.hutfile['stack']
-        if stack == 'python3':
+        if stack == 'python':
             self.shim_exe = ['/usr/bin/python3']
             self.shim_file = 'stackrun.py'
         elif stack == 'nodejs':

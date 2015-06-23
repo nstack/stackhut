@@ -21,7 +21,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.command is None:
         parser.print_help()
-        parser.exit(0, "No command given")
+
+        parser.exit(0, "No command given\n")
 
     # General App Setup
     utils.set_log_level(args.verbose)
