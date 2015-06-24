@@ -11,11 +11,14 @@ import os
 import shutil
 import redis
 
+logging.basicConfig()
 
 # global constants
+STACKHUT_DIR = '.stackhut'
 LOGFILE = 'service.log'
 HUTFILE = 'Hutfile'
-CONTRACTFILE = 'service.json'
+CONTRACTFILE = os.path.join(STACKHUT_DIR, 'service.json')
+IDLFILE = 'service.idl'
 S3_BUCKET = 'stackhut-payloads'
 
 # Logging

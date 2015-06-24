@@ -29,9 +29,15 @@ class BuildCmd(utils.BaseCmd):
     # TODO - run clean cmd first
     def run(self):
         super().run()
-        # move barrister call into process as running on py2.7 ?
-        sh.barrister(['-z', '-Gsize=8,5 -Glayout=twopi', '-d', 'service.html', '-p', 'service.png',
-                      '-t', self.hutfile['desc'], '-j', 'service.json', 'service.idl'])
+
+        # get vals from the hutfile
+        name = self.hutfile['name'].lower()
+        author = self.hutfile['author'].lower()
+        version = 'latest'
+        desc = self.hutfile['description']
+
+        # TODO - move barrister call into process as running on py2.7 ?
+        sh.barrister('-t', desc, '-j', utils.CONTRACTFILE, 'service.idl')
         # private clone for now - when OSS move into docker build
         log.debug("Copying stackhut app")
         shutil.rmtree('stackhut', ignore_errors=True)
@@ -40,7 +46,7 @@ class BuildCmd(utils.BaseCmd):
         # TODO - build Dockerfile from Hutfile
         # run docker build
         log.debug("Running docker build")
-        sh.docker(['build', '-t', "stackhut/{}:{}".format(self.hutfile['name'], self.hutfile['version']), '--rm', '.'])
+        sh.docker('build', '-f', '.stackhut/Dockerfile', '-t', "{}/{}:{}".format(author, name, version), '--rm', '.')
 
         shutil.rmtree('stackhut')
         log.info("{} build complete".format(self.hutfile['name']))

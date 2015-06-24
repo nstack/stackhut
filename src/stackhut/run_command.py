@@ -71,6 +71,8 @@ class RunCmd(BaseCmd):
             else:
                 raise utils.ParseError()
 
+            os.remove(REQ_FIFO) if os.path.exists(REQ_FIFO) else None
+            os.remove(RESP_FIFO) if os.path.exists(RESP_FIFO) else None
             os.mkfifo(REQ_FIFO)
             os.mkfifo(RESP_FIFO)
 
@@ -81,12 +83,13 @@ class RunCmd(BaseCmd):
         def _shutdown(res):
             log.info('Output - \n{}'.format(res))
             log.info('Shutting down service')
-            # cleanup
-            os.remove(REQ_FIFO)
-            os.remove(RESP_FIFO)
             # save output and log
             self.put_response(json.dumps(res))
             self.put_file(utils.LOGFILE)
+            # cleanup
+            os.remove(REQ_FIFO)
+            os.remove(RESP_FIFO)
+            os.remove(utils.LOGFILE)
 
         def _run_ext(method, params):
             """Make a pseudo-function call across languages"""
@@ -146,7 +149,7 @@ class RunLocalCmd(RunCmd, LocalStore):
     def parse_cmds(subparser):
         subparser = super(RunLocalCmd, RunLocalCmd).parse_cmds(subparser,
                                                                'runlocal', "Run a StackHut service locally", RunLocalCmd)
-        subparser.add_argument("--infile", '-i', default='demo_input.json',
+        subparser.add_argument("--infile", '-i', default='example_request.json',
                                help="Local file to use for input")
 
 class RunCloudCmd(RunCmd, CloudStore):
