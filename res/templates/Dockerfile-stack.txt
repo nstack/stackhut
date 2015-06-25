@@ -1,22 +1,24 @@
-FROM stackhut/{{ stack.image_name }}:latest
-MAINTAINER "{{ stack.author }}" <{{ stack.email }}>
+FROM stackhut/{{ stack.name|lower }}:latest
+MAINTAINER "StackHut" <stackhut@stackhut.com>
 LABEL description="{{ stack.description }}"
 
 # update the distro and commit
+{% if stack_install_cmds %}
 RUN echo "Starting..." && \
-    {% for cmd in stack.get_cmds() %}
+    {% for cmd in stack_install_cmds -%}
     {{ cmd }} && \
-    {% endfor %}
+    {% endfor -%}
     echo "...done" && exit
+{% endif %}
 
 # copy the stackhut app
 WORKDIR /workdir
 ONBUILD COPY ./stackhut /stackhut
 
 # copy the stackrun files into root
-ONBUILD COPY ./service.json ./Hutfile ./
+ONBUILD COPY ./.stackhut/service.json ./Hutfile ./
 # setup the python path
 ONBUILD ENV PYTHONPATH /stackhut/src
-# setup the eventual entrypoint
-ONBUILD ENTRYPOINT ["/usr/bin/python3", "/stackhut/src/stackhut.py", "run"]
+# setup the eventual entrypoint (using -vv for now)
+ONBUILD ENTRYPOINT ["/usr/bin/python3", "/stackhut/src/stackhut.py", "-vv", "run"]
 
