@@ -138,13 +138,15 @@ class CloudStore(IOStore):
         self.redis = redis.StrictRedis(host=redis_url, port=6379, db=0, password=None,
                                        socket_timeout=None, connection_pool=None, charset='utf-8',
                                        errors='strict', unix_socket_path=None)
-        log.debug("NEW _ Connected to Redis at {}".format(redis_url))
+        log.debug("Connected to Redis at {}".format(redis_url))
         # log.debug("{}".format(self.redis.info()))
 
     def get_request(self):
         """Get the request JSON"""
-        log.debug("Waiting for task {}".format(self.service_name))
-        return self.redis.blpop(self.service_name, 0)[1].decode('utf-8')
+        log.debug("Waiting on queue for service - {}".format(self.service_name))
+        x = self.redis.blpop(self.service_name, 0)[1].decode('utf-8')
+        log.debug("Received message {}".format(x))
+        return x
 
     def put_response(self, s):
         """Save the resposnce JSON"""
