@@ -126,6 +126,7 @@ class IOStore:
         log.debug("Task id is {}".format(task_id))
         self.task_id = task_id
 
+import datetime
 
 class CloudStore(IOStore):
     def __init__(self, service_name, aws_id, aws_key):
@@ -143,6 +144,8 @@ class CloudStore(IOStore):
 
     def get_request(self):
         """Get the request JSON"""
+        self.redis.lpush('fuck', datetime.datetime.now())
+
         log.debug("Waiting on queue for service - {}".format(self.service_name))
         x = self.redis.blpop(self.service_name, 0)[1].decode('utf-8')
         log.debug("Received message {}".format(x))
