@@ -138,8 +138,8 @@ class CloudStore(IOStore):
         self.redis = redis.StrictRedis(host=redis_url, port=6379, db=0, password=None,
                                        socket_timeout=None, connection_pool=None, charset='utf-8',
                                        errors='strict', unix_socket_path=None)
-        log.debug("Connected to Redis at {}".format(redis_url))
-        log.debug("{}".format(self.redis.info()))
+        log.debug("NEW _ Connected to Redis at {}".format(redis_url))
+        # log.debug("{}".format(self.redis.info()))
 
     def get_request(self):
         """Get the request JSON"""

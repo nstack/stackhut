@@ -58,7 +58,7 @@ class Alpine(BaseOS):
     base_pkgs = ['python3', 'ca-certificates']
 
     def os_pkg_cmd(self, pkgs):
-        return 'apk --update add {}'.format(' ' .join(pkgs))
+        return 'apk --update add {}'.format(str.join(' ', pkgs))
 
     def install_os_pkg(self, pkgs):
         return [
@@ -85,6 +85,10 @@ bases = [Fedora(), Alpine()]
 class Stack:
     name = ''
 
+    @property
+    def description(self):
+        return "Support for language stack {}".format(self.name.capitalize())
+
 class Python(Stack):
     name = 'python'
 
@@ -105,15 +109,15 @@ def build_base(base):
 # we need this as pkds installed per OS are OS dependent
 @dispatch(Fedora, Python)
 def get_stack_install_cmd(base_os, stack):
-    return ''  # installed by default
+    return []  # installed by default
 
 @dispatch(Alpine, Python)
 def get_stack_install_cmd(base_os, stack):
-    return ''  # installed by default
+    return []  # installed by default
 
 @dispatch(Fedora, NodeJS)
 def get_stack_install_cmd(base_os, stack):
-    return ''  # not supported
+    return []  # not supported
 
 @dispatch(Alpine, NodeJS)
 def get_stack_install_cmd(base_os, stack):

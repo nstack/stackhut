@@ -1,8 +1,8 @@
-FROM stackhut/{{ stack.name|lower }}:latest
+FROM stackhut/{{ base.name|lower }}:latest
 MAINTAINER "StackHut" <stackhut@stackhut.com>
 LABEL description="{{ stack.description }}"
 
-# update the distro and commit
+# install OS packages needed for stack
 {% if stack_install_cmds %}
 RUN echo "Starting..." && \
     {% for cmd in stack_install_cmds -%}

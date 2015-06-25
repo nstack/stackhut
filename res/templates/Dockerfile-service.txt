@@ -1,4 +1,4 @@
-FROM stackhut/{{ service.image_name }}:latest
+FROM stackhut/{{ service.name }}:latest
 MAINTAINER "{{ service.author }}" <{{ service.email }}>
 LABEL description="{{ service.description }}"
 
