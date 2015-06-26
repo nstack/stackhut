@@ -6,3 +6,4 @@ jinja2
 pyconfig
 PyYaml
 redis
+multipledispatch

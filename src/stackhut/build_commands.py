@@ -220,7 +220,7 @@ class Service:
         self.email = hutfile['contact']
         self.version = 'latest'
         self.description = hutfile['description']
-        self.files = []
+        self.files = hutfile['files'] if 'files' in hutfile else []
         self.os_deps = []
         self.lang_deps = False
         self.docker_cmds = []
