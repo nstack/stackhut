@@ -1,30 +1,58 @@
 #!/usr/bin/env python3
 import logging
 import os
-import abc
 import shutil
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
-import pyconfig
 import sh
 from stackhut import utils
 from stackhut.utils import log, AdminCmd
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
+root_dir = os.getcwd()
+
+class DockerEnv:
+    def build(self, template_name, template_params, outdir, image_name, push):
+        def gen_dockerfile():
+            template = template_env.get_template(template_name)
+            rendered_template = template.render(template_params)
+            log.debug(rendered_template)
+            with open('Dockerfile', 'w') as f:
+                f.write(rendered_template)
+
+        def build_dockerfile():
+            tag = "stackhut/{}:latest".format(image_name)
+            log.debug("Running docker build for {}".format(tag))
+            sh.docker('build', '-t', tag, '--rm', '.')
+            if push:
+                log.info("Pushing {} to Docker Hub".format(tag))
+                sh.docker('push', '-f', tag)
+
+        image_dir = os.path.join(outdir, image_name)
+        if not os.path.exists(image_dir):
+            os.mkdir(image_dir)
+        os.chdir(image_dir)
+        gen_dockerfile()
+        build_dockerfile()
+        os.chdir(root_dir)
+
 
 # Base OS's that we support
-class BaseOS:
-    name = ''
+class BaseOS(DockerEnv):
+    name = None
 
     @property
     def description(self):
         return "Base OS image using {}".format(self.name.capitalize())
 
-    # TODO - replace these with a reqs.txt
-    py3_packages = ['boto', 'sh', 'requests', 'markdown', 'redis', 'jinja2']
+    def build(self, outdir, push):
+        log.info("Building image for base {}".format(self.name))
+        image_name = self.name
+        super().build('Dockerfile-base.txt', dict(base=self), outdir, image_name, push)
 
-    def pip_install_cmd(self, packages):
-        return 'pip3 install --no-cache-dir --compile {}'.format(packages.join(' '))
+    # py3_packages = ['boto', 'sh', 'requests', 'markdown', 'redis', 'jinja2']
+    # def pip_install_cmd(self, packages):
+    #     return 'pip3 install --no-cache-dir --compile {}'.format(packages.join(' '))
 
 
 class Fedora(BaseOS):
@@ -79,7 +107,7 @@ class Alpine(BaseOS):
 
 
 # Language stacks that we support
-class Stack:
+class Stack(DockerEnv):
     name = None
     entrypoint = None
 
@@ -87,14 +115,23 @@ class Stack:
     def description(self):
         return "Support for language stack {}".format(self.name.capitalize())
 
+    def build(self, base, outdir, push):
+        log.info("Building image for base {} with stack {}".format(base.name, self.name))
+        image_name = "{}-{}".format(base.name, self.name)
+        stack_install_cmds = get_stack_install_cmd(base, self)
+        if stack_install_cmds is not None:
+            # only render the template if apy supported config
+            super().build('Dockerfile-stack.txt',
+                          dict(base=base, stack=self, stack_install_cmds=stack_install_cmds),
+                          outdir, image_name, push)
+
+
 class Python(Stack):
     name = 'python'
     entrypoint = 'app.py'
 
     def install_stack_pkgs(self):
         return 'pip3 install --no-cache-dir --compile -r requirements.txt'
-
-
 
 class NodeJS(Stack):
     name = 'nodejs'
@@ -135,18 +172,6 @@ def get_base(base_name):
 def get_stack(stack_name):
     return [stack for stack in stacks if stack.name == stack_name][0]
 
-def write_dockerfile(dockerfile, dirname):
-    dockerpath = os.path.join(dirname, 'Dockerfile')
-
-    if not os.path.exists(dirname):
-        os.mkdir(dirname)
-
-    with open(dockerpath, 'w') as f:
-        f.write(dockerfile)
-
-    return dirname
-
-
 class StackBuildCmd(AdminCmd):
     """Build StackHut service using docker"""
     @staticmethod
@@ -161,53 +186,16 @@ class StackBuildCmd(AdminCmd):
     def __init__(self, args):
         super().__init__(args)
         self.outdir = args.outdir
+        self.push = args.push
         if not os.path.exists(self.outdir):
             os.mkdir(self.outdir)
 
 
-
-    def build_base(self, base):
-        log.info("Building Dockerfile for base {}".format(base.name))
-        template = template_env.get_template('Dockerfile-base.txt')
-        rendered_template = template.render(base=base)
-        log.debug(rendered_template)
-        return write_dockerfile(rendered_template, os.path.join(self.outdir, base.name))
-
-    def build_stack(self, base, stack):
-        log.info("Building Dockerfile for base {} with stack {}".format(base.name, stack.name))
-        template = template_env.get_template('Dockerfile-stack.txt')
-
-        stack_install_cmds = get_stack_install_cmd(base, stack)
-        if stack_install_cmds is not None:
-            # only render the template if apy supported config
-            rendered_template = template.render(base=base, stack=stack, stack_install_cmds=stack_install_cmds)
-            logging.debug(rendered_template)
-            outdir = os.path.join(self.outdir, "{}-{}".format(base.name, stack.name))
-            return write_dockerfile(rendered_template, outdir)
-        else:
-            return None
-
-    def dockerbuild_deploy(self, build_dirs):
-        # loop over the dirs and build and push to dockerhub
-        log.info("Build dirs - {}".format(build_dirs))
-        root_dir = os.getcwd()
-        for d in build_dirs:
-            name = "stackhut/{}".format(d.split('/')[1])
-            os.chdir(d)
-            log.debug("Running docker build and push for {}".format(name))
-            sh.docker('build', '-t', "{}:{}".format(name, 'latest'), '--rm', '.')
-            if self.args.push:
-                log.info("Pushing image {} to Docker Hub".format(name))
-                sh.docker('push', '-f', name)
-            os.chdir(root_dir)
-
     def run(self):
         super().run()
-        base_dirs = [self.build_base(b) for b in bases]
-        stack_dirs = [self.build_stack(b, s) for b in bases for s in stacks]
-        build_dirs = [x for x in (base_dirs + stack_dirs) if x is not None]
-
-        self.dockerbuild_deploy(build_dirs)
+        # build bases and stacks
+        [b.build(self.outdir, self.push) for b in bases]
+        [s.build(self.outdir, self.push, b) for b in bases for s in stacks]
         log.info("All base OS and Stack images built and deployed")
 
 
