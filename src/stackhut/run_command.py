@@ -5,17 +5,17 @@ import os
 import shutil
 
 import barrister
-from stackhut.utils import log, BaseCmd, CloudStore, LocalStore
+from stackhut.utils import log, HutCmd, CloudStore, LocalStore
 import stackhut.utils as utils
 
 # Module Consts
 REQ_FIFO = 'req.json'
 RESP_FIFO = 'resp.json'
 
-class RunCmd(BaseCmd):
+class RunCmd(HutCmd):
     """Base Run Command functionality"""
     def __init__(self, args):
-        BaseCmd.__init__(self, args)
+        HutCmd.__init__(self, args)
 
         # setup the service contracts
         contract = barrister.contract_from_file(utils.CONTRACTFILE)
@@ -33,7 +33,7 @@ class RunCmd(BaseCmd):
             log.error("Unknown stack")
             exit(1)
         # copy across the shim file
-        shutil.copy(os.path.join(self.shim_dir, self.shim_file), os.getcwd())
+        shutil.copy(os.path.join(utils.get_res_path('shims'), self.shim_file), os.getcwd())
         self.shim_cmd = self.shim_exe + [self.shim_file]
 
     def run(self):

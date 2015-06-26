@@ -3,6 +3,7 @@
 import argparse
 from stackhut.commands import COMMANDS
 import stackhut.utils as utils
+from stackhut.utils import log
 
 if __name__ == "__main__":
     # Parse the cmd args
@@ -10,8 +11,8 @@ if __name__ == "__main__":
                                      epilog="Now build some crazy shit :)")
     parser.add_argument('-V', help='StackHut CLI Version',
                         action="version", version="%(prog)s 0.1.0")
-    parser.add_argument("--hutfile", help="Path to user-defined hutfile (default: %(default)s)",
-                        default=utils.HUTFILE, type=argparse.FileType('r', encoding='utf-8'))
+#    parser.add_argument("--hutfile", help="Path to user-defined hutfile (default: %(default)s)",
+#                        default=utils.HUTFILE, type=argparse.FileType('r', encoding='utf-8'))
     parser.add_argument('-v', dest='verbose', help="Verbosity level, add multiple times to increase",
                         action='count', default=0)
     # build the subparsers
@@ -21,13 +22,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.command is None:
         parser.print_help()
-
         parser.exit(0, "No command given\n")
 
     # General App Setup
     utils.set_log_level(args.verbose)
-    utils.log.info("Starting up StackHut")
-    utils.log.debug(args)
+    log.info("Starting up StackHut")
+    log.debug(args)
 
     # dispatch to correct subfunction - i.e. build, compile, run, etc.
     subfunc = args.func(args)

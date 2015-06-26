@@ -1,16 +1,23 @@
-FROM stackhut/{{ service.name }}:latest
+FROM stackhut/{{ service.from_image }}:latest
 MAINTAINER "{{ service.author }}" <{{ service.email }}>
 LABEL description="{{ service.description }}"
 
+{% if service.os_deps %}
 # update the distro and commit
 RUN echo "Starting..." && \
-    {% for cmd in base.get_cmds() %}
+    {% for cmd in service.base.install_os_pkg(service.os_deps) %}
     {{ cmd }} && \
     {% endfor %}
     echo "...done" && exit
+{% endif %}
+
+{% if service.lang_deps %}
+# Run any lang deps here
+RUN {{ service.stack.install_stack_pkgs() }}
+{% endif %}
 
 # copy the application itself - needs to be done manually for now
-COPY {{ service.entrypoint }} {{ service.files|join(' ') }} ./
+COPY {{ service.stack.entrypoint }} {{ service.files|join(' ') }} ./
 
 # any other Docker commands
 {% for cmd in service.docker_cmds %}

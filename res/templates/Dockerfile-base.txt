@@ -1,6 +1,6 @@
 FROM {{ base.name|lower }}:latest
 MAINTAINER "StackHut" <stackhut@stackhut.com>
-LABEL description={{ base.description }}
+LABEL description="{{ base.description }}"
 
 # update the distro and commit
 RUN echo "Starting..." && \

@@ -10,12 +10,12 @@ import uuid
 import os
 import shutil
 import redis
+import pyconfig
 
-logging.basicConfig()
 
 # global constants
 STACKHUT_DIR = '.stackhut'
-LOGFILE = 'service.log'
+LOGFILE = '.stackhut.log'
 HUTFILE = 'Hutfile'
 CONTRACTFILE = os.path.join(STACKHUT_DIR, 'service.json')
 IDLFILE = 'service.idl'
@@ -47,6 +47,18 @@ def set_log_level(args_level):
         loglevel = logging.DEBUG
     log.setLevel(loglevel)
 
+# setup app paths
+src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+res_dir = os.path.normpath(os.path.join(src_dir, '../res'))
+log.debug("StackHut src dir is {}".format(src_dir))
+log.debug("StackHut res dir is {}".format(res_dir))
+pyconfig.set('src_dir', src_dir)
+pyconfig.set('res_dir', res_dir)
+
+
+def get_res_path(res_name):
+    return (os.path.join(res_dir, res_name))
+
 
 # Base command implementing common func
 class BaseCmd:
@@ -60,18 +72,24 @@ class BaseCmd:
     def __init__(self, args):
         self.args = args
 
-        # import the hutfile
-        self.hutfile = yaml.load(args.hutfile)
-
-        self.src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
-        self.shim_dir = os.path.normpath(os.path.join(self.src_dir, '../res/shims'))
-        log.debug("StackHut src dir is {}".format(self.src_dir))
-        log.debug("StackHut shims dir is {}".format(self.shim_dir))
-
     @abc.abstractmethod
     def run(self):
         """Main entry point for a command with parsed cmd args"""
         pass
+
+class HutCmd(BaseCmd):
+    """Hut Commands are run from a Hut stack dir requiring a Hutfile"""
+    def __init__(self, args):
+        super().__init__(args)
+        # import the hutfile
+        with open(HUTFILE, 'r') as f:
+            self.hutfile = yaml.safe_load(f)
+
+# Base command implementing common func
+class AdminCmd(BaseCmd):
+    def __init__(self, args):
+        super().__init__(args)
+
 
 
 # Error handling
@@ -126,7 +144,6 @@ class IOStore:
         log.debug("Task id is {}".format(task_id))
         self.task_id = task_id
 
-import datetime
 
 class CloudStore(IOStore):
     def __init__(self, service_name, aws_id, aws_key):
@@ -136,16 +153,15 @@ class CloudStore(IOStore):
         self.bucket = self.conn.get_bucket(S3_BUCKET)
 
         redis_url = os.environ.get('REDIS_URL', 'localhost')
+        log.debug("Connecting to Redis at {}".format(redis_url))
         self.redis = redis.StrictRedis(host=redis_url, port=6379, db=0, password=None,
                                        socket_timeout=None, connection_pool=None, charset='utf-8',
                                        errors='strict', unix_socket_path=None)
-        log.debug("Connected to Redis at {}".format(redis_url))
-        # log.debug("{}".format(self.redis.info()))
+        self.redis.ping()
+        log.debug("Connected to Redis")
 
     def get_request(self):
         """Get the request JSON"""
-        self.redis.lpush('fuck', datetime.datetime.now())
-
         log.debug("Waiting on queue for service - {}".format(self.service_name))
         x = self.redis.blpop(self.service_name, 0)[1].decode('utf-8')
         log.debug("Received message {}".format(x))
