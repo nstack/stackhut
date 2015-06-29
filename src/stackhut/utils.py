@@ -1,3 +1,14 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import super
+from builtins import open
+from builtins import dict
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 import subprocess
 import logging
 from boto.s3.connection import Key, S3Connection
@@ -61,7 +72,7 @@ def get_res_path(res_name):
 
 
 # Base command implementing common func
-class BaseCmd:
+class BaseCmd(object):
     """The Base Command"""
     @staticmethod
     def parse_cmds(subparsers, cmd_name, description, cls):
@@ -122,7 +133,7 @@ class NonZeroExitError(barrister.RpcException):
         super(NonZeroExitError, self).__init__(code, msg, data)
 
 
-class IOStore:
+class IOStore(object):
     """A base wrapper wrapper around common IO task state"""
     @abc.abstractmethod
     def get_request(self):
@@ -241,7 +252,7 @@ def download_file(url, fname=None):
     return fname
 
 
-class Subprocess:
+class Subprocess(object):
     """Subprocess helper functions"""
     @staticmethod
     def call_strings(cmd, stdin):

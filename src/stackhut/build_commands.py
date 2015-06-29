@@ -1,3 +1,14 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import open
+from builtins import super
+from builtins import dict
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 #!/usr/bin/env python3
 import logging
 import os
@@ -9,9 +20,9 @@ from stackhut import utils
 from stackhut.utils import log, AdminCmd
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
-root_dir = os.getcwd()
+root_dir = os.getcwdu()
 
-class DockerEnv:
+class DockerEnv(object):
     def gen_dockerfile(self, template_name, template_params, dockerfile='Dockerfile'):
         rendered_template = template_env.get_template(template_name).render(template_params)
         with open(dockerfile, 'w') as f:

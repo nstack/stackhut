@@ -1,3 +1,14 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import super
+from builtins import open
+from builtins import dict
+from builtins import str
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import json
 import subprocess
 import uuid
@@ -33,7 +44,7 @@ class RunCmd(HutCmd):
             log.error("Unknown stack")
             exit(1)
         # copy across the shim file
-        shutil.copy(os.path.join(utils.get_res_path('shims'), self.shim_file), os.getcwd())
+        shutil.copy(os.path.join(utils.get_res_path('shims'), self.shim_file), os.getcwdu())
         self.shim_cmd = self.shim_exe + [self.shim_file]
 
     def run(self):
@@ -131,7 +142,7 @@ class RunCmd(HutCmd):
             log.exception("Shit, unhandled error! - {}".format(e))
             exit(1)
         finally:
-            os.remove(os.path.join(os.getcwd(), self.shim_file))
+            os.remove(os.path.join(os.getcwdu(), self.shim_file))
 
         # quit with correct exit code
         log.info('Service call complete')
