@@ -12,28 +12,26 @@ template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates
 root_dir = os.getcwd()
 
 class DockerEnv:
-    def build(self, template_name, template_params, outdir, image_name, push):
-        def gen_dockerfile():
-            template = template_env.get_template(template_name)
-            rendered_template = template.render(template_params)
-            log.debug(rendered_template)
-            with open('Dockerfile', 'w') as f:
-                f.write(rendered_template)
+    def gen_dockerfile(self, template_name, template_params, dockerfile='Dockerfile'):
+        rendered_template = template_env.get_template(template_name).render(template_params)
+        with open(dockerfile, 'w') as f:
+            f.write(rendered_template)
 
-        def build_dockerfile():
-            tag = "stackhut/{}:latest".format(image_name)
-            log.debug("Running docker build for {}".format(tag))
-            sh.docker('build', '-t', tag, '--rm', '.')
-            if push:
-                log.info("Pushing {} to Docker Hub".format(tag))
-                sh.docker('push', '-f', tag)
+    def build_dockerfile(self, image_name, push=False, author='stackhut', version='latest', dockerfile='Dockerfile'):
+        tag = "{}/{}:{}".format(author, image_name, version)
+        log.debug("Running docker build for {}".format(tag))
+        sh.docker('build', '-f', dockerfile, '-t', tag, '--rm', '.')
+        if push:
+            log.info("Pushing {} to Docker Hub".format(tag))
+            sh.docker('push', '-f', tag)
 
+    def stack_build(self, template_name, template_params, outdir, image_name, push=False):
         image_dir = os.path.join(outdir, image_name)
         if not os.path.exists(image_dir):
             os.mkdir(image_dir)
         os.chdir(image_dir)
-        gen_dockerfile()
-        build_dockerfile()
+        self.gen_dockerfile(template_name, template_params)
+        self.build_dockerfile(image_name, push)
         os.chdir(root_dir)
 
 
@@ -48,7 +46,7 @@ class BaseOS(DockerEnv):
     def build(self, outdir, push):
         log.info("Building image for base {}".format(self.name))
         image_name = self.name
-        super().build('Dockerfile-base.txt', dict(base=self), outdir, image_name, push)
+        super().stack_build('Dockerfile-base.txt', dict(base=self), outdir, image_name, push)
 
     # py3_packages = ['boto', 'sh', 'requests', 'markdown', 'redis', 'jinja2']
     # def pip_install_cmd(self, packages):
@@ -121,9 +119,9 @@ class Stack(DockerEnv):
         stack_install_cmds = get_stack_install_cmd(base, self)
         if stack_install_cmds is not None:
             # only render the template if apy supported config
-            super().build('Dockerfile-stack.txt',
-                          dict(base=base, stack=self, stack_install_cmds=stack_install_cmds),
-                          outdir, image_name, push)
+            super().stack_build('Dockerfile-stack.txt',
+                                dict(base=base, stack=self, stack_install_cmds=stack_install_cmds),
+                                outdir, image_name, push)
 
 
 class Python(Stack):
@@ -190,17 +188,17 @@ class StackBuildCmd(AdminCmd):
         if not os.path.exists(self.outdir):
             os.mkdir(self.outdir)
 
-
     def run(self):
         super().run()
         # build bases and stacks
         [b.build(self.outdir, self.push) for b in bases]
-        [s.build(self.outdir, self.push, b) for b in bases for s in stacks]
+        [s.build(b, self.outdir, self.push) for b in bases for s in stacks]
         log.info("All base OS and Stack images built and deployed")
 
 
 
-class Service:
+class Service(DockerEnv):
+
     def __init__(self, hutfile):
         # get vals from the hutfile
         self.name = hutfile['name'].lower()
@@ -214,10 +212,12 @@ class Service:
         self.docker_cmds = []
         self.base = get_base(hutfile['baseos'])
         self.stack = get_stack(hutfile['stack'])
-
         self.from_image = "{}-{}".format(self.base.name, self.stack.name)
 
-
+    def build(self, push):
+        dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
+        self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
+        self.build_dockerfile(self.name, push, self.author, self.version, dockerfile)
 
 
 class HutBuildCmd(utils.HutCmd):
@@ -230,20 +230,17 @@ class HutBuildCmd(utils.HutCmd):
 
     def __init__(self, args):
         super().__init__(args)
+        self.push = args.push
 
-    # TODO - run clean cmd first
+# TODO - run clean cmd first
     def run(self):
         super().run()
 
-        service = Service(self.hutfile)
-
-        # build the dockerfile
-        template = template_env.get_template('Dockerfile-service.txt')
-        rendered_template = template.render(service=service)
-        write_dockerfile(rendered_template, '.stackhut')
-
         # setup
         # TODO - move barrister call into process as running on py2.7 ?
+        if not os.path.exists(utils.STACKHUT_DIR):
+            os.mkdir(utils.STACKHUT_DIR)
+
         sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
         # private clone for now - when OSS move into docker build
         log.debug("Copying stackhut app")
@@ -251,29 +248,11 @@ class HutBuildCmd(utils.HutCmd):
         sh.git('clone', 'git@github.com:StackHut/stackhut-app.git', 'stackhut')
         shutil.rmtree('stackhut/.git')
 
-        # run docker build
-        log.debug("Running docker build")
-        docker_name = "{}/{}:{}".format(service.author, service.name, service.version)
-        sh.docker('build', '-f', '.stackhut/Dockerfile', '-t', docker_name, '--rm', '.')
-
-        if self.args.push:
-            log.info("Pushing image {} to Docker Hub".format(docker_name))
-            sh.docker('push', '-f', docker_name)
+        # Docker build
+        service = Service(self.hutfile)
+        service.build(self.push)
 
         # cleanup
-
         shutil.rmtree('stackhut')
         log.info("{} build complete".format(service.name))
-
-
-
-
-
-
-
-
-
-
-
-
 
