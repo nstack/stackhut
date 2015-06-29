@@ -49,7 +49,7 @@ class BaseOS(DockerEnv):
     def build(self, outdir, push):
         log.info("Building image for base {}".format(self.name))
         image_name = self.name
-        super().stack_build('Dockerfile-base.txt', dict(base=self), outdir, image_name, push)
+        super().stack_build('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name, push)
 
     # py3_packages = ['boto', 'sh', 'requests', 'markdown', 'redis', 'jinja2']
     # def pip_install_cmd(self, packages):
@@ -59,7 +59,7 @@ class BaseOS(DockerEnv):
 class Fedora(BaseOS):
     name = 'fedora'
 
-    base_pkgs = ['python3', 'python3-pip']
+    baseos_pkgs = ['python', 'python-pip']
 
     def os_pkg_cmd(self, pkgs):
         return 'dnf -y install {}'.format(' '.join(pkgs))
@@ -76,18 +76,18 @@ class Fedora(BaseOS):
             'rm -rf /var/cache/*',
             'rm -rf /tmp/*',
         ]
-        
+
     def setup_cmds(self):
-        return self.install_os_pkg(self.base_pkgs)
+        return self.install_os_pkg(self.baseos_pkgs)
 
 
 class Alpine(BaseOS):
     name = 'alpine'
 
-    base_pkgs = ['python3', 'ca-certificates']
+    baseos_pkgs = ['python', 'py-pip', 'ca-certificates']
 
     def os_pkg_cmd(self, pkgs):
-        return 'apk --update add {}'.format(str.join(' ', pkgs))
+        return 'apk --update add {}'.format(' '.join(pkgs))
 
     def install_os_pkg(self, pkgs):
         return [
@@ -104,7 +104,7 @@ class Alpine(BaseOS):
         return [
             'echo "@edge http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories',
             'echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories',
-        ] + self.install_os_pkg(self.base_pkgs)
+        ] + self.install_os_pkg(self.baseos_pkgs)
 
 
 # Language stacks that we support
@@ -116,19 +116,27 @@ class Stack(DockerEnv):
     def description(self):
         return "Support for language stack {}".format(self.name.capitalize())
 
-    def build(self, base, outdir, push):
-        log.info("Building image for base {} with stack {}".format(base.name, self.name))
-        image_name = "{}-{}".format(base.name, self.name)
-        stack_install_cmds = get_stack_install_cmd(base, self)
-        if stack_install_cmds is not None:
+    def build(self, baseos, outdir, push):
+        log.info("Building image for base {} with stack {}".format(baseos.name, self.name))
+        image_name = "{}-{}".format(baseos.name, self.name)
+        baseos_stack_pkgs = get_baseos_stack_pkgs(baseos, self)
+        if baseos_stack_pkgs is not None:
+            baseos_stack_cmds = baseos.install_os_pkg(baseos_stack_pkgs)
             # only render the template if apy supported config
             super().stack_build('Dockerfile-stack.txt',
-                                dict(base=base, stack=self, stack_install_cmds=stack_install_cmds),
+                                dict(baseos=baseos, stack=self, baseos_stack_pkgs=baseos_stack_pkgs),
                                 outdir, image_name, push)
 
 
-class Python(Stack):
-    name = 'python'
+class Python2(Stack):
+    name = 'python2'
+    entrypoint = 'app.py'
+
+    def install_stack_pkgs(self):
+        return 'pip2 install --no-cache-dir --compile -r requirements.txt'
+
+class Python3(Stack):
+    name = 'python3'
     entrypoint = 'app.py'
 
     def install_stack_pkgs(self):
@@ -141,31 +149,38 @@ class NodeJS(Stack):
 
 # Our BaseOS / Stack Dispatchers (e.g. pattern matching)
 # we need this as pkds installed per OS are OS dependent
-@dispatch(Fedora, Python)
-def get_stack_install_cmd(base_os, stack):
+@dispatch(Fedora, Python2)
+def get_baseos_stack_pkgs(base_os, stack):
     return []  # installed by default
 
-@dispatch(Alpine, Python)
-def get_stack_install_cmd(base_os, stack):
+@dispatch(Alpine, Python2)
+def get_baseos_stack_pkgs(base_os, stack):
     return []  # installed by default
+
+@dispatch(Fedora, Python3)
+def get_baseos_stack_pkgs(base_os, stack):
+    return ['python3', 'python3-pip']
+
+@dispatch(Alpine, Python3)
+def get_baseos_stack_pkgs(base_os, stack):
+    return ['python3']
 
 @dispatch(Fedora, NodeJS)
-def get_stack_install_cmd(base_os, stack):
+def get_baseos_stack_pkgs(base_os, stack):
     return None  # not supported
 
 @dispatch(Alpine, NodeJS)
-def get_stack_install_cmd(base_os, stack):
-    pkgs = ['iojs@testing']
-    return base_os.install_os_pkg(pkgs)
+def get_baseos_stack_pkgs(base_os, stack):
+    return ['iojs@testing', 'libstdc++@edge']
 
 @dispatch(object, object)
-def get_stack_install_cmd(base_os, stack):
+def get_baseos_stack_pkgs(base_os, stack):
     log.error("Os / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
     raise NotImplementedError()
 
 # Main configs we support
 bases = [Fedora(), Alpine()]
-stacks = [Python(), NodeJS()]
+stacks = [Python2(), Python3(), NodeJS()]
 
 def get_base(base_name):
     return [base for base in bases if base.name == base_name][0]
@@ -213,9 +228,9 @@ class Service(DockerEnv):
         self.os_deps = []
         self.lang_deps = False
         self.docker_cmds = []
-        self.base = get_base(hutfile['baseos'])
+        self.baseos = get_base(hutfile['baseos'])
         self.stack = get_stack(hutfile['stack'])
-        self.from_image = "{}-{}".format(self.base.name, self.stack.name)
+        self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)
 
     def build(self, push):
         dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')

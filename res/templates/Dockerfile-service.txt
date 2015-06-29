@@ -5,7 +5,7 @@ LABEL description="{{ service.description }}"
 {% if service.os_deps %}
 # update the distro and commit
 RUN echo "Starting..." && \
-    {% for cmd in service.base.install_os_pkg(service.os_deps) %}
+    {% for cmd in service.baseos.install_os_pkg(service.os_deps) %}
     {{ cmd }} && \
     {% endfor %}
     echo "...done" && exit

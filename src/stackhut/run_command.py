@@ -29,7 +29,10 @@ class RunCmd(HutCmd):
         stack = self.hutfile['stack']
         if stack == 'python':
             self.shim_exe = ['/usr/bin/env', 'python3']
-            self.shim_file = 'stackrun.py'
+            self.shim_file = 'stackrun3.py'
+        elif stack == 'python2':
+            self.shim_exe = ['/usr/bin/env', 'python2']
+            self.shim_file = 'stackrun2.py'
         elif stack == 'nodejs':
             self.shim_exe = ['/usr/bin/env', 'iojs', '--harmony']
             self.shim_file = 'stackrun.js'
@@ -68,7 +71,7 @@ class RunCmd(HutCmd):
 
             if 'req' in input_json:
                 reqs = input_json['req']
-                if type(reqs) is list:
+                if isinstance(reqs, list): # HACK
                     reqs = [_make_json_rpc(req) for req in reqs]
                 else:
                     reqs = _make_json_rpc(reqs)
@@ -105,7 +108,7 @@ class RunCmd(HutCmd):
             p = subprocess.Popen(self.shim_cmd, shell=False, stderr=subprocess.STDOUT)
             # blocking-wait to send the request
             with open(REQ_FIFO, "w") as f:
-                f.write(json.dumps(req))
+                f.write(unicode(json.dumps(req)))
             # blocking-wait to read the resp
             with open(RESP_FIFO, "r") as f:
                 resp = json.loads(f.read())

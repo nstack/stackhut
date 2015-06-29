@@ -222,7 +222,7 @@ class LocalStore(IOStore):
 
     def put_response(self, s):
         with open(self._get_path('output.json'), "w") as f:
-            f.write(s)
+            f.write(unicode(s))
 
     def get_file(self, name):
         pass

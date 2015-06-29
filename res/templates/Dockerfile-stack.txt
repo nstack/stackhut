@@ -1,11 +1,11 @@
-FROM stackhut/{{ base.name|lower }}:latest
+FROM stackhut/{{ baseos.name|lower }}:latest
 MAINTAINER "StackHut" <stackhut@stackhut.com>
 LABEL description="{{ stack.description }}"
 
-{% if stack_install_cmds %}
+{% if baseos_stack_pkgs %}
 # install OS packages needed for stack
 RUN echo "Starting..." && \
-    {% for cmd in stack_install_cmds -%}
+    {% for cmd in baseos.install_os_pkg(baseos_stack_pkgs) -%}
     {{ cmd }} && \
     {% endfor -%}
     echo "...done" && exit
@@ -14,7 +14,7 @@ RUN echo "Starting..." && \
 # copy the stackhut app
 WORKDIR /workdir
 ONBUILD COPY ./stackhut /stackhut
-ONBUILD RUN pip3 install --no-cache-dir --compile -r /stackhut/requirements.txt
+ONBUILD RUN pip2 install --no-cache-dir --compile -r /stackhut/requirements.txt
 
 # copy the stackrun files into root
 ONBUILD COPY ./Hutfile ./
@@ -23,5 +23,4 @@ ONBUILD COPY .stackhut ./.stackhut
 # setup the python path
 ONBUILD ENV PYTHONPATH /stackhut/src
 # setup the eventual entrypoint (using -vv for now)
-ONBUILD ENTRYPOINT ["/usr/bin/python3", "/stackhut/src/stackhut.py", "-vv", "run"]
-
+ONBUILD ENTRYPOINT ["/usr/bin/python2", "/stackhut/src/stackhut.py", "-vv", "run"]
