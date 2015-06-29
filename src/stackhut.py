@@ -1,12 +1,10 @@
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from builtins import *
+#!/usr/bin/env python2
+# TODO - switch to python3 once OSX and Ubuntu/Redhat distros do
+from __future__ import (unicode_literals, print_function, division, absolute_import)
 from future import standard_library
 standard_library.install_aliases()
-#!/usr/bin/env python3
-# TODO - switch to python3 once OSX and Ubuntu/Redhat distros do
+from builtins import *
+
 import argparse
 from stackhut.commands import COMMANDS
 import stackhut.utils as utils
