@@ -17,7 +17,6 @@ import shutil
 import redis
 import pyconfig
 
-
 # global constants
 STACKHUT_DIR = '.stackhut'
 LOGFILE = '.stackhut.log'
