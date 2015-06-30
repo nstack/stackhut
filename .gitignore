@@ -1,5 +1,4 @@
 # nested repos
-lib/barrister
 
 # ide
 *.iml
@@ -30,6 +29,10 @@ var/
 .installed.cfg
 *.egg
 bin/
+
+# package testing / venvs
+*-wheel
+*-sdist
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
