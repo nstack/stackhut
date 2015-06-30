@@ -1,6 +1,16 @@
-Authors
+=======
+Credits
 =======
 
-- Mandeep Gill <mandeep@stackhut.com>
-- Leo Anthias <leo@stackhut.com>
+Development Lead
+----------------
+
+* StackHut <stackhut@stackhut.com>
+* Mandeep Gill <mandeep@stackhut.com>
+* Leo Anthias <leo@stackhut.com>
+
+Contributors
+------------
+
+None yet. Why not be the first?
 

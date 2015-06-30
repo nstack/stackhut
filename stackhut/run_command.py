@@ -14,6 +14,7 @@
 
 from __future__ import (unicode_literals, print_function, division, absolute_import)
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import *
 import json
@@ -22,9 +23,9 @@ import uuid
 import os
 import shutil
 
-import barrister
-from stackhut.utils import log, HutCmd, CloudStore, LocalStore
-import stackhut.utils as utils
+from bin.stackhut import barrister
+from bin.stackhut import log, HutCmd, CloudStore, LocalStore
+from bin import stackhut as utils
 
 # Module Consts
 REQ_FIFO = 'req.json'

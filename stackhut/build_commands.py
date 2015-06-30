@@ -16,14 +16,13 @@ from __future__ import (unicode_literals, print_function, division, absolute_imp
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *
-import logging
 import os
 import shutil
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
 import sh
-from stackhut import utils
-from stackhut.utils import log, AdminCmd
+from bin.stackhut import utils
+from bin.stackhut import log, AdminCmd
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
 root_dir = os.getcwdu()

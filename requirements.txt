@@ -1,10 +1,2 @@
-future
-sh
-boto
-requests
-markdown
-jinja2
-pyconfig
-PyYaml
-redis
-multipledispatch
+.
+

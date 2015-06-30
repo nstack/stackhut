@@ -21,11 +21,10 @@ import subprocess
 import logging
 from boto.s3.connection import Key, S3Connection
 import requests
-import barrister
+from bin.stackhut import barrister
 import yaml
 import sys
 import abc
-import uuid
 import os
 import shutil
 import redis
@@ -66,11 +65,12 @@ def set_log_level(args_level):
     log.setLevel(loglevel)
 
 # setup app paths
-src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
-res_dir = os.path.normpath(os.path.join(src_dir, '../res'))
-log.debug("StackHut src dir is {}".format(src_dir))
+# src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+res_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), './res'))
+# f = open(os.path.join(os.path.dirname(__file__),'templates','file1.txt'))
+#log.debug("StackHut src dir is {}".format(src_dir))
 log.debug("StackHut res dir is {}".format(res_dir))
-pyconfig.set('src_dir', src_dir)
+#pyconfig.set('src_dir', src_dir)
 pyconfig.set('res_dir', res_dir)
 
 
