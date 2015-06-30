@@ -36,7 +36,7 @@ clean-test:
 	rm -fr htmlcov/
 
 lint:
-	flake8 stackhut-tool tests
+	flake8 stackhut tests
 
 test:
 	python setup.py test
@@ -45,22 +45,21 @@ test-all:
 	tox
 
 coverage:
-	coverage run --source stackhut-tool setup.py test
+	coverage run --source stackhut setup.py test
 	coverage report -m
 	coverage html
 	open htmlcov/index.html
 
 docs:
-	rm -f docs/stackhut-tool.rst
+	rm -f docs/stackhut.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ stackhut-tool
+	sphinx-apidoc -o docs/ stackhut
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
-	open docs/_build/html/index.html
+	-open docs/_build/html/index.html
 
-release: clean
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
+release: dist
+	twine upload dist/*
 
 dist: clean
 	python setup.py sdist
