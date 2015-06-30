@@ -45,11 +45,12 @@ setup(
     author="StackHut",
     author_email='stackhut@stackhut.com',
     url='https://github.com/stackhut/stackhut-tool',    
+    # download_url = 'https://github.com/stackhut/stackhut-tool/tarball/0.1.0'
     packages=[
         'stackhut', 'stackhut.barrister'
     ],
-#    package_dir={'stackhut-tool':
-#                 'stackhut-tool'},
+    # package_dir={'stackhut-tool':
+    #              'stackhut-tool'},
     include_package_data=True,
     entry_points={
         'console_scripts': [
