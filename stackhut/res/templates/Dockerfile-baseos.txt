@@ -7,4 +7,5 @@ RUN echo "Starting..." && \
     {% for cmd in baseos.setup_cmds() -%}
     {{ cmd }} && \
     {% endfor -%}
+    pip2 install --no-cache-dir --compile stackhut && \
     echo "...done" && exit
