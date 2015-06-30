@@ -16,16 +16,19 @@ from __future__ import (unicode_literals, print_function, division, absolute_imp
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *
+from future.utils import PY2, PY3
+
 import os
 import shutil
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
 import sh
-from bin.stackhut import utils
-from bin.stackhut import log, AdminCmd
+
+from stackhut import utils
+from stackhut.utils import log, AdminCmd
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
-root_dir = os.getcwdu()
+root_dir = os.getcwd() if PY3 else os.getcwdu()
 
 class DockerEnv(object):
     def gen_dockerfile(self, template_name, template_params, dockerfile='Dockerfile'):

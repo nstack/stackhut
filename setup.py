@@ -26,7 +26,8 @@ requirements = [
     "pyconfig",
     "PyYaml",
     "redis",
-    "multipledispatch"
+    "multipledispatch",
+    "barrister",
 ]
 
 # put package test requirements here
@@ -44,7 +45,7 @@ setup(
     license='Apache',
     author="StackHut",
     author_email='stackhut@stackhut.com',
-    url='https://github.com/stackhut/stackhut-tool',    
+    url='https://github.com/stackhut/stackhut-tool',
     # download_url = 'https://github.com/stackhut/stackhut-tool/tarball/0.1.0'
     packages=[
         'stackhut', 'stackhut.barrister'
@@ -77,7 +78,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Topic :: Software Development',
-        'Private :: Do Not Upload', # hack to force invalid package for upload
+        'Private :: Do Not Upload',  # hack to force invalid package for upload
 
     ],
 )

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import (unicode_literals, print_function, division, absolute_import)
 from future import standard_library
 standard_library.install_aliases()
@@ -21,7 +20,6 @@ import subprocess
 import logging
 from boto.s3.connection import Key, S3Connection
 import requests
-from bin.stackhut import barrister
 import yaml
 import sys
 import abc
@@ -29,6 +27,8 @@ import os
 import shutil
 import redis
 import pyconfig
+
+from stackhut import barrister
 
 # global constants
 STACKHUT_DIR = '.stackhut'

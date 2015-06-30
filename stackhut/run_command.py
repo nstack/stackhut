@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import (unicode_literals, print_function, division, absolute_import)
 from future import standard_library
 
@@ -23,9 +22,10 @@ import uuid
 import os
 import shutil
 
-from bin.stackhut import barrister
-from bin.stackhut import log, HutCmd, CloudStore, LocalStore
-from bin import stackhut as utils
+from stackhut import barrister
+from stackhut import utils
+from stackhut.utils import log, HutCmd, CloudStore, LocalStore
+
 
 # Module Consts
 REQ_FIFO = 'req.json'
