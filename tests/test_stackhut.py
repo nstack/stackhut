@@ -1,19 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 """
-test_stackhut-tool
+test_stackhut
 ----------------------------------
 
-Tests for `stackhut-tool` module.
+Tests for `stackhut` module.
 """
 
 import unittest
 
-from stackhut-tool import stackhut-tool
+import stackhut
 
 
-class TestStackhut-tool(unittest.TestCase):
+class TestStackhut(unittest.TestCase):
 
     def setUp(self):
         pass

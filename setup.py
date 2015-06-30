@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import sys
 
 try:
     from setuptools import setup, find_packages
@@ -27,8 +28,13 @@ requirements = [
     "PyYaml",
     "redis",
     "multipledispatch",
-    "barrister",
 ]
+
+# conditional requirements for py 2 or 3
+if sys.version_info[0] == 2:
+    requirements += ['barrister']
+else:
+    requirements += []
 
 # put package test requirements here
 test_requirements = [
