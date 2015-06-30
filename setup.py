@@ -46,7 +46,7 @@ setup(
     author_email='stackhut@stackhut.com',
     url='https://github.com/stackhut/stackhut-tool',    
     packages=[
-        'stackhut',
+        'stackhut', 'stackhut.barrister'
     ],
 #    package_dir={'stackhut-tool':
 #                 'stackhut-tool'},
