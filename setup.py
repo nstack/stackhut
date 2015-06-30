@@ -31,6 +31,7 @@ requirements = [
 ]
 
 # conditional requirements for py 2 or 3
+# NOTE - switch to extra_require at some point to build uni-wheel
 if sys.version_info[0] == 2:
     requirements += ['barrister']
 else:
@@ -49,8 +50,8 @@ setup(
                       read('HISTORY.rst').replace('.. :changelog:', '') + '\n\n' +
                       read('AUTHORS.rst')),
     license='Apache',
-    author="StackHut",
-    author_email='stackhut@stackhut.com',
+    author="Mandeep Gill",
+    author_email='mandeep@stackhut.com',
     url='https://github.com/stackhut/stackhut-tool',
     # download_url = 'https://github.com/stackhut/stackhut-tool/tarball/0.1.0'
     packages=[
@@ -84,7 +85,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Topic :: Software Development',
-        'Private :: Do Not Upload',  # hack to force invalid package for upload
+        #'Private :: Do Not Upload',  # hack to force invalid package for upload
 
     ],
 )

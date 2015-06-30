@@ -1,5 +1,5 @@
 ===============================
-StackHut Console Tool
+StackHut Command Tool
 ===============================
 
 .. image:: https://img.shields.io/travis/stackhut/stackhut-tool.svg
@@ -9,7 +9,7 @@ StackHut Console Tool
         :target: https://pypi.python.org/pypi/stackhut
 
 
-Python Boilerplate contains all the boilerplate you need to create a Python package.
+`stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. Runs on both Python 2.7 and Python 3.4.
 
 * Free software: Apache license
 * Documentation: https://stackhut-tool.readthedocs.org.
