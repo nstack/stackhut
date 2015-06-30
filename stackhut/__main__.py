@@ -22,7 +22,7 @@ import argparse
 
 from stackhut import utils
 from stackhut.utils import log
-from stackhut.commands import COMMANDS
+from stackhut.main_commands import COMMANDS
 
 def main():
     # Parse the cmd args

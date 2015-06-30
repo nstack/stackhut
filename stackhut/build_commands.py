@@ -274,19 +274,11 @@ class HutBuildCmd(utils.HutCmd):
         # TODO - move barrister call into process as running on py2.7 ?
         if not os.path.exists(utils.STACKHUT_DIR):
             os.mkdir(utils.STACKHUT_DIR)
-
-        sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
-        # private clone for now - when OSS move into docker build
-        log.debug("Copying stackhut app")
-        shutil.rmtree('stackhut', ignore_errors=True)
-        sh.git('clone', 'git@github.com:StackHut/stackhut-app.git', 'stackhut')
-        shutil.rmtree('stackhut/.git')
+        # sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
 
         # Docker build
         service = Service(self.hutfile)
         service.build(self.push)
 
-        # cleanup
-        shutil.rmtree('stackhut')
         log.info("{} build complete".format(service.name))
 

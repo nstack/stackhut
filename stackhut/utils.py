@@ -21,6 +21,7 @@ import logging
 from boto.s3.connection import Key, S3Connection
 import requests
 import yaml
+from yaml import Loader, SafeLoader
 import sys
 import abc
 import os
@@ -37,6 +38,15 @@ HUTFILE = 'Hutfile'
 CONTRACTFILE = os.path.join(STACKHUT_DIR, 'service.json')
 IDLFILE = 'service.idl'
 S3_BUCKET = 'stackhut-payloads'
+
+# Fixup Yaml handling on py2
+def construct_yaml_str(self, node):
+    # Override the default string handling function
+    # to always return unicode objects
+    return self.construct_scalar(node)
+Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+SafeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+
 
 # Logging
 def setup_logging():
