@@ -274,7 +274,7 @@ class HutBuildCmd(utils.HutCmd):
         # TODO - move barrister call into process as running on py2.7 ?
         if not os.path.exists(utils.STACKHUT_DIR):
             os.mkdir(utils.STACKHUT_DIR)
-        # sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
+        sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
 
         # Docker build
         service = Service(self.hutfile)

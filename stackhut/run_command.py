@@ -21,6 +21,7 @@ import subprocess
 import uuid
 import os
 import shutil
+import sh
 
 from stackhut import barrister
 from stackhut import utils
@@ -164,8 +165,19 @@ class RunLocalCmd(RunCmd, LocalStore):
     """"Concrete Run Command using local files for dev"""
 
     def __init__(self, args):
+        # setup
+        # TODO - move barrister call into process as running on py2.7 ?
+        if not os.path.exists(utils.STACKHUT_DIR):
+            os.mkdir(utils.STACKHUT_DIR)
+        sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
+
         LocalStore.__init__(self, args.infile)
         RunCmd.__init__(self, args)
+
+    def run(self):
+
+
+        super().run()
 
     @staticmethod
     def parse_cmds(subparser):
