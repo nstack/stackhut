@@ -14,12 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import (unicode_literals, print_function, division, absolute_import)
-from future import standard_library
-standard_library.install_aliases()
-from builtins import *
 import argparse
-
 from stackhut import utils
 from stackhut.utils import log
 from stackhut.main_commands import COMMANDS

@@ -11,11 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import (unicode_literals, print_function, division, absolute_import)
-from future import standard_library
-standard_library.install_aliases()
-from builtins import *
-
 import subprocess
 import logging
 from boto.s3.connection import Key, S3Connection
@@ -38,14 +33,7 @@ HUTFILE = 'Hutfile'
 CONTRACTFILE = os.path.join(STACKHUT_DIR, 'service.json')
 IDLFILE = 'service.idl'
 S3_BUCKET = 'stackhut-payloads'
-
-# Fixup Yaml handling on py2
-def construct_yaml_str(self, node):
-    # Override the default string handling function
-    # to always return unicode objects
-    return self.construct_scalar(node)
-Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
-SafeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+ROOT_DIR = os.getcwd()
 
 
 # Logging
@@ -245,7 +233,7 @@ class LocalStore(IOStore):
 
     def put_response(self, s):
         with open(self._get_path('output.json'), "w") as f:
-            f.write(unicode(s))
+            f.write(s)
 
     def get_file(self, name):
         pass
@@ -255,37 +243,3 @@ class LocalStore(IOStore):
         return os.path.join(self.local_store, fname)
 
 
-## S3 helper functions
-# File upload / download helpers
-def download_file(url, fname=None):
-    """from http://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py"""
-    fname = url.split('/')[-1] if fname is None else fname
-    logging.info("Downloading file {} from {}".format(fname, url))
-    r = requests.get(url, stream=True)
-    with open(fname, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:  # filter out keep-alive new chunks
-                f.write(chunk)
-    return fname
-
-
-class Subprocess(object):
-    """Subprocess helper functions"""
-    @staticmethod
-    def call_strings(cmd, stdin):
-        try:
-            p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, stderr= p.communicate(input=stdin.encode())
-            exitcode = p.returncode
-        except OSError as e:
-            raise ServerError(-32002, 'OS error', dict(error=e.strerror))
-
-        if exitcode is not 0:
-            raise NonZeroExitError(exitcode, stderr.decode())
-        else:
-            return dict(stdout=stdout.decode())
-
-    @staticmethod
-    def call_files(cmd, stdin, stdout, stderr):
-        ret_val = subprocess.call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
-        return ret_val

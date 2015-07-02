@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys
 
@@ -28,6 +28,8 @@ requirements = [
     "PyYaml",
     "redis",
     "multipledispatch",
+    "werkzeug",
+    "json-rpc"
 ]
 
 # conditional requirements for py 2 or 3
@@ -79,8 +81,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',

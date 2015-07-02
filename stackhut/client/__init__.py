@@ -12,24 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-StackHut service support
-"""
-from stackhut.run_command import RunCloudCmd, RunLocalCmd
-from stackhut.build_commands import StackBuildCmd, HutBuildCmd
-
-# TODO - small commands go here...
-# different classes for common tasks
-# i.e. shell out, python code, etc.
-# & payload pattern matching helper classes
-
-
-
-# StackHut primary commands
-COMMANDS = [RunLocalCmd,
-            RunCloudCmd,
-            HutBuildCmd,
-            StackBuildCmd,
-            # debug, push, pull, test, etc.
-            ]
-
+from .client import *

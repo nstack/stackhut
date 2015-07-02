@@ -11,11 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import (unicode_literals, print_function, division, absolute_import)
-from future import standard_library
-
-standard_library.install_aliases()
-from builtins import *
 import json
 import subprocess
 import uuid
@@ -36,6 +31,7 @@ class RunCmd(HutCmd):
     """Base Run Command functionality"""
     def __init__(self, args):
         HutCmd.__init__(self, args)
+        self.store = None
 
         # setup the service contracts
         contract = barrister.contract_from_file(utils.CONTRACTFILE)
@@ -56,7 +52,7 @@ class RunCmd(HutCmd):
             log.error("Unknown stack")
             exit(1)
         # copy across the shim file
-        shutil.copy(os.path.join(utils.get_res_path('shims'), self.shim_file), os.getcwdu())
+        shutil.copy(os.path.join(utils.get_res_path('shims'), self.shim_file), utils.ROOT_DIR)
         self.shim_cmd = self.shim_exe + [self.shim_file]
 
     def run(self):
@@ -67,7 +63,7 @@ class RunCmd(HutCmd):
             log.debug('Starting up service')
 
             try:
-                in_str = self.get_request()
+                in_str = self.store.get_request()
                 input_json = json.loads(in_str)
             except:
                 raise utils.ParseError()
@@ -75,11 +71,11 @@ class RunCmd(HutCmd):
 
             # massage the JSON-RPC request if we don't receieve an entirely valid req
             default_service = input_json['serviceName']
-            self.set_task_id(input_json['id'])
+            self.store.set_task_id(input_json['id'])
 
             def _make_json_rpc(req):
-                req['jsonrpc'] = "2.0" if 'jsonrpc' not in req else req['jsonrpc']
-                req['id'] = str(uuid.uuid4()) if 'id' not in req else req['id']
+                if 'jsonrpc' not in req: req['jsonrpc'] = "2.0"
+                if 'id' not in req: req['id'] = str(uuid.uuid4())
                 # add the default interface if none exists
                 if req['method'].find('.') < 0:
                     req['method'] = "{}.{}".format(default_service, req['method'])
@@ -107,8 +103,8 @@ class RunCmd(HutCmd):
             log.info('Output - \n{}'.format(res))
             log.info('Shutting down service')
             # save output and log
-            self.put_response(json.dumps(res))
-            self.put_file(utils.LOGFILE)
+            self.store.put_response(json.dumps(res))
+            self.store.put_file(utils.LOGFILE)
             # cleanup
             os.remove(REQ_FIFO)
             os.remove(RESP_FIFO)
@@ -154,35 +150,33 @@ class RunCmd(HutCmd):
             log.exception("Shit, unhandled error! - {}".format(e))
             exit(1)
         finally:
-            os.remove(os.path.join(os.getcwdu(), self.shim_file))
+            os.remove(os.path.join(utils.ROOT_DIR, self.shim_file))
 
         # quit with correct exit code
         log.info('Service call complete')
         return 0
 
 
-class RunLocalCmd(RunCmd, LocalStore):
+class RunLocalCmd(RunCmd):
     """"Concrete Run Command using local files for dev"""
-
     def __init__(self, args):
         # setup
-        # TODO - move barrister call into process as running on py2.7 ?
         if not os.path.exists(utils.STACKHUT_DIR):
             os.mkdir(utils.STACKHUT_DIR)
         sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
 
-        LocalStore.__init__(self, args.infile)
+        self.store = LocalStore(args.infile)
         RunCmd.__init__(self, args)
 
     def run(self):
-
-
         super().run()
 
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(RunLocalCmd, RunLocalCmd).parse_cmds(subparser,
-                                                               'runlocal', "Run a StackHut service locally", RunLocalCmd)
+                                                               'runlocal',
+                                                               "Run a StackHut service locally",
+                                                               RunLocalCmd)
         subparser.add_argument("--infile", '-i', default='example_request.json',
                                help="Local file to use for input")
 
@@ -191,10 +185,14 @@ class RunCloudCmd(RunCmd, CloudStore):
 
     def __init__(self, args):
         RunCmd.__init__(self, args)
-        CloudStore.__init__(self, self.hutfile['name'], args.aws_id, args.aws_key)
+        self.store = CloudStore(self.hutfile['name'], args.aws_id, args.aws_key)
+
 
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(RunCloudCmd, RunCloudCmd).parse_cmds(subparser, 'run', "Run a StackHut service", RunCloudCmd)
+        subparser = super(RunCloudCmd, RunCloudCmd).parse_cmds(subparser,
+                                                               'run',
+                                                               "Run a StackHut service",
+                                                               RunCloudCmd)
         subparser.add_argument("aws_id", help="Key used to communicate with AWS")
         subparser.add_argument("aws_key", help="Key used to communicate with AWS")

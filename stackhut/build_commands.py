@@ -11,13 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from __future__ import (unicode_literals, print_function, division, absolute_import)
-from future import standard_library
-standard_library.install_aliases()
-from builtins import *
-from future.utils import PY2, PY3
-
 import os
 import shutil
 from jinja2 import Environment, FileSystemLoader
@@ -28,7 +21,6 @@ from stackhut import utils
 from stackhut.utils import log, AdminCmd
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
-root_dir = os.getcwd() if PY3 else os.getcwdu()
 
 class DockerEnv(object):
     def gen_dockerfile(self, template_name, template_params, dockerfile='Dockerfile'):
@@ -51,7 +43,7 @@ class DockerEnv(object):
         os.chdir(image_dir)
         self.gen_dockerfile(template_name, template_params)
         self.build_dockerfile(image_name, push)
-        os.chdir(root_dir)
+        os.chdir(utils.ROOT_DIR)
 
 
 # Base OS's that we support

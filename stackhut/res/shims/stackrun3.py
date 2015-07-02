@@ -16,7 +16,6 @@
 """
 Demo StackHut service
 """
-import sh  # allows shelling out to user code
 from app import SERVICES
 import json
 

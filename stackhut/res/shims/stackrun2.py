@@ -24,6 +24,10 @@ import sh  # allows shelling out to user code
 from app import SERVICES
 import json
 
+import sys
+print("path - {}".format(sys.path))
+
+
 def gen_error(code, msg=''):
     return dict(error=code, msg=msg)
 
