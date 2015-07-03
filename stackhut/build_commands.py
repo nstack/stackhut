@@ -67,7 +67,7 @@ class BaseOS(DockerEnv):
 class Fedora(BaseOS):
     name = 'fedora'
 
-    baseos_pkgs = ['python', 'python-pip']
+    baseos_pkgs = ['python3', 'python3-pip']
 
     def os_pkg_cmd(self, pkgs):
         return 'dnf -y install {}'.format(' '.join(pkgs))
@@ -92,7 +92,7 @@ class Fedora(BaseOS):
 class Alpine(BaseOS):
     name = 'alpine'
 
-    baseos_pkgs = ['python', 'py-pip', 'ca-certificates']
+    baseos_pkgs = ['python3', 'ca-certificates']
 
     def os_pkg_cmd(self, pkgs):
         return 'apk --update add {}'.format(' '.join(pkgs))
@@ -159,19 +159,19 @@ class NodeJS(Stack):
 # we need this as pkds installed per OS are OS dependent
 @dispatch(Fedora, Python2)
 def get_baseos_stack_pkgs(base_os, stack):
-    return []  # installed by default
+    return ['python', 'python-pip']
 
 @dispatch(Alpine, Python2)
 def get_baseos_stack_pkgs(base_os, stack):
-    return []  # installed by default
+    return ['python', 'py-pip']
 
 @dispatch(Fedora, Python3)
 def get_baseos_stack_pkgs(base_os, stack):
-    return ['python3', 'python3-pip']
+    return []  # installed by default
 
 @dispatch(Alpine, Python3)
 def get_baseos_stack_pkgs(base_os, stack):
-    return ['python3']
+    return []  # installed by default
 
 @dispatch(Fedora, NodeJS)
 def get_baseos_stack_pkgs(base_os, stack):

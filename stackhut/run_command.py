@@ -15,12 +15,13 @@ import json
 import subprocess
 import uuid
 import os
-import shutil
-import sh
+from distutils.dir_util import copy_tree
 
 from stackhut import barrister
 from stackhut import utils
 from stackhut.utils import log, HutCmd, CloudStore, LocalStore
+import server as server
+
 
 
 # Module Consts
@@ -31,8 +32,8 @@ class RunCmd(HutCmd):
     """Base Run Command functionality"""
     def __init__(self, args):
         HutCmd.__init__(self, args)
-        self.store = None
 
+        # TODO - move into build command
         # setup the service contracts
         contract = barrister.contract_from_file(utils.CONTRACTFILE)
         self.server = barrister.Server(contract)
@@ -41,19 +42,22 @@ class RunCmd(HutCmd):
         stack = self.hutfile['stack']
         if stack == 'python':
             self.shim_exe = ['/usr/bin/env', 'python3']
-            self.shim_file = 'stackrun3.py'
+            self.shim_runner = 'runner.py'
         elif stack == 'python2':
             self.shim_exe = ['/usr/bin/env', 'python2']
-            self.shim_file = 'stackrun2.py'
+            self.shim_runner = 'runner.py'
         elif stack == 'nodejs':
             self.shim_exe = ['/usr/bin/env', 'iojs', '--harmony']
-            self.shim_file = 'stackrun.js'
+            self.shim_runner = 'runner.js'
         else:
-            log.error("Unknown stack")
+            log.error("Unknown stack - {}".format(stack))
             exit(1)
-        # copy across the shim file
-        shutil.copy(os.path.join(utils.get_res_path('shims'), self.shim_file), utils.ROOT_DIR)
-        self.shim_cmd = self.shim_exe + [self.shim_file]
+        # copy across the shim files
+        self.shim_dir = os.path.join(utils.get_res_path('shims'), stack)
+        copy_tree(self.shim_dir, utils.ROOT_DIR)
+        # os.rename(os.path.join(utils.ROOT_DIR, self.shim_helper), 'stackhut.py')
+
+        self.shim_cmd = self.shim_exe + [self.shim_runner]
 
     def run(self):
         super().run()
@@ -70,7 +74,7 @@ class RunCmd(HutCmd):
             log.info('Input - \n{}'.format(input_json))
 
             # massage the JSON-RPC request if we don't receieve an entirely valid req
-            default_service = input_json['serviceName']
+            default_service = 'Default'  # input_json['serviceName']
             self.store.set_task_id(input_json['id'])
 
             def _make_json_rpc(req):
@@ -94,6 +98,9 @@ class RunCmd(HutCmd):
             os.remove(RESP_FIFO) if os.path.exists(RESP_FIFO) else None
             os.mkfifo(REQ_FIFO)
             os.mkfifo(RESP_FIFO)
+
+            # startup the local helper service
+            server.init(self.store)
 
             return reqs  # anything else
 
@@ -120,7 +127,7 @@ class RunCmd(HutCmd):
             p = subprocess.Popen(self.shim_cmd, shell=False, stderr=subprocess.STDOUT)
             # blocking-wait to send the request
             with open(REQ_FIFO, "w") as f:
-                f.write(unicode(json.dumps(req)))
+                f.write(json.dumps(req))
             # blocking-wait to read the resp
             with open(RESP_FIFO, "r") as f:
                 resp = json.loads(f.read())
@@ -150,7 +157,8 @@ class RunCmd(HutCmd):
             log.exception("Shit, unhandled error! - {}".format(e))
             exit(1)
         finally:
-            os.remove(os.path.join(utils.ROOT_DIR, self.shim_file))
+            os.remove(os.path.join(utils.ROOT_DIR, self.shim_runner))
+            os.remove(os.path.join(utils.ROOT_DIR, 'helper.py'))
 
         # quit with correct exit code
         log.info('Service call complete')
@@ -163,10 +171,10 @@ class RunLocalCmd(RunCmd):
         # setup
         if not os.path.exists(utils.STACKHUT_DIR):
             os.mkdir(utils.STACKHUT_DIR)
-        sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
+        # sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
 
-        self.store = LocalStore(args.infile)
         RunCmd.__init__(self, args)
+        self.store = LocalStore(args.infile)
 
     def run(self):
         super().run()

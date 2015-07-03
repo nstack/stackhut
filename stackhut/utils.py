@@ -39,6 +39,7 @@ ROOT_DIR = os.getcwd()
 # Logging
 def setup_logging():
     log = logging.getLogger('stackhut')
+    log.propagate = False
     logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s] %(message)s', '%H:%M:%S')
     # file output
     fileHandler = logging.FileHandler(LOGFILE, mode='w')
@@ -61,6 +62,7 @@ def set_log_level(args_level):
     elif args_level >= 2:
         loglevel = logging.DEBUG
     log.setLevel(loglevel)
+
 
 # setup app paths
 # src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))

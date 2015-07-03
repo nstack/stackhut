@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """Main interface into client stackhut code"""
-# TODO - move into separate RPC server
+import threading
 import requests
 import sh
 from werkzeug.wrappers import Request, Response
@@ -26,7 +26,16 @@ store = None
 def init(_store):
     global store
     store = _store
-    run_simple('localhost', 4000, application)
+
+    def run_server():
+         # start in a new thread
+         log.debug("Starting StackHut helper-server")
+         run_simple('localhost', 4000, application, threaded=False)
+
+    # start server in sep thread
+    t = threading.Thread(target=run_server)
+    t.daemon = True
+    t.start()
 
 def shutdown():
     pass
@@ -82,10 +91,4 @@ def application(request):
     # dispatcher["add"] = lambda a, b: a + b
     response = JSONRPCResponseManager.handle(request.data, dispatcher)
     return Response(response.json, mimetype='application/json')
-
-
-if __name__ == '__main__':
-    init(None)
-    # TODO - setup rpc server here
-    shutdown()
 

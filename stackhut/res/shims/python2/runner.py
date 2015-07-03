@@ -20,13 +20,8 @@ from __future__ import (unicode_literals, print_function, division, absolute_imp
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *
-import sh  # allows shelling out to user code
 from app import SERVICES
 import json
-
-import sys
-print("path - {}".format(sys.path))
-
 
 def gen_error(code, msg=''):
     return dict(error=code, msg=msg)
