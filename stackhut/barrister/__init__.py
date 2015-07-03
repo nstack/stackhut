@@ -11,10 +11,6 @@
     :copyright: 2012 by James Cooper.
     :license: MIT, see LICENSE for more details.
 """
-from __future__ import (unicode_literals, print_function, division, absolute_import)
-from future import standard_library
-standard_library.install_aliases()
-from builtins import *
 __version__ = '0.1.7'
 
 from .runtime import contract_from_file, idgen_uuid, idgen_seq

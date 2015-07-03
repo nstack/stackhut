@@ -135,10 +135,16 @@ class Stack(DockerEnv):
                                 dict(baseos=baseos, stack=self, baseos_stack_pkgs=baseos_stack_pkgs),
                                 outdir, image_name, push)
 
+    def install_stack_pkgs(self):
+        return ''
 
 class Python2(Stack):
     name = 'python2'
     entrypoint = 'app.py'
+
+    @property
+    def check_install_stack_pkgs(self):
+        return os.path.exists('requirements.txt')
 
     def install_stack_pkgs(self):
         return 'pip2 install --no-cache-dir --compile -r requirements.txt'
@@ -147,8 +153,12 @@ class Python3(Stack):
     name = 'python3'
     entrypoint = 'app.py'
 
+    @property
+    def check_install_stack_pkgs(self):
+        return os.path.exists('requirements.txt')
+
     def install_stack_pkgs(self):
-        return 'pip3 install --no-cache-dir --compile -r requirements.txt'
+        return 'pip2 install --no-cache-dir --compile -r requirements.txt'
 
 class NodeJS(Stack):
     name = 'nodejs'

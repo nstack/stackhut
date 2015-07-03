@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Main interface into client stackhut code"""
 import threading
 import requests
@@ -23,6 +22,14 @@ from stackhut.utils import ServerError, NonZeroExitError, log
 
 store = None
 
+@Request.application
+def application(request):
+    # Dispatcher is dictionary {<method_name>: callable}
+    # dispatcher["echo"] = lambda s: s
+    # dispatcher["add"] = lambda a, b: a + b
+    response = JSONRPCResponseManager.handle(request.data, dispatcher)
+    return Response(response.json, mimetype='application/json')
+
 def init(_store):
     global store
     store = _store
@@ -33,9 +40,7 @@ def init(_store):
          run_simple('localhost', 4000, application, threaded=False)
 
     # start server in sep thread
-    t = threading.Thread(target=run_server)
-    t.daemon = True
-    t.start()
+    threading.Thread(target=run_server, daemon=True).start()
 
 def shutdown():
     pass
@@ -44,8 +49,6 @@ def shutdown():
 def put_file(fname, make_public=False):
     return store.put_file(fname, make_public)
 
-
-## S3 helper functions
 # File upload / download helpers
 @dispatcher.add_method
 def download_file(url, fname=None):
@@ -84,11 +87,4 @@ def run_command(cmd, stdin=''):
 #     ret_val = subprocess.call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
 #     return ret_val
 
-@Request.application
-def application(request):
-    # Dispatcher is dictionary {<method_name>: callable}
-    # dispatcher["echo"] = lambda s: s
-    # dispatcher["add"] = lambda a, b: a + b
-    response = JSONRPCResponseManager.handle(request.data, dispatcher)
-    return Response(response.json, mimetype='application/json')
 

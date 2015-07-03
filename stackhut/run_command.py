@@ -20,9 +20,7 @@ from distutils.dir_util import copy_tree
 from stackhut import barrister
 from stackhut import utils
 from stackhut.utils import log, HutCmd, CloudStore, LocalStore
-import server as server
-
-
+from stackhut import shim_server
 
 # Module Consts
 REQ_FIFO = 'req.json'
@@ -100,7 +98,7 @@ class RunCmd(HutCmd):
             os.mkfifo(RESP_FIFO)
 
             # startup the local helper service
-            server.init(self.store)
+            shim_server.init(self.store)
 
             return reqs  # anything else
 
@@ -158,7 +156,7 @@ class RunCmd(HutCmd):
             exit(1)
         finally:
             os.remove(os.path.join(utils.ROOT_DIR, self.shim_runner))
-            os.remove(os.path.join(utils.ROOT_DIR, 'helper.py'))
+            os.remove(os.path.join(utils.ROOT_DIR, 'stackhut.py'))
 
         # quit with correct exit code
         log.info('Service call complete')

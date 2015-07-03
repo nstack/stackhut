@@ -11,8 +11,9 @@ RUN echo "Starting..." && \
     echo "...done" && exit
 {% endif %}
 
+
 {% if service.lang_deps %}
-# Run any lang deps here
+# install lang packages needed for stack
 RUN {{ service.stack.install_stack_pkgs() }}
 {% endif %}
 

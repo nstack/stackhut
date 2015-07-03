@@ -20,4 +20,4 @@ ONBUILD COPY .stackhut ./.stackhut
 # setup the python path
 # ONBUILD ENV PYTHONPATH /stackhut/src
 # setup the eventual entrypoint (using -vv for now)
-ONBUILD ENTRYPOINT ["/usr/bin/python2", "/usr/bin/stackhut", "-vv", "run"]
+ONBUILD ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-vv", "run"]
