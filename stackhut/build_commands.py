@@ -141,24 +141,26 @@ class Stack(DockerEnv):
 class Python2(Stack):
     name = 'python2'
     entrypoint = 'app.py'
+    package_file = 'requirements.txt'
 
     @property
-    def check_install_stack_pkgs(self):
-        return os.path.exists('requirements.txt')
+    def get_install_stack_file(self):
+        return self.package_file if os.path.exists(self.package_file) else None
 
     def install_stack_pkgs(self):
         return 'pip2 install --no-cache-dir --compile -r requirements.txt'
 
-class Python3(Stack):
-    name = 'python3'
+class Python(Stack):
+    name = 'python'
     entrypoint = 'app.py'
+    package_file = 'requirements.txt'
 
     @property
-    def check_install_stack_pkgs(self):
-        return os.path.exists('requirements.txt')
+    def get_install_stack_file(self):
+        return self.package_file if os.path.exists(self.package_file) else None
 
     def install_stack_pkgs(self):
-        return 'pip2 install --no-cache-dir --compile -r requirements.txt'
+        return 'pip3 install --no-cache-dir --compile -r requirements.txt'
 
 class NodeJS(Stack):
     name = 'nodejs'
@@ -175,11 +177,11 @@ def get_baseos_stack_pkgs(base_os, stack):
 def get_baseos_stack_pkgs(base_os, stack):
     return ['python', 'py-pip']
 
-@dispatch(Fedora, Python3)
+@dispatch(Fedora, Python)
 def get_baseos_stack_pkgs(base_os, stack):
     return []  # installed by default
 
-@dispatch(Alpine, Python3)
+@dispatch(Alpine, Python)
 def get_baseos_stack_pkgs(base_os, stack):
     return []  # installed by default
 
@@ -198,7 +200,7 @@ def get_baseos_stack_pkgs(base_os, stack):
 
 # Main configs we support
 bases = [Fedora(), Alpine()]
-stacks = [Python2(), Python3(), NodeJS()]
+stacks = [Python(), Python2(), NodeJS()]
 
 def get_base(base_name):
     return [base for base in bases if base.name == base_name][0]
@@ -234,7 +236,6 @@ class StackBuildCmd(AdminCmd):
 
 
 class Service(DockerEnv):
-
     def __init__(self, hutfile):
         # get vals from the hutfile
         self.name = hutfile['name'].lower()
@@ -242,10 +243,9 @@ class Service(DockerEnv):
         self.email = hutfile['contact']
         self.version = 'latest'
         self.description = hutfile['description']
-        self.files = hutfile['files'] if 'files' in hutfile else []
-        self.os_deps = []
-        self.lang_deps = False
-        self.docker_cmds = []
+        self.files = hutfile.get('files', [])
+        self.os_deps = hutfile.get('os-deps', [])
+        self.docker_cmds = hutfile.get('docker-cmds', [])
         self.baseos = get_base(hutfile['baseos'])
         self.stack = get_stack(hutfile['stack'])
         self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)

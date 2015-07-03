@@ -64,6 +64,10 @@ class RunCmd(HutCmd):
         def _startup():
             log.debug('Starting up service')
 
+            # startup the local helper service
+            shim_server.init(self.store)
+
+            # get/wait for a request
             try:
                 in_str = self.store.get_request()
                 input_json = json.loads(in_str)
@@ -85,7 +89,7 @@ class RunCmd(HutCmd):
 
             if 'req' in input_json:
                 reqs = input_json['req']
-                if isinstance(reqs, list): # HACK
+                if type(reqs) is list:
                     reqs = [_make_json_rpc(req) for req in reqs]
                 else:
                     reqs = _make_json_rpc(reqs)
@@ -96,9 +100,6 @@ class RunCmd(HutCmd):
             os.remove(RESP_FIFO) if os.path.exists(RESP_FIFO) else None
             os.mkfifo(REQ_FIFO)
             os.mkfifo(RESP_FIFO)
-
-            # startup the local helper service
-            shim_server.init(self.store)
 
             return reqs  # anything else
 

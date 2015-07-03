@@ -22,7 +22,6 @@ requirements = [
     "sh",
     "boto",
     "requests",
-    "markdown",
     "jinja2",
     "pyconfig",
     "PyYaml",
@@ -46,13 +45,13 @@ test_requirements = [
 
 setup(
     name='stackhut',
-    version='0.1.1',
+    version='0.1.2',
     description="Run your software in the cloud",
     long_description=(read('README.rst') + '\n\n' +
                       read('HISTORY.rst').replace('.. :changelog:', '') + '\n\n' +
                       read('AUTHORS.rst')),
     license='Apache',
-    author="Mandeep Gill",
+    author="Mandeep Gill  Leo Anthias",
     author_email='mandeep@stackhut.com',
     url='https://github.com/stackhut/stackhut-tool',
     # download_url = 'https://github.com/stackhut/stackhut-tool/tarball/0.1.0'
