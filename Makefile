@@ -39,7 +39,7 @@ lint:
 	flake8 stackhut tests
 
 test:
-	python setup.py test
+	python3 setup.py test
 
 test-all:
 	tox
@@ -62,9 +62,9 @@ release: dist
 	twine upload dist/*
 
 dist: clean
-	python setup.py sdist
-	python setup.py bdist_wheel
+	python3 setup.py sdist
+	python3 setup.py bdist_wheel
 	ls -l dist
 
 install: clean
-	python setup.py install
+	python3 setup.py install
