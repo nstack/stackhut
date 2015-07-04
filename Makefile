@@ -59,6 +59,8 @@ docs:
 	xdg-open docs/_build/html/index.html
 
 release: dist
+	git push
+	git push --tags
 	twine upload dist/*
 
 dist: clean

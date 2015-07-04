@@ -16,7 +16,7 @@ import subprocess
 import uuid
 import os
 from distutils.dir_util import copy_tree
-from sh import barrister
+import sh
 
 from stackhut import barrister
 from stackhut import utils
@@ -174,7 +174,7 @@ class RunLocalCmd(RunCmd):
         # setup
         if not os.path.exists(utils.STACKHUT_DIR):
             os.mkdir(utils.STACKHUT_DIR)
-        barrister('-j', utils.CONTRACTFILE, 'service.idl')
+        sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
 
         RunCmd.__init__(self, args)
         self.store = LocalStore(args.infile)

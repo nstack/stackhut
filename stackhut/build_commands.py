@@ -19,33 +19,42 @@ from sh import docker, barrister
 
 from stackhut import utils
 from stackhut.utils import log, AdminCmd
+import time
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
 
-class DockerEnv(object):
+class DockerEnv:
+    def __init__(self):
+        self.push = None
+        self.no_cache = None
+
+    def build(self, push, no_cache):
+        self.push = push
+        self.no_cache = no_cache
+
     def gen_dockerfile(self, template_name, template_params, dockerfile='Dockerfile'):
         rendered_template = template_env.get_template(template_name).render(template_params)
         with open(dockerfile, 'w') as f:
             f.write(rendered_template)
 
-    def build_dockerfile(self, image_name, push=False, author='stackhut', version='latest', dockerfile='Dockerfile', no_cache=False):
+    def build_dockerfile(self, image_name, author='stackhut', version='latest', dockerfile='Dockerfile'):
         tag = "{}/{}:{}".format(author, image_name, version)
         log.debug("Running docker build for {}".format(tag))
-        cache_flag = '--no-cache=True' if no_cache else '--no-cache=False'
+        cache_flag = '--no-cache=True' if self.no_cache else '--no-cache=False'
         cmds = ['build', '-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
         log.debug("Calling Docker with cmds - {}".format(cmds))
         docker(*cmds)
-        if push:
+        if self.push:
             log.info("Pushing {} to Docker Hub".format(tag))
             docker('push', '-f', tag)
 
-    def stack_build(self, template_name, template_params, outdir, image_name, push=False):
+    def stack_build(self, template_name, template_params, outdir, image_name):
         image_dir = os.path.join(outdir, image_name)
         if not os.path.exists(image_dir):
             os.mkdir(image_dir)
         os.chdir(image_dir)
         self.gen_dockerfile(template_name, template_params)
-        self.build_dockerfile(image_name, push)
+        self.build_dockerfile(image_name)
         os.chdir(utils.ROOT_DIR)
 
 
@@ -53,14 +62,18 @@ class DockerEnv(object):
 class BaseOS(DockerEnv):
     name = None
 
+    def __init__(self):
+        super().__init__()
+
     @property
     def description(self):
         return "Base OS image using {}".format(self.name.capitalize())
 
-    def build(self, outdir, push):
+    def build(self, outdir, *args):
+        super().build(*args)
         log.info("Building image for base {}".format(self.name))
         image_name = self.name
-        super().stack_build('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name, push)
+        super().stack_build('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name)
 
 
 class Fedora(BaseOS):
@@ -119,11 +132,15 @@ class Stack(DockerEnv):
     name = None
     entrypoint = None
 
+    def __init__(self):
+        super().__init__()
+
     @property
     def description(self):
         return "Support for language stack {}".format(self.name.capitalize())
 
-    def build(self, baseos, outdir, push):
+    def build(self, baseos, outdir, *args):
+        super().build(*args)
         log.info("Building image for base {} with stack {}".format(baseos.name, self.name))
         image_name = "{}-{}".format(baseos.name, self.name)
         baseos_stack_pkgs = get_baseos_stack_pkgs(baseos, self)
@@ -132,7 +149,7 @@ class Stack(DockerEnv):
             # only render the template if apy supported config
             super().stack_build('Dockerfile-stack.txt',
                                 dict(baseos=baseos, stack=self, baseos_stack_pkgs=baseos_stack_pkgs),
-                                outdir, image_name, push)
+                                outdir, image_name, push, no_cache)
 
     def install_stack_pkgs(self):
         return ''
@@ -217,25 +234,27 @@ class StackBuildCmd(AdminCmd):
         subparser.add_argument("--outdir", '-o', default='stacks',
                                help="Directory to save stacks to")
         subparser.add_argument("--push", '-p', action='store_true', help="Push image to public after")
+        subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
 
     def __init__(self, args):
         super().__init__(args)
         self.outdir = args.outdir
-        self.push = args.push
         if not os.path.exists(self.outdir):
             os.mkdir(self.outdir)
 
     def run(self):
         super().run()
         # build bases and stacks
-        [b.build(self.outdir, self.push) for b in bases]
-        [s.build(b, self.outdir, self.push) for b in bases for s in stacks]
+        [b.build(self.outdir, self.args.push, self.args.no_cache) for b in bases]
+        [s.build(b, self.outdir, self.args.push, self.args.no_cache) for b in bases for s in stacks]
         log.info("All base OS and Stack images built and deployed")
 
 
 
 class Service(DockerEnv):
     def __init__(self, hutfile):
+        super().__init__()
+
         # get vals from the hutfile
         self.name = hutfile['name'].lower()
         self.author = hutfile['author'].lower()
@@ -254,11 +273,15 @@ class Service(DockerEnv):
         self.stack = get_stack(hutfile['stack'])
         self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)
 
+    @property
+    def build_date(self):
+        return int(time.time())
 
-    def build(self, push):
+    def build(self, *args):
+        super().build(*args)
         dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
         self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-        self.build_dockerfile(self.name, push, self.author, self.version, dockerfile, True)
+        self.build_dockerfile(self.name, self.author, self.version, dockerfile)
 
 
 class HutBuildCmd(utils.HutCmd):
@@ -268,10 +291,10 @@ class HutBuildCmd(utils.HutCmd):
         subparser = super(HutBuildCmd, HutBuildCmd).parse_cmds(subparser, 'build',
                                                                "Build a StackHut service", HutBuildCmd)
         subparser.add_argument("--push", '-p', action='store_true', help="Push image to public after")
+        subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
 
     def __init__(self, args):
         super().__init__(args)
-        self.push = args.push
 
 # TODO - run clean cmd first
     def run(self):
@@ -285,7 +308,7 @@ class HutBuildCmd(utils.HutCmd):
 
         # Docker build
         service = Service(self.hutfile)
-        service.build(self.push)
+        service.build(self.args.push, self.args.no_cache)
 
         log.info("{} build complete".format(service.name))
 

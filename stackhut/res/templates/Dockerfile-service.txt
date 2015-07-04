@@ -11,9 +11,6 @@ RUN echo "Starting..." && \
     echo "...done" && exit
 {% endif %}
 
-# install stackhut app
-RUN pip3 install --no-cache-dir --compile stackhut
-
 # setup the env and copy all files and dirs across
 WORKDIR /workdir
 COPY Hutfile {{ service.stack.entrypoint }} {{ service.stack.get_install_stack_file }} {{ service.files|join(' ') }} ./
@@ -27,10 +24,14 @@ COPY {{ d }} ./{{ d }}
 RUN {{ service.stack.install_stack_pkgs() }}
 {% endif %}
 
+# setup the entrypoint (using -vv for now)
+ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-vv", "run"]
+
+# install stackhut app
+RUN pip3 install --no-cache-dir --compile stackhut  # cache bust - {{ service.build_date }}
+
 # any other Docker commands
 {% for cmd in service.docker_cmds -%}
 {{ cmd }}
 {% endfor -%}
 
-# setup the entrypoint (using -vv for now)
-ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-vv", "run"]
