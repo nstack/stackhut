@@ -404,7 +404,7 @@ class Server(object):
         self.contract.validate_request(iface_name, func_name, params)
 
         # call out here
-        result = context.props['callback'](method, params)
+        result = context.props['callback'](method, params, req['id'])
 
         self.contract.validate_response(iface_name, func_name, result)
         return result

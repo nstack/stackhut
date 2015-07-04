@@ -14,16 +14,22 @@
 import logging
 import requests
 import json
+import os
 
-logging.debug("Starting Python client-helper")
 url = "http://localhost:4000/jsonrpc"
 headers = {'content-type': 'application/json'}
 
 id_val = 0
+req_id = None
+root_dir = os.getcwd()
 
-def make_call(method, *params):
+def make_call(method, *_params):
     global id_val
-    # Example echo method
+    global req_id
+
+    params = list(_params)
+    params.insert(0, req_id)
+
     payload = {
         "method": method,
         "params": params,
@@ -31,12 +37,15 @@ def make_call(method, *params):
         "id": id_val,
     }
 
-    logging.debug("Making call - \n{}".format(payload))
     response = requests.post(
         url, data=json.dumps(payload), headers=headers).json()
 
     id_val += 1
-    return response["result"]
+
+    if 'result' in response:
+        return response["result"]
+    else:
+        raise RuntimeError(response['error'])
 
 def put_file(fname, make_public=False):
     return make_call('put_file', fname, make_public)

@@ -16,13 +16,18 @@
 """
 Demo StackHut service
 """
-from app import SERVICES
 import json
+import os
+import stackhut
+from app import SERVICES
 
 def gen_error(code, msg=''):
     return dict(error=code, msg=msg)
 
 def run(req):
+    # tell the client helper the current taskid
+    stackhut.req_id = req['req_id']
+
     iface_name, func_name = req['method'].split('.')
     params = req['params']
 
@@ -48,11 +53,15 @@ if __name__ == "__main__":
     with open("req.json", "r") as f:
         req = json.loads(f.read())
 
+    os.chdir(req['req_id'])
+
     # run the command
     try:
         resp = run(req)
     except Exception as e:
         resp = gen_error(-32000, str(e))
+
+    os.chdir(stackhut.root_dir)
 
     # save the output
     with open("resp.json", "w") as f:

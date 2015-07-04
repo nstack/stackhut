@@ -155,7 +155,7 @@ class IOStore(object):
         pass
 
     @abc.abstractmethod
-    def put_file(self, fname):
+    def put_file(self, fname, req_id='', make_public=False):
         pass
 
     def set_task_id(self, task_id):
@@ -186,7 +186,7 @@ class CloudStore(IOStore):
         return x
 
     def put_response(self, s):
-        """Save the resposnce JSON"""
+        """Save the response JSON"""
         log.debug("Pushing task result")
         self.redis.lpush(self.task_id, s.encode('utf-8'))
 
@@ -202,11 +202,12 @@ class CloudStore(IOStore):
         # return s
         pass
 
-    def put_file(self, fname, make_public=False):
+    def put_file(self, fname, req_id='', make_public=False):
         """Upload file to S3"""
-        k = self._create_key(fname)
-        k.set_contents_from_filename(fname)
-        log.info("Uploaded {} to S3".format(fname))
+        req_fname = os.path.join(req_id, fname)
+        k = self._create_key(req_fname)
+        k.set_contents_from_filename(req_fname)
+        log.info("Uploaded {} to S3".format(req_fname))
 
         res = k
         if make_public:
@@ -240,8 +241,13 @@ class LocalStore(IOStore):
     def get_file(self, name):
         pass
 
-    def put_file(self, fname, make_public=False):
-        shutil.copy(fname, self.local_store)
-        return os.path.join(self.local_store, fname)
+    def put_file(self, fname, req_id='', make_public=False):
+        """Put file into a subdir keyed by req_id in local store"""
+        req_fname = os.path.join(req_id, fname)
+        local_store_dir = os.path.join(self.local_store, req_id)
+
+        os.mkdir(local_store_dir) if not os.path.exists(local_store_dir) else None
+        shutil.copy(req_fname, local_store_dir)
+        return os.path.join(self.local_store, req_fname)
 
 

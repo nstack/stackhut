@@ -10,12 +10,3 @@ RUN echo "Starting..." && \
     {% endfor -%}
     echo "...done" && exit
 {% endif %}
-
-WORKDIR /workdir
-
-# copy the stackrun files into root
-ONBUILD COPY ./Hutfile ./
-ONBUILD COPY .stackhut ./.stackhut
-
-# setup the eventual entrypoint (using -vv for now)
-ONBUILD ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-vv", "run"]

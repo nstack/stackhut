@@ -16,6 +16,7 @@ import subprocess
 import uuid
 import os
 from distutils.dir_util import copy_tree
+from sh import barrister
 
 from stackhut import barrister
 from stackhut import utils
@@ -81,7 +82,7 @@ class RunCmd(HutCmd):
 
             def _make_json_rpc(req):
                 if 'jsonrpc' not in req: req['jsonrpc'] = "2.0"
-                if 'id' not in req: req['id'] = str(uuid.uuid4())
+                req['id'] = str(uuid.uuid4()) if 'id' not in req else str(req['id'])
                 # add the default interface if none exists
                 if req['method'].find('.') < 0:
                     req['method'] = "{}.{}".format(default_service, req['method'])
@@ -116,11 +117,14 @@ class RunCmd(HutCmd):
             os.remove(RESP_FIFO)
             os.remove(utils.LOGFILE)
 
-        def _run_ext(method, params):
+        def _run_ext(method, params, req_id):
             """Make a pseudo-function call across languages"""
             # TODO - optimise
-            # write the req
-            req = dict(method=method, params=params)
+            # make dir to hold any output
+            os.mkdir(req_id) if not os.path.exists(req_id) else None
+
+            # create the req
+            req = dict(method=method, params=params, req_id=req_id)
 
             # call out to sub process
             p = subprocess.Popen(self.shim_cmd, shell=False, stderr=subprocess.STDOUT)
@@ -149,8 +153,8 @@ class RunCmd(HutCmd):
 
         # Now run the main rpc commands
         try:
-            req = _startup()
-            resp = self.server.call(req, dict(callback=_run_ext))
+            reqs = _startup()
+            resp = self.server.call(reqs, dict(callback=_run_ext))
             _shutdown(resp)
         except Exception as e:
             log.exception("Shit, unhandled error! - {}".format(e))
@@ -170,7 +174,7 @@ class RunLocalCmd(RunCmd):
         # setup
         if not os.path.exists(utils.STACKHUT_DIR):
             os.mkdir(utils.STACKHUT_DIR)
-        # sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
+        barrister('-j', utils.CONTRACTFILE, 'service.idl')
 
         RunCmd.__init__(self, args)
         self.store = LocalStore(args.infile)
@@ -193,7 +197,6 @@ class RunCloudCmd(RunCmd, CloudStore):
     def __init__(self, args):
         RunCmd.__init__(self, args)
         self.store = CloudStore(self.hutfile['name'], args.aws_id, args.aws_key)
-
 
     @staticmethod
     def parse_cmds(subparser):

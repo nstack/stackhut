@@ -15,7 +15,7 @@ import os
 import shutil
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
-import sh
+from sh import docker, barrister
 
 from stackhut import utils
 from stackhut.utils import log, AdminCmd
@@ -28,13 +28,16 @@ class DockerEnv(object):
         with open(dockerfile, 'w') as f:
             f.write(rendered_template)
 
-    def build_dockerfile(self, image_name, push=False, author='stackhut', version='latest', dockerfile='Dockerfile'):
+    def build_dockerfile(self, image_name, push=False, author='stackhut', version='latest', dockerfile='Dockerfile', no_cache=False):
         tag = "{}/{}:{}".format(author, image_name, version)
         log.debug("Running docker build for {}".format(tag))
-        sh.docker('build', '-f', dockerfile, '-t', tag, '--rm', '.')
+        cache_flag = '--no-cache=True' if no_cache else '--no-cache=False'
+        cmds = ['build', '-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
+        log.debug("Calling Docker with cmds - {}".format(cmds))
+        docker(*cmds)
         if push:
             log.info("Pushing {} to Docker Hub".format(tag))
-            sh.docker('push', '-f', tag)
+            docker('push', '-f', tag)
 
     def stack_build(self, template_name, template_params, outdir, image_name, push=False):
         image_dir = os.path.join(outdir, image_name)
@@ -58,10 +61,6 @@ class BaseOS(DockerEnv):
         log.info("Building image for base {}".format(self.name))
         image_name = self.name
         super().stack_build('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name, push)
-
-    # py3_packages = ['boto', 'sh', 'requests', 'markdown', 'redis', 'jinja2']
-    # def pip_install_cmd(self, packages):
-    #     return 'pip3 install --no-cache-dir --compile {}'.format(packages.join(' '))
 
 
 class Fedora(BaseOS):
@@ -145,7 +144,7 @@ class Python2(Stack):
 
     @property
     def get_install_stack_file(self):
-        return self.package_file if os.path.exists(self.package_file) else None
+        return self.package_file if os.path.exists(self.package_file) else ''
 
     def install_stack_pkgs(self):
         return 'pip2 install --no-cache-dir --compile -r requirements.txt'
@@ -157,7 +156,7 @@ class Python(Stack):
 
     @property
     def get_install_stack_file(self):
-        return self.package_file if os.path.exists(self.package_file) else None
+        return self.package_file if os.path.exists(self.package_file) else ''
 
     def install_stack_pkgs(self):
         return 'pip3 install --no-cache-dir --compile -r requirements.txt'
@@ -243,17 +242,23 @@ class Service(DockerEnv):
         self.email = hutfile['contact']
         self.version = 'latest'
         self.description = hutfile['description']
-        self.files = hutfile.get('files', [])
-        self.os_deps = hutfile.get('os-deps', [])
-        self.docker_cmds = hutfile.get('docker-cmds', [])
+
+        # copy files and dirs separetly
+        files = hutfile.get('files', [])
+        self.files = [f for f in files if os.path.isfile(f)]
+        self.dirs = [d for d in files if os.path.isdir(d)]
+
+        self.os_deps = hutfile.get('os_deps', [])
+        self.docker_cmds = hutfile.get('docker_cmds', [])
         self.baseos = get_base(hutfile['baseos'])
         self.stack = get_stack(hutfile['stack'])
         self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)
 
+
     def build(self, push):
         dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
         self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-        self.build_dockerfile(self.name, push, self.author, self.version, dockerfile)
+        self.build_dockerfile(self.name, push, self.author, self.version, dockerfile, True)
 
 
 class HutBuildCmd(utils.HutCmd):
@@ -276,7 +281,7 @@ class HutBuildCmd(utils.HutCmd):
         # TODO - move barrister call into process as running on py2.7 ?
         if not os.path.exists(utils.STACKHUT_DIR):
             os.mkdir(utils.STACKHUT_DIR)
-        sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
+        barrister('-j', utils.CONTRACTFILE, 'service.idl')
 
         # Docker build
         service = Service(self.hutfile)

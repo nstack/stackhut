@@ -11,9 +11,16 @@ RUN echo "Starting..." && \
     echo "...done" && exit
 {% endif %}
 
-# copy the application itself - needs to be done manually for now
-# TODO - fix to handle dirs
-COPY {{ service.stack.entrypoint }} {{ service.stack.get_install_stack_file }} {{ service.files|join(' ') }} ./
+# install stackhut app
+RUN pip3 install --no-cache-dir --compile stackhut
+
+# setup the env and copy all files and dirs across
+WORKDIR /workdir
+COPY Hutfile {{ service.stack.entrypoint }} {{ service.stack.get_install_stack_file }} {{ service.files|join(' ') }} ./
+COPY .stackhut ./.stackhut
+{% for d in service.dirs -%}
+COPY {{ d }} ./{{ d }}
+{% endfor -%}
 
 {% if service.stack.get_install_stack_file %}
 # install lang packages needed for stack
@@ -21,6 +28,9 @@ RUN {{ service.stack.install_stack_pkgs() }}
 {% endif %}
 
 # any other Docker commands
-{% for cmd in service.docker_cmds %}
+{% for cmd in service.docker_cmds -%}
 {{ cmd }}
-{% endfor %}
+{% endfor -%}
+
+# setup the entrypoint (using -vv for now)
+ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-vv", "run"]

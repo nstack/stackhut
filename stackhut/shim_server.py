@@ -13,6 +13,7 @@
 # limitations under the License.
 """Main interface into client stackhut code"""
 import threading
+import os
 import requests
 import sh
 from werkzeug.wrappers import Request, Response
@@ -22,11 +23,36 @@ from stackhut.utils import ServerError, NonZeroExitError, log
 
 store = None
 
+
+@dispatcher.add_method
+def put_file(req_id, fname, make_public=False):
+    return store.put_file(fname, req_id, make_public)
+
+# File upload / download helpers
+@dispatcher.add_method
+def download_file(req_id, url, fname=None):
+    """from http://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py"""
+    fname = url.split('/')[-1] if fname is None else fname
+    log.info(req_id)
+    task_fname = os.path.join(req_id, fname)
+    log.info("Downloading file {} from {}".format(task_fname, url))
+    r = requests.get(url, stream=True)
+    with open(task_fname, 'wb') as f:
+        for chunk in r.iter_content(chunk_size=1024):
+            if chunk:  # filter out keep-alive new chunks
+                f.write(chunk)
+    return fname
+
+@dispatcher.add_method
+def run_command(req_id, cmd, stdin=''):
+    try:
+        output = sh.Command(cmd, _in=stdin)
+    except sh.ErrorReturnCode as e:
+        raise NonZeroExitError(output.exit_code, e.stderr)
+    return output
+
 @Request.application
 def application(request):
-    # Dispatcher is dictionary {<method_name>: callable}
-    # dispatcher["echo"] = lambda s: s
-    # dispatcher["add"] = lambda a, b: a + b
     response = JSONRPCResponseManager.handle(request.data, dispatcher)
     return Response(response.json, mimetype='application/json')
 
@@ -44,31 +70,6 @@ def init(_store):
 
 def shutdown():
     pass
-
-@dispatcher.add_method
-def put_file(fname, make_public=False):
-    return store.put_file(fname, make_public)
-
-# File upload / download helpers
-@dispatcher.add_method
-def download_file(url, fname=None):
-    """from http://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py"""
-    fname = url.split('/')[-1] if fname is None else fname
-    log.info("Downloading file {} from {}".format(fname, url))
-    r = requests.get(url, stream=True)
-    with open(fname, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:  # filter out keep-alive new chunks
-                f.write(chunk)
-    return fname
-
-@dispatcher.add_method
-def run_command(cmd, stdin=''):
-    try:
-        output = sh.Command(cmd, _in=stdin)
-    except sh.ErrorReturnCode as e:
-        raise NonZeroExitError(output.exit_code, e.stderr)
-    return output
 
 # def run_command(cmd, stdin=''):
 #     try:
