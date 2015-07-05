@@ -20,8 +20,10 @@ import sh
 
 from stackhut import barrister
 from stackhut import utils
-from stackhut.utils import log, HutCmd, CloudStore, LocalStore
+from stackhut.utils import log, CloudStore, LocalStore
 from stackhut import shim_server
+from .commands import HutCmd
+from .primitives import run_barrister
 
 # Module Consts
 REQ_FIFO = 'req.json'
@@ -172,10 +174,7 @@ class RunLocalCmd(RunCmd):
     """"Concrete Run Command using local files for dev"""
     def __init__(self, args):
         # setup
-        if not os.path.exists(utils.STACKHUT_DIR):
-            os.mkdir(utils.STACKHUT_DIR)
-        sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
-
+        run_barrister()
         RunCmd.__init__(self, args)
         self.store = LocalStore(args.infile)
 

@@ -18,7 +18,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 # put package test requirements here
 requirements = [
     "wheel",
-    "future",
     "sh",
     "boto",
     "requests",

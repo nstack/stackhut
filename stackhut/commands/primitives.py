@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import shutil
+import time
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
-from sh import docker, barrister
+import sh
+from sh import docker
 
 from stackhut import utils
-from stackhut.utils import log, AdminCmd
-import time
+from stackhut.utils import log
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
 
@@ -149,7 +149,7 @@ class Stack(DockerEnv):
             # only render the template if apy supported config
             super().stack_build('Dockerfile-stack.txt',
                                 dict(baseos=baseos, stack=self, baseos_stack_pkgs=baseos_stack_pkgs),
-                                outdir, image_name, push, no_cache)
+                                outdir, image_name)
 
     def install_stack_pkgs(self):
         return ''
@@ -201,9 +201,9 @@ def get_baseos_stack_pkgs(base_os, stack):
 def get_baseos_stack_pkgs(base_os, stack):
     return []  # installed by default
 
-@dispatch(Fedora, NodeJS)
-def get_baseos_stack_pkgs(base_os, stack):
-    return None  # not supported
+# @dispatch(Fedora, NodeJS)
+# def get_baseos_stack_pkgs(base_os, stack):
+#     return None  # not supported
 
 @dispatch(Alpine, NodeJS)
 def get_baseos_stack_pkgs(base_os, stack):
@@ -211,47 +211,24 @@ def get_baseos_stack_pkgs(base_os, stack):
 
 @dispatch(object, object)
 def get_baseos_stack_pkgs(base_os, stack):
-    log.error("Os / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
+    # log.error("Os / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
     raise NotImplementedError()
 
-# Main configs we support
-bases = [Fedora(), Alpine()]
-stacks = [Python(), Python2(), NodeJS()]
 
-def get_base(base_name):
-    return [base for base in bases if base.name == base_name][0]
+bases = dict([(b.name, b) for b in [Alpine(), Fedora()]])
+stacks = dict([(s.name, s) for s in [Python(), NodeJS(), Python2()]])
 
-def get_stack(stack_name):
-    return [stack for stack in stacks if stack.name == stack_name][0]
-
-class StackBuildCmd(AdminCmd):
-    """Build StackHut service using docker"""
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(StackBuildCmd, StackBuildCmd).parse_cmds(subparser, 'stackbuild',
-                                                                   "Build the default OS and Stack images",
-                                                                   StackBuildCmd)
-        subparser.add_argument("--outdir", '-o', default='stacks',
-                               help="Directory to save stacks to")
-        subparser.add_argument("--push", '-p', action='store_true', help="Push image to public after")
-        subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
-
-    def __init__(self, args):
-        super().__init__(args)
-        self.outdir = args.outdir
-        if not os.path.exists(self.outdir):
-            os.mkdir(self.outdir)
-
-    def run(self):
-        super().run()
-        # build bases and stacks
-        [b.build(self.outdir, self.args.push, self.args.no_cache) for b in bases]
-        [s.build(b, self.outdir, self.args.push, self.args.no_cache) for b in bases for s in stacks]
-        log.info("All base OS and Stack images built and deployed")
-
+def is_stack_supported(base, stack):
+    """Return true if the baseos & stack combination is supported"""
+    try:
+        _ = get_baseos_stack_pkgs(base, stack)
+        return True
+    except NotImplementedError as e:
+        return False
 
 
 class Service(DockerEnv):
+    """Main primitive representing a StackHut service"""
     def __init__(self, hutfile):
         super().__init__()
 
@@ -269,8 +246,8 @@ class Service(DockerEnv):
 
         self.os_deps = hutfile.get('os_deps', [])
         self.docker_cmds = hutfile.get('docker_cmds', [])
-        self.baseos = get_base(hutfile['baseos'])
-        self.stack = get_stack(hutfile['stack'])
+        self.baseos = bases[(hutfile['baseos'])]
+        self.stack = stacks[(hutfile['stack'])]
         self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)
 
     @property
@@ -284,31 +261,12 @@ class Service(DockerEnv):
         self.build_dockerfile(self.name, self.author, self.version, dockerfile)
 
 
-class HutBuildCmd(utils.HutCmd):
-    """Build StackHut service using docker"""
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(HutBuildCmd, HutBuildCmd).parse_cmds(subparser, 'build',
-                                                               "Build a StackHut service", HutBuildCmd)
-        subparser.add_argument("--push", '-p', action='store_true', help="Push image to public after")
-        subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
 
-    def __init__(self, args):
-        super().__init__(args)
 
-# TODO - run clean cmd first
-    def run(self):
-        super().run()
-
-        # setup
-        # TODO - move barrister call into process as running on py2.7 ?
-        if not os.path.exists(utils.STACKHUT_DIR):
-            os.mkdir(utils.STACKHUT_DIR)
-        barrister('-j', utils.CONTRACTFILE, 'service.idl')
-
-        # Docker build
-        service = Service(self.hutfile)
-        service.build(self.args.push, self.args.no_cache)
-
-        log.info("{} build complete".format(service.name))
-
+# Helper functions
+# TODO - we should move these into a dep-style system - maybe use Makefiled in interrim
+def run_barrister():
+    # TODO - move barrister call into process as running on py2.7 ?
+    if not os.path.exists(utils.STACKHUT_DIR):
+        os.mkdir(utils.STACKHUT_DIR)
+    sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')

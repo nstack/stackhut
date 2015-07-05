@@ -15,16 +15,19 @@
 # limitations under the License.
 
 import argparse
-from stackhut import utils
+
+
+from stackhut import utils, __version__
 from stackhut.utils import log
-from stackhut.main_commands import COMMANDS
+from stackhut.commands import COMMANDS
+
 
 def main():
     # Parse the cmd args
     parser = argparse.ArgumentParser(description="StackHut CLI",
                                      epilog="Now build some crazy shit :)")
     parser.add_argument('-V', help='StackHut CLI Version',
-                        action="version", version="%(prog)s 0.1.0")
+                        action="version", version="%(prog)s {}".format(__version__))
     #    parser.add_argument("--hutfile", help="Path to user-defined hutfile (default: %(default)s)",
     #                        default=utils.HUTFILE, type=argparse.FileType('r', encoding='utf-8'))
     parser.add_argument('-v', dest='verbose', help="Verbosity level, add multiple times to increase",

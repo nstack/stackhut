@@ -14,9 +14,6 @@
 import subprocess
 import logging
 from boto.s3.connection import Key, S3Connection
-import requests
-import yaml
-from yaml import Loader, SafeLoader
 import sys
 import abc
 import os
@@ -34,7 +31,6 @@ CONTRACTFILE = os.path.join(STACKHUT_DIR, 'service.json')
 IDLFILE = 'service.idl'
 S3_BUCKET = 'stackhut-payloads'
 ROOT_DIR = os.getcwd()
-
 
 # Logging
 def setup_logging():
@@ -73,41 +69,8 @@ log.debug("StackHut res dir is {}".format(res_dir))
 #pyconfig.set('src_dir', src_dir)
 pyconfig.set('res_dir', res_dir)
 
-
 def get_res_path(res_name):
     return (os.path.join(res_dir, res_name))
-
-
-# Base command implementing common func
-class BaseCmd(object):
-    """The Base Command"""
-    @staticmethod
-    def parse_cmds(subparsers, cmd_name, description, cls):
-        sp = subparsers.add_parser(cmd_name, help=description, description=description)
-        sp.set_defaults(func=cls)
-        return sp
-
-    def __init__(self, args):
-        self.args = args
-
-    @abc.abstractmethod
-    def run(self):
-        """Main entry point for a command with parsed cmd args"""
-        pass
-
-class HutCmd(BaseCmd):
-    """Hut Commands are run from a Hut stack dir requiring a Hutfile"""
-    def __init__(self, args):
-        super().__init__(args)
-        # import the hutfile
-        with open(HUTFILE, 'r') as f:
-            self.hutfile = yaml.safe_load(f)
-
-# Base command implementing common func
-class AdminCmd(BaseCmd):
-    def __init__(self, args):
-        super().__init__(args)
-
 
 
 # Error handling
@@ -140,7 +103,7 @@ class NonZeroExitError(barrister.RpcException):
         super(NonZeroExitError, self).__init__(code, msg, data)
 
 
-class IOStore(object):
+class IOStore:
     """A base wrapper wrapper around common IO task state"""
     @abc.abstractmethod
     def get_request(self):
