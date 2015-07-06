@@ -71,7 +71,7 @@ class ScaffoldCmd(BaseCmd):
         super().__init__(args)
         self.baseos = bases[args.baseos]
         self.stack = stacks[args.stack]
-        self.name = args.name
+        self.service_name = args.name
 
     def render_file(self, env, fname, params):
         rendered_template = env.get_template(fname).render(params)
@@ -81,15 +81,16 @@ class ScaffoldCmd(BaseCmd):
     def run(self):
         super().run()
         if is_stack_supported(self.baseos, self.stack):
-            log.info("Creating service {}".format(self.name))
+            log.info("Creating service {}".format(self.service_name))
             # checkout the scaffold into the service
-            sh.git.clone("git@github.com:StackHut/scaffold-{}.git".format(self.stack.name), self.name)
-            os.chdir(self.name)
+            sh.git.clone("git@github.com:StackHut/scaffold-{}.git".format(self.stack.name), self.service_name)
+            os.chdir(self.service_name)
             shutil.rmtree(".git")
 
             # now modify any files as required
             template_env = Environment(loader=FileSystemLoader(utils.get_res_path('.')))
-            files = ['Hutfile', 'example_request.json', 'service.idl']
+            files = ['Hutfile', 'example_request.json', 'service.idl',
+                     self.stack.entrypoint, 'README.md']
             for f in files:
                 self.render_file(template_env, f, dict(scaffold=self))
 
