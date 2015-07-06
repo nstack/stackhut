@@ -16,7 +16,6 @@ import time
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
 import sh
-from sh import docker
 
 from stackhut import utils
 from stackhut.utils import log
@@ -43,10 +42,10 @@ class DockerEnv:
         cache_flag = '--no-cache=True' if self.no_cache else '--no-cache=False'
         cmds = ['build', '-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
         log.debug("Calling Docker with cmds - {}".format(cmds))
-        docker(*cmds)
+        sh.docker(*cmds)
         if self.push:
             log.info("Pushing {} to Docker Hub".format(tag))
-            docker('push', '-f', tag)
+            sh.docker('push', '-f', tag)
 
     def stack_build(self, template_name, template_params, outdir, image_name):
         image_dir = os.path.join(outdir, image_name)
