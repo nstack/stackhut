@@ -27,6 +27,12 @@ RUN {{ service.stack.install_stack_pkgs() }}
 # setup the entrypoint (using -vv for now)
 ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-vv", "run"]
 
+# HACK for Barrister
+RUN echo "Starting..." && \
+    echo "#!/bin/sh" > /usr/bin/barrister && \
+    chmod 755 /usr/bin/barrister && \
+    echo "...done" && exit
+
 # install stackhut app
 RUN pip3 install --no-cache-dir --compile stackhut  # cache bust - {{ service.build_date }}
 
