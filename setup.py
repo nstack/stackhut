@@ -55,7 +55,7 @@ setup(
     url='https://github.com/stackhut/stackhut-tool',
     # download_url = 'https://github.com/stackhut/stackhut-tool/tarball/0.1.0'
     packages=[
-        'stackhut', 'stackhut.barrister'
+        'stackhut', 'stackhut.barrister', 'stackhut.commands'
     ],
     # package_dir={'stackhut-tool':
     #              'stackhut-tool'},

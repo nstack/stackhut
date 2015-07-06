@@ -211,8 +211,9 @@ def get_baseos_stack_pkgs(base_os, stack):
 
 @dispatch(object, object)
 def get_baseos_stack_pkgs(base_os, stack):
-    # log.error("Os / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
-    raise NotImplementedError()
+    log.debug("Os / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
+    return None
+    # raise NotImplementedError()
 
 
 bases = dict([(b.name, b) for b in [Alpine(), Fedora()]])
@@ -220,10 +221,9 @@ stacks = dict([(s.name, s) for s in [Python(), NodeJS(), Python2()]])
 
 def is_stack_supported(base, stack):
     """Return true if the baseos & stack combination is supported"""
-    try:
-        _ = get_baseos_stack_pkgs(base, stack)
+    if get_baseos_stack_pkgs(base, stack) is not None:
         return True
-    except NotImplementedError as e:
+    else:
         return False
 
 
