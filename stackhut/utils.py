@@ -167,17 +167,18 @@ class CloudStore(IOStore):
 
     def put_file(self, fname, req_id='', make_public=False):
         """Upload file to S3"""
+        log.info("Uploading to S3")
         req_fname = os.path.join(req_id, fname)
         k = self._create_key(req_fname)
         k.set_contents_from_filename(req_fname)
-        log.info("Uploaded {} to S3".format(req_fname))
+        log.info("Uploaded {} to {} in S3".format(req_fname, k))
 
-        res = k
         if make_public:
             k.set_acl('public-read')
             k.make_public()
-            res = k.generate_url(expires_in=0, query_auth=False)
-        return res
+            return str(k.generate_url(expires_in=0, query_auth=False))
+        else:
+            return str(k)
 
 class LocalStore(IOStore):
     local_store = "local_task"

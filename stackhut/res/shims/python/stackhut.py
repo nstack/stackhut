@@ -31,10 +31,10 @@ def make_call(method, *_params):
     params.insert(0, req_id)
 
     payload = {
-        "method": method,
-        "params": params,
-        "jsonrpc": "2.0",
-        "id": id_val,
+        'method': method,
+        'params': params,
+        'jsonrpc': '2.0',
+        'id': id_val,
     }
 
     response = requests.post(
@@ -43,7 +43,7 @@ def make_call(method, *_params):
     id_val += 1
 
     if 'result' in response:
-        return response["result"]
+        return response['result']
     else:
         raise RuntimeError(response['error'])
 
