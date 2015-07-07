@@ -25,7 +25,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from stackhut import utils
 from stackhut.utils import log
-from .primitives import Service, BaseOS, Stack, bases, stacks, is_stack_supported, run_barrister
+from .primitives import Service, BaseOS, Stack, bases, stacks, is_stack_supported, run_barrister, TestEnv
 
 # Base command implementing common func
 class BaseCmd:
@@ -93,7 +93,6 @@ class ScaffoldCmd(BaseCmd):
                      self.stack.entrypoint, 'README.md']
             for f in files:
                 self.render_file(template_env, f, dict(scaffold=self))
-
         else:
             print("Sorry that combination is not supported")
 
@@ -152,3 +151,27 @@ class HutBuildCmd(HutCmd):
         log.info("{} build complete".format(service.name))
 
 
+class TestLocalCmd(HutCmd):
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(ScaffoldCmd, ScaffoldCmd).parse_cmds(subparser, 'testlocal',
+                            "Test Service inside container using specified input", TestLocalCmd)
+        subparser.add_argument("--infile", '-i', default='example_request.json',
+                               help="Local file to use for test input")
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.infile = self.args.infile
+
+    def run(self):
+        super().run()
+
+        docker_env = TestEnv(self.hutfile, self.infile)
+        tag = docker_env.build(False, False)
+
+        log.info("Running test service with {}".format(self.infile))
+        out = sh.docker.run(tag)
+        log.info("Ran test service - log output below...")
+        log.info(out)
+
+        # sh.docker.rmi(tag)

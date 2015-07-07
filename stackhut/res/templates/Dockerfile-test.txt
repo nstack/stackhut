@@ -1,0 +1,8 @@
+FROM stackhut/{{ test.name }}:latest
+# MAINTAINER "{{ test.author }}"
+
+# copy across the test file
+COPY {{ test.infile }} ./
+
+# setup new entrypoint (using -vv as testing)
+ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-vv", "runlocal", "-i", "{{ test.infilename }}"]

@@ -21,6 +21,7 @@ COMMANDS = [RunLocalCmd,
             RunCloudCmd,
             HutBuildCmd,
             StackBuildCmd,
-            ScaffoldCmd
+            ScaffoldCmd,
+            TestLocalCmd
             # debug, push, pull, test, etc.
             ]

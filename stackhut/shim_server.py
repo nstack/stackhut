@@ -25,7 +25,7 @@ store = None
 
 
 @dispatcher.add_method
-def put_file(req_id, fname, make_public=False):
+def put_file(req_id, fname, make_public=True):
     return store.put_file(fname, req_id, make_public)
 
 # File upload / download helpers

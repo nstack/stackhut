@@ -46,6 +46,7 @@ class DockerEnv:
         if self.push:
             log.info("Pushing {} to Docker Hub".format(tag))
             sh.docker('push', '-f', tag)
+        return tag
 
     def stack_build(self, template_name, template_params, outdir, image_name):
         image_dir = os.path.join(outdir, image_name)
@@ -260,6 +261,21 @@ class Service(DockerEnv):
         self.build_dockerfile(self.name, self.author, self.version, dockerfile)
 
 
+class TestEnv(DockerEnv):
+    def __init__(self, hutfile, infile):
+        super().__init__()
+        self.infile = infile
+        self.infilename = os.path.basename(infile)
+
+        self.name = hutfile['name'].lower()
+        self.author = hutfile['author'].lower()
+        self.version = 'test'
+
+    def build(self, *args):
+        super().build(*args)
+        dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile-test')
+        self.gen_dockerfile('Dockerfile-test.txt', dict(test=self), dockerfile)
+        return self.build_dockerfile(self.name, self.author, self.version, dockerfile)
 
 
 # Helper functions

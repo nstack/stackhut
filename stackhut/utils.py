@@ -165,7 +165,7 @@ class CloudStore(IOStore):
         # return s
         pass
 
-    def put_file(self, fname, req_id='', make_public=False):
+    def put_file(self, fname, req_id='', make_public=True):
         """Upload file to S3"""
         log.info("Uploading to S3")
         req_fname = os.path.join(req_id, fname)
@@ -205,7 +205,7 @@ class LocalStore(IOStore):
     def get_file(self, name):
         pass
 
-    def put_file(self, fname, req_id='', make_public=False):
+    def put_file(self, fname, req_id='', make_public=True):
         """Put file into a subdir keyed by req_id in local store"""
         req_fname = os.path.join(req_id, fname)
         local_store_dir = os.path.join(self.local_store, req_id)
