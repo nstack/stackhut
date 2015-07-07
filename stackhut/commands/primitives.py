@@ -215,7 +215,7 @@ def get_baseos_stack_pkgs(base_os, stack):
     # raise NotImplementedError()
 
 
-bases = dict([(b.name, b) for b in [Fedora()]]) # [Alpine(), Fedora()]])
+bases = dict([(b.name, b) for b in [Alpine(), Fedora()]])
 stacks = dict([(s.name, s) for s in [Python(), NodeJS(), Python2()]])
 
 def is_stack_supported(base, stack):
