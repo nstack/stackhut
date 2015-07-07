@@ -176,9 +176,9 @@ class CloudStore(IOStore):
         if make_public:
             k.set_acl('public-read')
             k.make_public()
-            return str(k.generate_url(expires_in=0, query_auth=False))
+            return k.generate_url(expires_in=0, query_auth=False)
         else:
-            return str(k)
+            return k.key
 
 class LocalStore(IOStore):
     local_store = "local_task"

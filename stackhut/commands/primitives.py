@@ -234,8 +234,8 @@ class Service(DockerEnv):
         # get vals from the hutfile
         self.name = hutfile['name'].lower()
         self.author = hutfile['author'].lower()
-        self.email = hutfile['contact']
         self.version = 'latest'
+        self.email = hutfile['contact']
         self.description = hutfile['description']
 
         # copy files and dirs separetly
