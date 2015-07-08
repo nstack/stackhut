@@ -20,11 +20,14 @@ import os
 import shutil
 import redis
 import pyconfig
+import yaml
+import json
 
 from stackhut import barrister
 
 # global constants
 STACKHUT_DIR = '.stackhut'
+CFGFILE = os.path.expanduser(os.path.join('~', '.stackhut.cfg'))
 LOGFILE = '.stackhut.log'
 HUTFILE = 'Hutfile'
 CONTRACTFILE = os.path.join(STACKHUT_DIR, 'service.json')
@@ -215,3 +218,42 @@ class LocalStore(IOStore):
         return os.path.join(self.local_store, req_fname)
 
 
+class StackHutCfg(dict):
+    """Wrapper calss around dict that uses a json backing store"""
+    def __init__(self):
+        super().__init__()
+
+        if os.path.exists(CFGFILE):
+            with open(CFGFILE, 'r') as f:
+                self.update(json.load(f))
+
+    def save(self):
+        with open(CFGFILE, 'w') as f:
+            json.dump(self, f)
+
+
+class HutfileCfg:
+    def __init__(self):
+        # import the hutfile
+        with open(HUTFILE, 'r') as f:
+            hutfile = yaml.safe_load(f)
+
+        # TODO - validatdation
+
+        # get vals from the hutfile
+        self.name = hutfile['name'].lower()
+        self.author = hutfile['author'].lower()
+        self.version = 'latest'
+        self.email = hutfile['contact']
+        self.description = hutfile['description']
+
+        # copy files and dirs separetly
+        files = hutfile.get('files', [])
+        self.files = [f for f in files if os.path.isfile(f)]
+        self.dirs = [d for d in files if os.path.isdir(d)]
+
+        self.os_deps = hutfile.get('os_deps', [])
+        self.docker_cmds = hutfile.get('docker_cmds', [])
+        self.baseos = hutfile['baseos']
+        self.stack = hutfile['stack']
+        self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)

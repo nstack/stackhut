@@ -49,8 +49,7 @@ class HutCmd(BaseCmd):
     def __init__(self, args):
         super().__init__(args)
         # import the hutfile
-        with open(utils.HUTFILE, 'r') as f:
-            self.hutfile = yaml.safe_load(f)
+        self.hutcfg = utils.HutfileCfg()
 
 # Base command implementing common func
 class AdminCmd(BaseCmd):
@@ -125,7 +124,6 @@ class StackBuildCmd(AdminCmd):
         log.info("All base OS and Stack images built and deployed")
 
 
-
 class HutBuildCmd(HutCmd):
     """Build StackHut service using docker"""
     @staticmethod
@@ -176,3 +174,85 @@ class TestLocalCmd(HutCmd):
         out = sh.docker.run('-v', '{}:/workdir/example_request.json:ro'.format(infile),
                             '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'runlocal', _out=lambda x: print(x, end=''))
         log.info("Finished test service")
+
+
+# Base command implementing common func
+class LoginCmd(AdminCmd):
+    def __init__(self, args):
+        super().__init__(args)
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(LoginCmd, LoginCmd).parse_cmds(subparser, 'login',
+                                                               "login to stackhut", LoginCmd)
+
+    def run(self):
+        super().run()
+
+        username = input("Username: ")
+        password = input("Password: ", )
+
+        # connect to Stackhut service to get token
+        if True:
+            token = "dummytoken"
+
+            cfg = utils.StackHutCfg()
+            cfg['username'] = username
+            cfg['token'] = token
+            cfg.save()
+
+        else:
+            print("Incorrect username or password, please try again")
+
+
+# Base command implementing common func
+class LogoutCmd(AdminCmd):
+    def __init__(self, args):
+        super().__init__(args)
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(LogoutCmd, LogoutCmd).parse_cmds(subparser, 'logout',
+                                                           "logout to stackhut", LogoutCmd)
+
+    def run(self):
+        super().run(
+        cfg = utils.StackHutCfg()
+
+        # connect to Stackhut service to get token
+        body = dict(username=cfg['username'], token=cfg['token'])
+        print("Logged out {}".format(cfg['username']))
+
+        # blank out the cfg file
+        cfg['username'] = ''
+        cfg['token'] = ''
+        cfg.save()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

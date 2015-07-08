@@ -229,25 +229,12 @@ def is_stack_supported(base, stack):
 
 class Service(DockerEnv):
     """Main primitive representing a StackHut service"""
-    def __init__(self, hutfile):
+    def __init__(self, hutcfg):
         super().__init__()
 
-        # get vals from the hutfile
-        self.name = hutfile['name'].lower()
-        self.author = hutfile['author'].lower()
-        self.version = 'latest'
-        self.email = hutfile['contact']
-        self.description = hutfile['description']
-
-        # copy files and dirs separetly
-        files = hutfile.get('files', [])
-        self.files = [f for f in files if os.path.isfile(f)]
-        self.dirs = [d for d in files if os.path.isdir(d)]
-
-        self.os_deps = hutfile.get('os_deps', [])
-        self.docker_cmds = hutfile.get('docker_cmds', [])
-        self.baseos = bases[(hutfile['baseos'])]
-        self.stack = stacks[(hutfile['stack'])]
+        self.hutcfg = hutcfg
+        self.baseos = bases[(hutcfg['baseos'])]
+        self.stack = stacks[(hutcfg['stack'])]
         self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)
 
     @property
@@ -258,7 +245,7 @@ class Service(DockerEnv):
         super().build(*args)
         dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
         self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-        self.build_dockerfile(self.name, self.author, self.version, dockerfile)
+        self.build_dockerfile(self.hutcfg.name, self.hutcfg.author, self.hutcfg.version, dockerfile)
 
 
 # Helper functions

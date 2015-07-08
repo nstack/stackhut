@@ -1,11 +1,11 @@
 FROM stackhut/{{ service.from_image }}:latest
-MAINTAINER "{{ service.author }}" <{{ service.email }}>
-LABEL description="{{ service.description }}"
+MAINTAINER "{{ service.hutcfg.author }}" <{{ service.hutcfg.email }}>
+LABEL description="{{ service.hutcfg.description }}"
 
-{% if service.os_deps %}
+{% if service.hutcfg.os_deps %}
 # update the distro and commit
 RUN echo "Starting..." && \
-    {% for cmd in service.baseos.install_os_pkg(service.os_deps) -%}
+    {% for cmd in service.baseos.install_os_pkg(service.hutcfg.os_deps) -%}
     {{ cmd }} && \
     {% endfor -%}
     echo "...done" && exit
@@ -13,9 +13,9 @@ RUN echo "Starting..." && \
 
 # setup the env and copy all files and dirs across
 WORKDIR /workdir
-COPY Hutfile {{ service.stack.entrypoint }} {{ service.stack.get_install_stack_file }} {{ service.files|join(' ') }} ./
+COPY Hutfile {{ service.stack.entrypoint }} {{ service.stack.get_install_stack_file }} {{ service.hutcfg.files|join(' ') }} ./
 COPY .stackhut ./.stackhut
-{% for d in service.dirs -%}
+{% for d in service.hutcfg.dirs -%}
 COPY {{ d }} ./{{ d }}
 {% endfor -%}
 
@@ -37,7 +37,7 @@ RUN echo "Starting..." && \
 RUN pip3 install --no-cache-dir --compile stackhut  # cache bust - {{ service.build_date }}
 
 # any other Docker commands
-{% for cmd in service.docker_cmds -%}
+{% for cmd in service.hutcfg.docker_cmds -%}
 {{ cmd }}
 {% endfor -%}
 
