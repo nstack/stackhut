@@ -25,7 +25,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from stackhut import utils
 from stackhut.utils import log
-from .primitives import Service, BaseOS, Stack, bases, stacks, is_stack_supported, run_barrister, TestEnv
+from .primitives import Service, BaseOS, Stack, bases, stacks, is_stack_supported, run_barrister
 
 # Base command implementing common func
 class BaseCmd:
@@ -166,12 +166,13 @@ class TestLocalCmd(HutCmd):
     def run(self):
         super().run()
 
-        docker_env = TestEnv(self.hutfile, self.infile)
-        tag = docker_env.build(False, False)
+        name = self.hutfile['name'].lower()
+        author = self.hutfile['author'].lower()
+        version = 'latest'
+        tag = "{}/{}:{}".format(author, name, version)
+        infile = os.path.abspath(self.infile)
 
         log.info("Running test service with {}".format(self.infile))
-        out = sh.docker.run(tag)
-        log.info("Ran test service - log output below...")
-        log.info(out)
-
-        # sh.docker.rmi(tag)
+        out = sh.docker.run('-v', '{}:/workdir/example_request.json:ro'.format(infile),
+                            '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'runlocal', _out=lambda x: print(x, end=''))
+        log.info("Finished test service")
