@@ -47,7 +47,7 @@ def make_call(method, *_params):
     else:
         raise RuntimeError(response['error'])
 
-def put_file(fname, make_public=False):
+def put_file(fname, make_public=True):
     return make_call('put_file', fname, make_public)
 
 def download_file(url, fname=None):

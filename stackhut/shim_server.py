@@ -23,7 +23,6 @@ from stackhut.utils import ServerError, NonZeroExitError, log
 
 store = None
 
-
 @dispatcher.add_method
 def put_file(req_id, fname, make_public=True):
     return store.put_file(fname, req_id, make_public)

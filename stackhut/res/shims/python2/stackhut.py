@@ -39,7 +39,7 @@ def make_call(method, *params):
     id_val += 1
     return response["result"]
 
-def put_file(fname, make_public=False):
+def put_file(fname, make_public=True):
     return make_call('put_file', fname, make_public)
 
 def download_file(url, fname=None):
