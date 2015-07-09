@@ -176,7 +176,7 @@ class RunCloudCmd(RunCmd, CloudStore):
 
     def __init__(self, args):
         RunCmd.__init__(self, args)
-        self.store = CloudStore(self.hutcfg['name'], args.aws_id, args.aws_key)
+        self.store = CloudStore(self.hutcfg.name, args.aws_id, args.aws_key)
 
     @staticmethod
     def parse_cmds(subparser):
