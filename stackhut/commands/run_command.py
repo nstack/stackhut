@@ -40,7 +40,7 @@ class RunCmd(HutCmd):
         self.server = barrister.Server(contract)
 
         # select the stack
-        stack = self.hutfile['stack']
+        stack = self.hutcfg.stack
         if stack == 'python':
             self.shim_exe = ['/usr/bin/env', 'python3']
             self.shim_runner = 'runner.py'
@@ -195,7 +195,7 @@ class RunCloudCmd(RunCmd, CloudStore):
 
     def __init__(self, args):
         RunCmd.__init__(self, args)
-        self.store = CloudStore(self.hutfile['name'], args.aws_id, args.aws_key)
+        self.store = CloudStore(self.hutcfg['name'], args.aws_id, args.aws_key)
 
     @staticmethod
     def parse_cmds(subparser):

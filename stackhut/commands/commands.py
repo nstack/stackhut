@@ -18,8 +18,10 @@
 # & payload pattern matching helper classes
 import abc
 import yaml
+import json
 import os
 import shutil
+import getpass
 import sh
 from jinja2 import Environment, FileSystemLoader
 
@@ -55,6 +57,7 @@ class HutCmd(BaseCmd):
 class AdminCmd(BaseCmd):
     def __init__(self, args):
         super().__init__(args)
+        self.usercfg = utils.StackHutCfg()
 
 
 class ScaffoldCmd(BaseCmd):
@@ -143,7 +146,7 @@ class HutBuildCmd(HutCmd):
         run_barrister()
 
         # Docker build
-        service = Service(self.hutfile)
+        service = Service(self.hutcfg)
         service.build(self.args.push, self.args.no_cache)
 
         log.info("{} build complete".format(service.name))
@@ -164,10 +167,11 @@ class TestLocalCmd(HutCmd):
     def run(self):
         super().run()
 
-        name = self.hutfile['name'].lower()
-        author = self.hutfile['author'].lower()
+
+        name = self.hutcfg['name'].lower()
+        author = self.hutcfg['author'].lower()
         version = 'latest'
-        tag = "{}/{}:{}".format(author, name, version)
+        tag = self.hutcfg.tag
         infile = os.path.abspath(self.infile)
 
         log.info("Running test service with {}".format(self.infile))
@@ -184,23 +188,20 @@ class LoginCmd(AdminCmd):
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(LoginCmd, LoginCmd).parse_cmds(subparser, 'login',
-                                                               "login to stackhut", LoginCmd)
+                                                         "login to stackhut", LoginCmd)
 
     def run(self):
         super().run()
 
         username = input("Username: ")
-        password = input("Password: ", )
+        password = getpass.getpass("Password: ")
 
         # connect to Stackhut service to get token
         if True:
-            token = "dummytoken"
-
-            cfg = utils.StackHutCfg()
-            cfg['username'] = username
-            cfg['token'] = token
-            cfg.save()
-
+            self.usercfg['username'] = username
+            self.usercfg['password'] = password
+            # cfg['token'] = token
+            self.usercfg.save()
         else:
             print("Incorrect username or password, please try again")
 
@@ -216,43 +217,87 @@ class LogoutCmd(AdminCmd):
                                                            "logout to stackhut", LogoutCmd)
 
     def run(self):
-        super().run(
-        cfg = utils.StackHutCfg()
+        super().run()
 
         # connect to Stackhut service to get token
-        body = dict(username=cfg['username'], token=cfg['token'])
-        print("Logged out {}".format(cfg['username']))
-
+        print("Logged out {}".format(self.usercfg['username']))
         # blank out the cfg file
-        cfg['username'] = ''
-        cfg['token'] = ''
-        cfg.save()
+        self.usercfg['username'] = ''
+        self.usercfg['token'] = ''
+        self.usercfg.save()
 
 
 
 
+# Base command implementing common func
+# dockerImage: String, userName : String,
+# password : String,
+# methods : JsValue,
+# githubUrl : Option[String],
+# exampleRequest : Option[JsValue],
+# description : String)
 
+class DeployCmd(HutCmd, AdminCmd):
+    def __init__(self, args):
+        super().__init__(args)
 
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(DeployCmd, DeployCmd).parse_cmds(subparser, 'deploy',
+                                                           "deploy service to StackHut", DeployCmd)
 
+    def create_methods(self):
+        with open(utils.CONTRACTFILE, 'r') as f:
+            contract = json.load(f)
 
+        # remove the barrister element
+        interfaces = [x for x in contract if 'barrister_version' not in x]
 
+        def render_param(param):
+            # main render function
+            array_t = "[]" if param.get('is_array') else ''
+            name_type_t = param_t = "{}{}".format(array_t, param['type'])
+            if 'name' in param:
+                return "{} {}".format(param['name'], name_type_t)
+            else:
+                return name_type_t
 
+        def render_params(params):
+            return [render_param(p) for p in params]
 
+        def render_signature(method):
+            params_t = str.join(', ', render_params(method['params']))
+            return "{} ({}) {}".format(method['name'], params_t, render_param(method['returns']))
 
+        for i in interfaces:
+            for f in i['functions']:
+                f['signature'] = render_signature(f)
+                log.debug("Signature for {}.{} is \"{}\"".format(i['name'], f['name'], f['signature']))
 
+        return interfaces
 
+    def run(self):
+        super().run()
 
+        # build up the deploy message body
+        example_request = None
+        if os.path.exists('example_request.json'):
+            with open('example_request.json') as f:
+                example_request = json.load(f)
 
+        if self.usercfg['username'] != self.hutcfg.email:
+            log.error("StackHut username ({}) not equal to Hutfile contact email ({})".format(self.usercfg['username'], self.hutcfg.email))
+            return 1
 
+        data = {
+            'image_name': self.hutcfg.tag,
+            'git_url': None,
+            'example_request': example_request,
+            'description': self.hutcfg.description,
+            'methods': self.create_methods()
+        }
 
-
-
-
-
-
-
-
-
-
-
+        log.info("Deploying image {} to StackHut".format(self.hutcfg.tag))
+        utils.stackhut_api_secure_call('add', data, self.usercfg)
+        log.info("Image deployed")
 

@@ -17,12 +17,11 @@ from .run_command import RunCloudCmd, RunLocalCmd
 from .commands import *
 
 # StackHut primary commands
-COMMANDS = [RunLocalCmd,
-            RunCloudCmd,
-            HutBuildCmd,
-            StackBuildCmd,
-            ScaffoldCmd,
-            TestLocalCmd,
-            LoginCmd
-            # debug, push, pull, test, etc.
-            ]
+COMMANDS = [
+    RunCloudCmd, RunLocalCmd, TestLocalCmd,
+    HutBuildCmd, DeployCmd,
+    StackBuildCmd,
+    ScaffoldCmd,
+    LoginCmd, LogoutCmd,
+    # debug, push, pull, test, etc.
+]

@@ -17,6 +17,7 @@ from boto.s3.connection import Key, S3Connection
 import sys
 import abc
 import os
+import stat
 import shutil
 import redis
 import pyconfig
@@ -228,7 +229,9 @@ class StackHutCfg(dict):
                 self.update(json.load(f))
 
     def save(self):
+        # TODO - this is not thread-safe but ok for now
         with open(CFGFILE, 'w') as f:
+            os.chmod(CFGFILE, stat.S_IRUSR | stat.S_IWUSR)
             json.dump(self, f)
 
 
@@ -256,4 +259,30 @@ class HutfileCfg:
         self.docker_cmds = hutfile.get('docker_cmds', [])
         self.baseos = hutfile['baseos']
         self.stack = hutfile['stack']
-        self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)
+        self.from_image = "{}-{}".format(self.baseos, self.stack)
+        self.tag = "{}/{}:{}".format(self.author, self.name, self.version)
+
+
+secure_url_prefix = "https://api.stackhut.com/"
+unsecure_url_prefix = "http://api.stackhut.com/"
+headers = {'content-type': 'application/json'}
+
+import urllib.parse
+import requests
+
+def stackhut_api_call(endpoint, body, secure=False):
+    url_prefix = secure_url_prefix if secure else unsecure_url_prefix
+    url = urllib.parse.urljoin(url_prefix, endpoint)
+    log.debug("Calling Stackhut {} with \n\t{}".format(endpoint, body))
+    r = requests.post(url, data=json.dumps(body), headers=headers)
+
+    if r.status_code == requests.codes.ok:
+        return r.json()
+    else:
+        log.error("Error {} talking to stackhut server".format(r.status_code))
+        r.raise_for_status()
+
+def stackhut_api_secure_call(endpoint, body, usercfg):
+    body['username'] = usercfg['username']
+    body['password'] = usercfg['password']
+    return stackhut_api_call(endpoint, body, secure=True)
