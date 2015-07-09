@@ -222,8 +222,6 @@ class LogoutCmd(AdminCmd):
         self.usercfg.save()
 
 
-
-
 # Base command implementing common func
 # dockerImage: String, userName : String,
 # password : String,

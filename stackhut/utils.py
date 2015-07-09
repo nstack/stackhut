@@ -229,9 +229,11 @@ class StackHutCfg(dict):
                 self.update(json.load(f))
 
     def save(self):
-        # TODO - this is not thread-safe but ok for now
-        with open(CFGFILE, 'w') as f:
+        if not os.path.exists(CFGFILE):
+            open(CFGFILE, 'w').close()
             os.chmod(CFGFILE, stat.S_IRUSR | stat.S_IWUSR)
+
+        with open(CFGFILE, 'w') as f:
             json.dump(self, f)
 
 
