@@ -273,16 +273,17 @@ import requests
 def stackhut_api_call(endpoint, body, secure=False):
     url_prefix = secure_url_prefix if secure else unsecure_url_prefix
     url = urllib.parse.urljoin(url_prefix, endpoint)
-    log.debug("Calling Stackhut {} with \n\t{}".format(endpoint, body))
+    log.debug("Calling Stackhut {} with \n\t{}".format(endpoint, json.dumps(body)))
     r = requests.post(url, data=json.dumps(body), headers=headers)
 
     if r.status_code == requests.codes.ok:
         return r.json()
     else:
         log.error("Error {} talking to stackhut server".format(r.status_code))
+        log.error(r.text)
         r.raise_for_status()
 
 def stackhut_api_secure_call(endpoint, body, usercfg):
-    body['username'] = usercfg['username']
+    body['userName'] = usercfg['username']
     body['password'] = usercfg['password']
     return stackhut_api_call(endpoint, body, secure=True)

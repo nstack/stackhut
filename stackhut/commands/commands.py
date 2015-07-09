@@ -149,7 +149,7 @@ class HutBuildCmd(HutCmd):
         service = Service(self.hutcfg)
         service.build(self.args.push, self.args.no_cache)
 
-        log.info("{} build complete".format(service.name))
+        log.info("{} build complete".format(self.hutcfg.name))
 
 
 class TestLocalCmd(HutCmd):
@@ -166,11 +166,6 @@ class TestLocalCmd(HutCmd):
 
     def run(self):
         super().run()
-
-
-        name = self.hutcfg['name'].lower()
-        author = self.hutcfg['author'].lower()
-        version = 'latest'
         tag = self.hutcfg.tag
         infile = os.path.abspath(self.infile)
 
@@ -236,7 +231,6 @@ class LogoutCmd(AdminCmd):
 # githubUrl : Option[String],
 # exampleRequest : Option[JsValue],
 # description : String)
-
 class DeployCmd(HutCmd, AdminCmd):
     def __init__(self, args):
         super().__init__(args)
@@ -290,10 +284,10 @@ class DeployCmd(HutCmd, AdminCmd):
             return 1
 
         data = {
-            'image_name': self.hutcfg.tag,
-            'git_url': None,
-            'example_request': example_request,
-            'description': self.hutcfg.description,
+            'dockerImage': self.hutcfg.name,
+            'githubUrl': None,
+            'exampleRequest': example_request,
+            'desc': self.hutcfg.description,
             'methods': self.create_methods()
         }
 

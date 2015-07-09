@@ -15,7 +15,6 @@ import json
 import subprocess
 import uuid
 import os
-from distutils.dir_util import copy_tree
 import sh
 
 from stackhut import barrister
@@ -23,7 +22,7 @@ from stackhut import utils
 from stackhut.utils import log, CloudStore, LocalStore
 from stackhut import shim_server
 from .commands import HutCmd
-from .primitives import run_barrister
+from .primitives import run_barrister, stacks
 
 # Module Consts
 REQ_FIFO = 'req.json'
@@ -33,32 +32,14 @@ class RunCmd(HutCmd):
     """Base Run Command functionality"""
     def __init__(self, args):
         HutCmd.__init__(self, args)
-
-        # TODO - move into build command
         # setup the service contracts
         contract = barrister.contract_from_file(utils.CONTRACTFILE)
         self.server = barrister.Server(contract)
-
         # select the stack
-        stack = self.hutcfg.stack
-        if stack == 'python':
-            self.shim_exe = ['/usr/bin/env', 'python3']
-            self.shim_runner = 'runner.py'
-        elif stack == 'python2':
-            self.shim_exe = ['/usr/bin/env', 'python2']
-            self.shim_runner = 'runner.py'
-        elif stack == 'nodejs':
-            self.shim_exe = ['/usr/bin/env', 'iojs', '--harmony']
-            self.shim_runner = 'runner.js'
-        else:
+        self.stack = stacks.get(self.hutcfg.stack)
+        if self.stack is None:
             log.error("Unknown stack - {}".format(stack))
             exit(1)
-        # copy across the shim files
-        self.shim_dir = os.path.join(utils.get_res_path('shims'), stack)
-        copy_tree(self.shim_dir, utils.ROOT_DIR)
-        # os.rename(os.path.join(utils.ROOT_DIR, self.shim_helper), 'stackhut.py')
-
-        self.shim_cmd = self.shim_exe + [self.shim_runner]
 
     def run(self):
         super().run()
@@ -104,6 +85,7 @@ class RunCmd(HutCmd):
             os.mkfifo(REQ_FIFO)
             os.mkfifo(RESP_FIFO)
 
+            self.stack.copy_shim()
             return reqs  # anything else
 
         # called by service on exit - clean the system, write all output data and return control back to docker
@@ -114,10 +96,6 @@ class RunCmd(HutCmd):
             # save output and log
             self.store.put_response(json.dumps(res))
             self.store.put_file(utils.LOGFILE)
-            # cleanup
-            os.remove(REQ_FIFO)
-            os.remove(RESP_FIFO)
-            os.remove(utils.LOGFILE)
 
         def _run_ext(method, params, req_id):
             """Make a pseudo-function call across languages"""
@@ -129,7 +107,7 @@ class RunCmd(HutCmd):
             req = dict(method=method, params=params, req_id=req_id)
 
             # call out to sub process
-            p = subprocess.Popen(self.shim_cmd, shell=False, stderr=subprocess.STDOUT)
+            p = subprocess.Popen(self.stack.shim_cmd, shell=False, stderr=subprocess.STDOUT)
             # blocking-wait to send the request
             with open(REQ_FIFO, "w") as f:
                 f.write(json.dumps(req))
@@ -162,8 +140,11 @@ class RunCmd(HutCmd):
             log.exception("Shit, unhandled error! - {}".format(e))
             exit(1)
         finally:
-            os.remove(os.path.join(utils.ROOT_DIR, self.shim_runner))
-            os.remove(os.path.join(utils.ROOT_DIR, 'stackhut.py'))
+            # cleanup
+            self.stack.del_shim()
+            os.remove(REQ_FIFO)
+            os.remove(RESP_FIFO)
+            os.remove(utils.LOGFILE)
 
         # quit with correct exit code
         log.info('Service call complete')

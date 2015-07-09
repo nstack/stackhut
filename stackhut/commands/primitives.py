@@ -16,6 +16,7 @@ import time
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
 import sh
+from distutils.dir_util import copy_tree
 
 from stackhut import utils
 from stackhut.utils import log
@@ -131,6 +132,9 @@ class Alpine(BaseOS):
 class Stack(DockerEnv):
     name = None
     entrypoint = None
+    package_file = None
+    shim_files = None
+    shim_cmd = None
 
     def __init__(self):
         super().__init__()
@@ -145,7 +149,7 @@ class Stack(DockerEnv):
         image_name = "{}-{}".format(baseos.name, self.name)
         baseos_stack_pkgs = get_baseos_stack_pkgs(baseos, self)
         if baseos_stack_pkgs is not None:
-            baseos_stack_cmds = baseos.install_os_pkg(baseos_stack_pkgs)
+            # baseos_stack_cmds = baseos.install_os_pkg(baseos_stack_pkgs)
             # only render the template if apy supported config
             super().stack_build('Dockerfile-stack.txt',
                                 dict(baseos=baseos, stack=self, baseos_stack_pkgs=baseos_stack_pkgs),
@@ -154,10 +158,21 @@ class Stack(DockerEnv):
     def install_stack_pkgs(self):
         return ''
 
+    def copy_shim(self):
+        shim_dir = os.path.join(utils.get_res_path('shims'), self.name)
+        copy_tree(shim_dir, utils.ROOT_DIR)
+
+    def del_shim(self):
+        for f in self.shim_files:
+            os.remove(os.path.join(utils.ROOT_DIR, f))
+
+
 class Python2(Stack):
     name = 'python2'
     entrypoint = 'app.py'
     package_file = 'requirements.txt'
+    shim_files = ['runner.py', 'stackhut.py']
+    shim_cmd = ['/usr/bin/env', 'python3', 'runner.py']
 
     @property
     def get_install_stack_file(self):
@@ -170,6 +185,8 @@ class Python(Stack):
     name = 'python'
     entrypoint = 'app.py'
     package_file = 'requirements.txt'
+    shim_files = ['runner.py', 'stackhut.py']
+    shim_cmd = ['/usr/bin/env', 'python2', 'runner.py']
 
     @property
     def get_install_stack_file(self):
@@ -181,6 +198,9 @@ class Python(Stack):
 class NodeJS(Stack):
     name = 'nodejs'
     entrypoint = 'app.js'
+    package_file = 'package.json'
+    shim_files = ['runner.js', 'stackhut.js']
+    shim_cmd = ['/usr/bin/env', 'iojs', '--harmony', 'runner.js']
 
 
 # Our BaseOS / Stack Dispatchers (e.g. pattern matching)
@@ -233,8 +253,8 @@ class Service(DockerEnv):
         super().__init__()
 
         self.hutcfg = hutcfg
-        self.baseos = bases[(hutcfg['baseos'])]
-        self.stack = stacks[(hutcfg['stack'])]
+        self.baseos = bases[hutcfg.baseos]
+        self.stack = stacks[hutcfg.stack]
         self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)
 
     @property
