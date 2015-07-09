@@ -167,8 +167,8 @@ class Stack(DockerEnv):
             os.remove(os.path.join(utils.ROOT_DIR, f))
 
 
-class Python2(Stack):
-    name = 'python2'
+class Python(Stack):
+    name = 'python'
     entrypoint = 'app.py'
     package_file = 'requirements.txt'
     shim_files = ['runner.py', 'stackhut.py']
@@ -179,10 +179,10 @@ class Python2(Stack):
         return self.package_file if os.path.exists(self.package_file) else ''
 
     def install_stack_pkgs(self):
-        return 'pip2 install --no-cache-dir --compile -r requirements.txt'
+        return 'pip3 install --no-cache-dir --compile -r requirements.txt'
 
-class Python(Stack):
-    name = 'python'
+class Python2(Stack):
+    name = 'python2'
     entrypoint = 'app.py'
     package_file = 'requirements.txt'
     shim_files = ['runner.py', 'stackhut.py']
@@ -193,7 +193,7 @@ class Python(Stack):
         return self.package_file if os.path.exists(self.package_file) else ''
 
     def install_stack_pkgs(self):
-        return 'pip3 install --no-cache-dir --compile -r requirements.txt'
+        return 'pip2 install --no-cache-dir --compile -r requirements.txt'
 
 class NodeJS(Stack):
     name = 'nodejs'
