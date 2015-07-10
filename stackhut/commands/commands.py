@@ -230,14 +230,9 @@ class LogoutCmd(AdminCmd):
 
     def run(self):
         super().run()
-
-        # connect to Stackhut service to get token
+        # connect to Stackhut service to get token?
         print("Logged out {}".format(self.usercfg['username']))
-        # blank out the cfg file
-        self.usercfg['username'] = ''
-        for v in self.usercfg.encrypt_vals:
-            self.usercfg[v] = ''
-
+        self.usercfg.wipe()
         self.usercfg.save()
 
 

@@ -260,6 +260,12 @@ class StackHutCfg(dict):
         with open(CFGFILE, 'w') as f:
             json.dump(self, f)
 
+    def wipe(self):
+        # blank out the cfg file
+        self.usercfg['username'] = ''
+        for v in self.usercfg.encrypt_vals:
+            self.usercfg[v] = ''
+
 
 class HutfileCfg:
     def __init__(self):
