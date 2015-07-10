@@ -235,7 +235,9 @@ class LogoutCmd(AdminCmd):
         print("Logged out {}".format(self.usercfg['username']))
         # blank out the cfg file
         self.usercfg['username'] = ''
-        self.usercfg['token'] = ''
+        for v in self.usercfg.encrypt_vals:
+            self.usercfg[v] = ''
+
         self.usercfg.save()
 
 

@@ -19,6 +19,8 @@ import abc
 import os
 import stat
 import shutil
+from itertools import cycle
+import codecs
 import redis
 import pyconfig
 import yaml
@@ -227,8 +229,30 @@ class StackHutCfg(dict):
         if os.path.exists(CFGFILE):
             with open(CFGFILE, 'r') as f:
                 self.update(json.load(f))
+                for v in self.encrypt_vals:
+                    if v in self:
+                        self[v] = self.xor_decrypt_string(self[v])
+                        print(self[v])
+
+    # Yes - this is shit crypto but jsut so we don't store plaintext on the fileystem
+    # password sent over SSL to web regardless
+    key = 'stackhut_is_G_dawg'
+    encrypt_vals = ['password', 'token']
+
+    def xor_crypt_string(self, plaintext):
+        ciphertext = ''.join(chr(ord(x) ^ ord(y)) for (x, y) in zip(plaintext, cycle(self.key)))
+        return (codecs.encode(ciphertext.encode('utf-8'), 'hex')).decode('utf-8')
+
+    def xor_decrypt_string(self, ciphertext):
+        ciphertext = (codecs.decode(ciphertext.encode('utf-8'), 'hex')).decode('utf-8')
+        return ''.join(chr(ord(x) ^ ord(y)) for (x, y) in zip(ciphertext, cycle(self.key)))
 
     def save(self):
+        for v in self.encrypt_vals:
+            if v in self:
+                self[v] = self.xor_crypt_string(self[v])
+
+        # set cfg file permissions
         if not os.path.exists(CFGFILE):
             open(CFGFILE, 'w').close()
             os.chmod(CFGFILE, stat.S_IRUSR | stat.S_IWUSR)
