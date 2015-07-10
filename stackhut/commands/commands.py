@@ -60,7 +60,7 @@ class AdminCmd(BaseCmd):
         self.usercfg = utils.StackHutCfg()
 
 
-class ScaffoldCmd(BaseCmd):
+class ScaffoldCmd(AdminCmd):
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(ScaffoldCmd, ScaffoldCmd).parse_cmds(subparser, 'scaffold',
@@ -68,6 +68,7 @@ class ScaffoldCmd(BaseCmd):
         subparser.add_argument("baseos", help="Base Operating System", choices=bases.keys())
         subparser.add_argument("stack", help="Language stack to support", choices=stacks.keys())
         subparser.add_argument("name", help="Service name", type=str)
+        subparser.add_argument("--no-git", '-n', action='store_true', help="Disable creating a git repo")
 
     def __init__(self, args):
         super().__init__(args)
@@ -82,21 +83,37 @@ class ScaffoldCmd(BaseCmd):
 
     def run(self):
         super().run()
+        if 'username' in self.usercfg:
+            self.author = (self.usercfg['username'].split('@')[0]).capitalize()
+        else:
+            log.error("Please login first")
+            return 1
+
         if is_stack_supported(self.baseos, self.stack):
             log.info("Creating service {}".format(self.service_name))
-            # checkout the scaffold into the service
-            sh.git.clone("git@github.com:StackHut/scaffold-{}.git".format(self.stack.name), self.service_name)
+            # copy the scaffold into the service
+            shutil.copytree(utils.get_res_path('scaffold'), self.service_name)
             os.chdir(self.service_name)
-            shutil.rmtree(".git")
 
-            # now modify any files as required
-            template_env = Environment(loader=FileSystemLoader(utils.get_res_path('.')))
-            files = ['Hutfile', 'example_request.json', 'service.idl',
-                     self.stack.entrypoint, 'README.md']
-            for f in files:
-                self.render_file(template_env, f, dict(scaffold=self))
+            # rename scaffold file to entrypoint and remove others
+            os.rename(self.stack.scaffold_name, self.stack.entrypoint)
+            [os.remove(f) for f in os.listdir(".") if f.startswith("scaffold-")]
+
+            # run the templates
+            template_env = Environment(loader=FileSystemLoader('.'))
+            [self.render_file(template_env, f, dict(scaffold=self))
+                for f in os.listdir('.') if os.path.isfile(f)]
+
+            # git commit
+            if not self.args.no_git:
+                sh.git.init()
+                sh.git.add(".")
+                sh.git.commit(m="Initial commit")
+                sh.git.branch("stackhut")
+
         else:
             print("Sorry that combination is not supported")
+            return 1
 
 
 class StackBuildCmd(AdminCmd):

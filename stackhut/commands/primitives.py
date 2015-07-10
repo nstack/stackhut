@@ -173,6 +173,7 @@ class Python(Stack):
     package_file = 'requirements.txt'
     shim_files = ['runner.py', 'stackhut.py']
     shim_cmd = ['/usr/bin/env', 'python3', 'runner.py']
+    scaffold_name = 'scaffold-python.py'
 
     @property
     def get_install_stack_file(self):
@@ -187,6 +188,7 @@ class Python2(Stack):
     package_file = 'requirements.txt'
     shim_files = ['runner.py', 'stackhut.py']
     shim_cmd = ['/usr/bin/env', 'python2', 'runner.py']
+    scaffold_name = 'scaffold-python2.py'
 
     @property
     def get_install_stack_file(self):
@@ -201,6 +203,7 @@ class NodeJS(Stack):
     package_file = 'package.json'
     shim_files = ['runner.js', 'stackhut.js']
     shim_cmd = ['/usr/bin/env', 'iojs', '--harmony', 'runner.js']
+    scaffold_name = 'scaffold-nodejs.js'
 
 
 # Our BaseOS / Stack Dispatchers (e.g. pattern matching)

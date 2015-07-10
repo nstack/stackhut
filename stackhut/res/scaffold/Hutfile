@@ -5,7 +5,7 @@ name: {{ scaffold.service_name }}
 author: {{ scaffold.author }}
 
 # A contact email address
-contact: {{ scaffold.username }}
+contact: {{ scaffold.usercfg.username }}
 
 # description of the service
 description: Awesome service in {{ scaffold.stack.name }}
@@ -15,5 +15,5 @@ baseos: {{ scaffold.baseos.name }}
 stack: {{ scaffold.stack.name }}
 
 # a list of files we wish to copy into the image
-files: 
+files:
     - example_request.json

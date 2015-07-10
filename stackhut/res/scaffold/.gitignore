@@ -1,5 +1,6 @@
 .stackhut.log
 *.json
+!example_request.json
 local_task
 .stackhut
 
