@@ -52,6 +52,7 @@ def run_command(req_id, cmd, stdin=''):
 
 @Request.application
 def application(request):
+    log.debug("Got helper request - {}".format(request.data))
     response = JSONRPCResponseManager.handle(request.data, dispatcher)
     return Response(response.json, mimetype='application/json')
 

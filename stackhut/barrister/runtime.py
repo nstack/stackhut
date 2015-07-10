@@ -258,7 +258,7 @@ class Server(object):
         if self.contract.has_interface(iface_name):
             self.handlers[iface_name] = handler
         else:
-            raise RpcException(ERR_INVALID_REQ, "Unknown interface: '%s'", iface_name)
+            raise RpcException(ERR_INVALID_REQ, "Unknown interface: '%s'" % iface_name)
 
     def set_filters(self, filters):
         """
@@ -900,7 +900,7 @@ class Contract(object):
         if self.has_interface(iface_name):
             return self.interfaces[iface_name]
         else:
-            raise RpcException(ERR_INVALID_PARAMS, "Unknown interface: '%s'", iface_name)
+            raise RpcException(ERR_INVALID_PARAMS, "Unknown interface: '%s'" % iface_name)
 
     def validate(self, expected_type, is_array, val):
         """

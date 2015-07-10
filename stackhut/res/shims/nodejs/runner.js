@@ -19,9 +19,9 @@ let fs = require('fs');
 // load the app to call into
 let app = require('./app');
 let stackhut = require('./stackhut')
-let util = require('util');
-console.log('app - \n\t', util.inspect(app, false, null));
-console.log('stackhut - \n\t', util.inspect(stackhut, false, null));
+// let util = require('util');
+// console.log('app - \n\t', util.inspect(app, false, null));
+// console.log('stackhut - \n\t', util.inspect(stackhut, false, null));
 
 const REQ_JSON = 'req.json'
 const RESP_JSON = 'resp.json'

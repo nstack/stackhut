@@ -37,8 +37,7 @@ def make_call(method, *_params):
         'id': id_val,
     }
 
-    response = requests.post(
-        url, data=json.dumps(payload), headers=headers).json()
+    response = requests.post(url, data=json.dumps(payload), headers=headers).json()
 
     id_val += 1
 

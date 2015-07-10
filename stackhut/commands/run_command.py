@@ -121,6 +121,7 @@ class RunCmd(HutCmd):
             if p.returncode != 0:
                 raise utils.NonZeroExitError(p.returncode, p.stdout)
 
+            log.debug(resp)
             # basic error handling
             if 'error' in resp:
                 code = resp['error']
