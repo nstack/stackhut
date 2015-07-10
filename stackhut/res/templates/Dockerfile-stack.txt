@@ -10,3 +10,8 @@ RUN echo "Starting..." && \
     {% endfor -%}
     echo "...done" && exit
 {% endif %}
+
+{% if service.stack.stack_pkgs %}
+# install lang packages needed for stack
+RUN {{ service.stack.install_stack_pkgs() }}
+{% endif %}

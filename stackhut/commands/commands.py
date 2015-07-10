@@ -22,6 +22,7 @@ import json
 import os
 import shutil
 import getpass
+import uuid
 import sh
 from jinja2 import Environment, FileSystemLoader
 
@@ -75,6 +76,7 @@ class ScaffoldCmd(AdminCmd):
         self.baseos = bases[args.baseos]
         self.stack = stacks[args.stack]
         self.service_name = args.name
+        self.task_id = uuid.uuid4()
 
     def render_file(self, env, fname, params):
         rendered_template = env.get_template(fname).render(params)
@@ -83,7 +85,7 @@ class ScaffoldCmd(AdminCmd):
 
     def run(self):
         super().run()
-        if 'username' in self.usercfg:
+        if 'username' in self.usercfg and len(self.usercfg['username']) > 0:
             self.author = (self.usercfg['username'].split('@')[0]).capitalize()
         else:
             log.error("Please login first")

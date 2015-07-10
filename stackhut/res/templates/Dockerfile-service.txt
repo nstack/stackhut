@@ -21,7 +21,7 @@ COPY {{ d }} ./{{ d }}
 
 {% if service.stack.get_install_stack_file %}
 # install lang packages needed for stack
-RUN {{ service.stack.install_stack_pkgs() }}
+RUN {{ service.stack.install_service_pkgs() }}
 {% endif %}
 
 # setup the entrypoint (using -vv for now)

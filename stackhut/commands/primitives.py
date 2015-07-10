@@ -132,9 +132,11 @@ class Alpine(BaseOS):
 class Stack(DockerEnv):
     name = None
     entrypoint = None
+    stack_pkgs = None
     package_file = None
     shim_files = None
     shim_cmd = None
+    scaffold_name = None
 
     def __init__(self):
         super().__init__()
@@ -155,7 +157,12 @@ class Stack(DockerEnv):
                                 dict(baseos=baseos, stack=self, baseos_stack_pkgs=baseos_stack_pkgs),
                                 outdir, image_name)
 
+    def install_service_pkgs(self):
+        """Anything needed to run the service"""
+        return ''
+
     def install_stack_pkgs(self):
+        """Anything needed to run the stack"""
         return ''
 
     def copy_shim(self):
@@ -170,41 +177,65 @@ class Stack(DockerEnv):
 class Python(Stack):
     name = 'python'
     entrypoint = 'app.py'
+    stack_pkgs = ['requests']
     package_file = 'requirements.txt'
+
     shim_files = ['runner.py', 'stackhut.py']
     shim_cmd = ['/usr/bin/env', 'python3', 'runner.py']
+
     scaffold_name = 'scaffold-python.py'
 
     @property
     def get_install_stack_file(self):
         return self.package_file if os.path.exists(self.package_file) else ''
 
-    def install_stack_pkgs(self):
+    def install_service_pkgs(self):
         return 'pip3 install --no-cache-dir --compile -r requirements.txt'
+
+    def install_stack_pkgs(self):
+        return 'pip3 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_pkgs))
 
 class Python2(Stack):
     name = 'python2'
     entrypoint = 'app.py'
+    stack_pkgs = ['requests']
     package_file = 'requirements.txt'
+
     shim_files = ['runner.py', 'stackhut.py']
     shim_cmd = ['/usr/bin/env', 'python2', 'runner.py']
+
     scaffold_name = 'scaffold-python2.py'
 
     @property
     def get_install_stack_file(self):
         return self.package_file if os.path.exists(self.package_file) else ''
 
-    def install_stack_pkgs(self):
+    def install_service_pkgs(self):
         return 'pip2 install --no-cache-dir --compile -r requirements.txt'
+
+    def install_stack_pkgs(self):
+        return 'pip2 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_pkgs))
 
 class NodeJS(Stack):
     name = 'nodejs'
     entrypoint = 'app.js'
+    stack_pkgs = ['request']
     package_file = 'package.json'
+
     shim_files = ['runner.js', 'stackhut.js']
     shim_cmd = ['/usr/bin/env', 'iojs', '--harmony', 'runner.js']
+
     scaffold_name = 'scaffold-nodejs.js'
 
+    @property
+    def get_install_stack_file(self):
+        return self.package_file if os.path.exists(self.package_file) else ''
+
+    def install_service_pkgs(self):
+        return 'npm install'
+
+    def install_stack_pkgs(self):
+        return 'npm install'.format(str.join(' ', self.stack_pkgs))
 
 # Our BaseOS / Stack Dispatchers (e.g. pattern matching)
 # we need this as pkds installed per OS are OS dependent

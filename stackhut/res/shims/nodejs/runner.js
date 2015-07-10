@@ -1,3 +1,4 @@
+#!/usr/bin/env iojs
 "use strict"
 // Copyright 2015 StackHut Ltd.
 //
@@ -17,8 +18,10 @@
 let fs = require('fs');
 // load the app to call into
 let app = require('./app');
+let stackhut = require('./stackhut')
 let util = require('util');
 console.log('app - \n\t', util.inspect(app, false, null));
+console.log('stackhut - \n\t', util.inspect(stackhut, false, null));
 
 const REQ_JSON = 'req.json'
 const RESP_JSON = 'resp.json'
@@ -37,6 +40,9 @@ function write_resp(resp) {
 }
 
 function run(req) {
+    // tell the client helper the current taskid
+    stackhut.req_id = req['req_id']
+
     let ms = req['method'].split('.');
     let iface_name = ms[0];
     let func_name = ms[1];
