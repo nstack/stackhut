@@ -1,5 +1,5 @@
 FROM stackhut/{{ service.from_image }}:latest
-MAINTAINER "{{ service.hutcfg.author }}" <{{ service.hutcfg.email }}>
+MAINTAINER "{{ service.hutcfg.author }}" <{{ service.usercfg.username }}>
 LABEL description="{{ service.hutcfg.description }}"
 
 {% if service.hutcfg.os_deps %}

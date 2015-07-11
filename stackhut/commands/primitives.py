@@ -283,10 +283,11 @@ def is_stack_supported(base, stack):
 
 class Service(DockerEnv):
     """Main primitive representing a StackHut service"""
-    def __init__(self, hutcfg):
+    def __init__(self, hutcfg, usercfg):
         super().__init__()
 
         self.hutcfg = hutcfg
+        self.usercfg = usercfg
         self.baseos = bases[hutcfg.baseos]
         self.stack = stacks[hutcfg.stack]
         self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)

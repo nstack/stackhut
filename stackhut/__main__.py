@@ -15,8 +15,6 @@
 # limitations under the License.
 
 import argparse
-
-
 from stackhut import utils, __version__
 from stackhut.utils import log
 from stackhut.commands import COMMANDS

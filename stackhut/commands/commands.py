@@ -146,7 +146,7 @@ class StackBuildCmd(AdminCmd):
         log.info("All base OS and Stack images built and deployed")
 
 
-class HutBuildCmd(HutCmd):
+class HutBuildCmd(HutCmd, AdminCmd):
     """Build StackHut service using docker"""
     @staticmethod
     def parse_cmds(subparser):
@@ -165,7 +165,7 @@ class HutBuildCmd(HutCmd):
         run_barrister()
 
         # Docker build
-        service = Service(self.hutcfg)
+        service = Service(self.hutcfg, self.usercfg)
         service.build(self.args.push, self.args.no_cache)
 
         log.info("{} build complete".format(self.hutcfg.name))
