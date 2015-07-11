@@ -177,7 +177,7 @@ class RunCloudCmd(RunCmd, CloudStore):
 
     def __init__(self, args):
         RunCmd.__init__(self, args)
-        self.store = CloudStore(self.hutcfg.name, args.aws_id, args.aws_key)
+        self.store = CloudStore(self.hutcfg.name)
 
     @staticmethod
     def parse_cmds(subparser):
@@ -185,5 +185,3 @@ class RunCloudCmd(RunCmd, CloudStore):
                                                                'run',
                                                                "Run a StackHut service",
                                                                RunCloudCmd)
-        subparser.add_argument("aws_id", help="Key used to communicate with AWS")
-        subparser.add_argument("aws_key", help="Key used to communicate with AWS")

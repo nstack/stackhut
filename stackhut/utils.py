@@ -119,9 +119,8 @@ class IOStore:
     def put_response(self, s):
         pass
 
-    @abc.abstractmethod
     def get_file(self, name):
-        pass
+        log.error("Store.get_file called")
 
     @abc.abstractmethod
     def put_file(self, fname, req_id='', make_public=False):
@@ -133,14 +132,23 @@ class IOStore:
 
 
 class CloudStore(IOStore):
-    def __init__(self, service_name, aws_id, aws_key):
+    def _get_env(self, k):
+        v = os.environ.get(k, '')
+        del os.environ[k]
+        return v
+
+    def __init__(self, service_name):
         self.service_name = service_name
+
         # open connection to AWS
+        aws_id = self._get_env('AWS_ID')
+        aws_key = self._get_env('AWS_KEY')
         self.conn = S3Connection(aws_id, aws_key)
         self.bucket = self.conn.get_bucket(S3_BUCKET)
+        log.debug("Connected to AWS S3")
 
-        redis_url = os.environ.get('REDIS_URL', 'localhost')
-        log.debug("Connecting to Redis at {}".format(redis_url))
+        # open connection to Redis
+        redis_url = self._get_env('REDIS_URL')
         self.redis = redis.StrictRedis(host=redis_url, port=6379, db=0, password=None,
                                        socket_timeout=None, connection_pool=None, charset='utf-8',
                                        errors='strict', unix_socket_path=None)
@@ -164,12 +172,11 @@ class CloudStore(IOStore):
         k.key = '{}/{}'.format(self.task_id, name)
         return k
 
-    def get_file(self, name):
-        # k = self._create_key(name)
-        # s = k.get_contents_as_string(encoding='utf-8')
-        # log.info("Downloaded {} from S3".format(name))
-        # return s
-        pass
+    # def get_file(self, name):
+    #     # k = self._create_key(name)
+    #     # s = k.get_contents_as_string(encoding='utf-8')
+    #     # log.info("Downloaded {} from S3".format(name))
+    #     # return s
 
     def put_file(self, fname, req_id='', make_public=True):
         """Upload file to S3"""
@@ -208,8 +215,8 @@ class LocalStore(IOStore):
         with open(self._get_path('output.json'), "w") as f:
             f.write(s)
 
-    def get_file(self, name):
-        pass
+    # def get_file(self, name):
+    #     pass
 
     def put_file(self, fname, req_id='', make_public=True):
         """Put file into a subdir keyed by req_id in local store"""
