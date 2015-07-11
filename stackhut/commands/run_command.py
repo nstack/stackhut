@@ -59,13 +59,17 @@ class RunCmd(HutCmd):
                 raise utils.ParseError()
             log.info('Input - \n{}'.format(input_json))
 
+            def gen_id(d, v):
+                d[v] = str(uuid.uuid4()) if v not in d else str(d[v])
+
             # massage the JSON-RPC request if we don't receieve an entirely valid req
             default_service = 'Default'  # input_json['serviceName']
+            gen_id(input_json, 'id')
             self.store.set_task_id(input_json['id'])
 
             def _make_json_rpc(req):
                 if 'jsonrpc' not in req: req['jsonrpc'] = "2.0"
-                req['id'] = str(uuid.uuid4()) if 'id' not in req else str(req['id'])
+                gen_id(req, 'id')
                 # add the default interface if none exists
                 if req['method'].find('.') < 0:
                     req['method'] = "{}.{}".format(default_service, req['method'])
