@@ -271,7 +271,7 @@ def get_baseos_stack_pkgs(base_os, stack):
 
 
 bases = dict([(b.name, b) for b in [Alpine(), Fedora()]])
-stacks = dict([(s.name, s) for s in [NodeJS()]]) # [Python(), NodeJS(), Python2()]])
+stacks = dict([(s.name, s) for s in [Python(), NodeJS(), Python2()]])
 
 def is_stack_supported(base, stack):
     """Return true if the baseos & stack combination is supported"""
