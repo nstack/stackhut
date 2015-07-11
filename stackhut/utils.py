@@ -18,6 +18,7 @@ import sys
 import abc
 import os
 import stat
+import threading
 import shutil
 from itertools import cycle
 import codecs
@@ -130,10 +131,44 @@ class IOStore:
         log.debug("Task id is {}".format(task_id))
         self.task_id = task_id
 
+class ControlListener(threading.Thread):
+    def __init__(self, store, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.store = store
+        self.pubsub = store.redis.pubsub()
+        self.pubsub.subscribe(['{}-control'.format(store.service_name)])
+        self.can_quit = True
+        self.cv = threading.Condition()
+
+    def run(self):
+        # infinte loop on listen generator
+        for item in self.pubsub.listen():
+            log.debug(item)
+            if item['type'] == 'message':
+                if item['data'] == b"KILL":
+                    self.pubsub.unsubscribe()
+                    with self.cv:
+                        self.cv.wait_for(lambda: self.can_quit)
+                        log.debug("Shutting down on KILL request")
+                        os._exit(os.EX_OK)
+                else:
+                    log.error("Got unknown message on control channel - \n\t{}".format(item))
+                    os._exit(os.EX_DATAERR)
+
+
+    # NOTE - this is not thread-safe in case of control msg received 1st, then data msg on blpop
+    # channel during shutdown itself - will result in a lost message but unlikely to occur.
+    # Solve by putting blpop on another thread and sync between them
+    def stop(self):
+        with self.cv:
+            self.can_quit = False
+            self.cv.notify_all()  # this is not needed - as will never run again
+
 
 class CloudStore(IOStore):
+    """Main storage subsytem for use in prod env"""
     def _get_env(self, k):
-        v = os.environ.get(k, '')
+        v = os.environ.get(k, None)
         del os.environ[k]
         return v
 
@@ -155,10 +190,16 @@ class CloudStore(IOStore):
         self.redis.ping()
         log.debug("Connected to Redis")
 
+        # setup control listener on sep thread
+        self.control = ControlListener(self, daemon=True)
+        self.control.start()
+
     def get_request(self):
         """Get the request JSON"""
         log.debug("Waiting on queue for service - {}".format(self.service_name))
         x = self.redis.blpop(self.service_name, 0)[1].decode('utf-8')
+        # shutdown control listener
+        self.control.stop()
         log.debug("Received message {}".format(x))
         return x
 
@@ -194,6 +235,7 @@ class CloudStore(IOStore):
             return k.key
 
 class LocalStore(IOStore):
+    """Mock storage system for local testing"""
     local_store = "local_task"
 
     def _get_path(self, name):
