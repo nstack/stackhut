@@ -149,12 +149,15 @@ class Stack(DockerEnv):
         super().build(*args)
         log.info("Building image for base {} with stack {}".format(baseos.name, self.name))
         image_name = "{}-{}".format(baseos.name, self.name)
-        baseos_stack_pkgs = get_baseos_stack_pkgs(baseos, self)
-        if baseos_stack_pkgs is not None:
-            # baseos_stack_cmds = baseos.install_os_pkg(baseos_stack_pkgs)
+        baseos_stack_cmds_pkgs = get_baseos_stack_pkgs(baseos, self)
+        if baseos_stack_cmds_pkgs is not None:
+            os_cmds, pkgs = baseos_stack_cmds_pkgs
+            pkg_cmds = baseos.install_os_pkg(pkgs) if pkgs else []
+            stack_cmds = os_cmds + pkg_cmds
+
             # only render the template if apy supported config
             super().stack_build('Dockerfile-stack.txt',
-                                dict(baseos=baseos, stack=self, baseos_stack_pkgs=baseos_stack_pkgs),
+                                dict(baseos=baseos, stack=self, stack_cmds=stack_cmds),
                                 outdir, image_name)
 
     def install_service_pkgs(self):
@@ -164,6 +167,10 @@ class Stack(DockerEnv):
     def install_stack_pkgs(self):
         """Anything needed to run the stack"""
         return ''
+
+    @property
+    def install_service_file(self):
+        return self.package_file if os.path.exists(self.package_file) else ''
 
     def copy_shim(self):
         shim_dir = os.path.join(utils.get_res_path('shims'), self.name)
@@ -177,7 +184,7 @@ class Stack(DockerEnv):
 class Python(Stack):
     name = 'python'
     entrypoint = 'app.py'
-    stack_pkgs = ['requests']
+    stack_pkgs = ['requests', 'sh']
     package_file = 'requirements.txt'
 
     shim_files = ['runner.py', 'stackhut.py']
@@ -185,20 +192,16 @@ class Python(Stack):
 
     scaffold_name = 'scaffold-python.py'
 
-    @property
-    def get_install_stack_file(self):
-        return self.package_file if os.path.exists(self.package_file) else ''
-
-    def install_service_pkgs(self):
-        return 'pip3 install --no-cache-dir --compile -r requirements.txt'
-
     def install_stack_pkgs(self):
         return 'pip3 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_pkgs))
+
+    def install_service_pkgs(self):
+        return 'pip3 install --no-cache-dir --compile -r {}'.format(self.package_file)
 
 class Python2(Stack):
     name = 'python2'
     entrypoint = 'app.py'
-    stack_pkgs = ['requests']
+    stack_pkgs = ['requests', 'sh']
     package_file = 'requirements.txt'
 
     shim_files = ['runner.py', 'stackhut.py']
@@ -206,20 +209,16 @@ class Python2(Stack):
 
     scaffold_name = 'scaffold-python2.py'
 
-    @property
-    def get_install_stack_file(self):
-        return self.package_file if os.path.exists(self.package_file) else ''
-
-    def install_service_pkgs(self):
-        return 'pip2 install --no-cache-dir --compile -r requirements.txt'
-
     def install_stack_pkgs(self):
         return 'pip2 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_pkgs))
+
+    def install_service_pkgs(self):
+        return 'pip2 install --no-cache-dir --compile -r {}'.format(self.package_file)
 
 class NodeJS(Stack):
     name = 'nodejs'
     entrypoint = 'app.js'
-    stack_pkgs = ['request']
+    stack_pkgs = ['sync-request']
     package_file = 'package.json'
 
     shim_files = ['runner.js', 'stackhut.js']
@@ -227,41 +226,42 @@ class NodeJS(Stack):
 
     scaffold_name = 'scaffold-nodejs.js'
 
-    @property
-    def get_install_stack_file(self):
-        return self.package_file if os.path.exists(self.package_file) else ''
+    def install_stack_pkgs(self):
+        return 'npm install {}'.format(str.join(' ', self.stack_pkgs))
 
     def install_service_pkgs(self):
         return 'npm install'
-
-    def install_stack_pkgs(self):
-        return 'npm install'.format(str.join(' ', self.stack_pkgs))
 
 # Our BaseOS / Stack Dispatchers (e.g. pattern matching)
 # we need this as pkds installed per OS are OS dependent
 @dispatch(Fedora, Python2)
 def get_baseos_stack_pkgs(base_os, stack):
-    return ['python', 'python-pip']
+    """return the docker cmds and any os packages needed to be installed"""
+    return [], ['python', 'python-pip']
 
 @dispatch(Alpine, Python2)
 def get_baseos_stack_pkgs(base_os, stack):
-    return ['python', 'py-pip']
+    return [], ['python', 'py-pip']
 
 @dispatch(Fedora, Python)
 def get_baseos_stack_pkgs(base_os, stack):
-    return []  # installed by default
+    return [], []  # installed by default
 
 @dispatch(Alpine, Python)
 def get_baseos_stack_pkgs(base_os, stack):
-    return []  # installed by default
+    return [], []  # installed by default
 
-# @dispatch(Fedora, NodeJS)
-# def get_baseos_stack_pkgs(base_os, stack):
-#     return None  # not supported
+@dispatch(Fedora, NodeJS)
+def get_baseos_stack_pkgs(base_os, stack):
+    cmds = ['dnf -y install dnf-plugins-core',
+            'dnf -y copr enable nibbler/iojs',
+            ]
+    pkgs = ['iojs', 'iojs-npm']
+    return cmds, pkgs
 
 @dispatch(Alpine, NodeJS)
 def get_baseos_stack_pkgs(base_os, stack):
-    return ['iojs@testing', 'libstdc++@edge']
+    return [], ['iojs@testing', 'libstdc++@edge']
 
 @dispatch(object, object)
 def get_baseos_stack_pkgs(base_os, stack):
@@ -271,7 +271,7 @@ def get_baseos_stack_pkgs(base_os, stack):
 
 
 bases = dict([(b.name, b) for b in [Alpine(), Fedora()]])
-stacks = dict([(s.name, s) for s in [Python(), NodeJS(), Python2()]])
+stacks = dict([(s.name, s) for s in [NodeJS()]]) # [Python(), NodeJS(), Python2()]])
 
 def is_stack_supported(base, stack):
     """Return true if the baseos & stack combination is supported"""

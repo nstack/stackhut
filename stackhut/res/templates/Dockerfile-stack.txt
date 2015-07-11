@@ -2,16 +2,16 @@ FROM stackhut/{{ baseos.name|lower }}:latest
 MAINTAINER "StackHut" <stackhut@stackhut.com>
 LABEL description="{{ stack.description }}"
 
-{% if baseos_stack_pkgs %}
+{% if stack_cmds %}
 # install OS packages needed for stack
 RUN echo "Starting..." && \
-    {% for cmd in baseos.install_os_pkg(baseos_stack_pkgs) -%}
+    {% for cmd in stack_cmds -%}
     {{ cmd }} && \
     {% endfor -%}
     echo "...done" && exit
 {% endif %}
 
-{% if service.stack.stack_pkgs %}
+{% if stack.stack_pkgs %}
 # install lang packages needed for stack
-RUN {{ service.stack.install_stack_pkgs() }}
+RUN {{ stack.install_stack_pkgs() }}
 {% endif %}
