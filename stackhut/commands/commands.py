@@ -275,7 +275,7 @@ class DeployCmd(HutCmd, AdminCmd):
 
         def render_signature(method):
             params_t = str.join(', ', render_params(method['params']))
-            return "{} ({}) {}".format(method['name'], params_t, render_param(method['returns']))
+            return "{}({}) {}".format(method['name'], params_t, render_param(method['returns']))
 
         for i in interfaces:
             for f in i['functions']:
@@ -293,19 +293,19 @@ class DeployCmd(HutCmd, AdminCmd):
             with open('example_request.json') as f:
                 example_request = json.load(f)
 
-        if self.usercfg['username'] != self.hutcfg.email:
-            log.error("StackHut username ({}) not equal to Hutfile contact email ({})".format(self.usercfg['username'], self.hutcfg.email))
-            return 1
+        # if self.usercfg['username'] != self.hutcfg.email:
+        #     log.error("StackHut username ({}) not equal to Hutfile contact email ({})".format(self.usercfg['username'], self.hutcfg.email))
+        #     return 1
 
         data = {
-            'dockerImage': self.hutcfg.name,
-            'githubUrl': None,
+            'dockerImage': self.hutcfg.tag,
+            'githubUrl': self.hutcfg.github_url,
             'exampleRequest': example_request,
-            'desc': self.hutcfg.description,
-            'methods': self.create_methods()
+            'description': self.hutcfg.description,
+            'schema': self.create_methods()
         }
 
         log.info("Deploying image {} to StackHut".format(self.hutcfg.tag))
-        utils.stackhut_api_secure_call('add', data, self.usercfg)
-        log.info("Image deployed")
+        r = utils.stackhut_api_secure_call('add', data, self.usercfg)
+        log.info("Image {} has been {}".format(r['serviceName'], r['message']))
 

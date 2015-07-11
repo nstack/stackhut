@@ -38,6 +38,7 @@ CONTRACTFILE = os.path.join(STACKHUT_DIR, 'service.json')
 IDLFILE = 'service.idl'
 S3_BUCKET = 'stackhut-payloads'
 ROOT_DIR = os.getcwd()
+DEBUG = False
 
 # Logging
 def setup_logging():
@@ -325,10 +326,11 @@ class HutfileCfg:
 
         # get vals from the hutfile
         self.name = hutfile['name'].lower()
-        self.author = hutfile['author'].lower()
+        self.author = 'stackhut'  # hutfile['author'].lower()
         self.version = 'latest'
-        self.email = hutfile['contact']
+        # self.email = hutfile['contact']
         self.description = hutfile['description']
+        self.github_url = hutfile.get('github_url', None)
 
         # copy files and dirs separetly
         files = hutfile.get('files', [])
@@ -343,15 +345,20 @@ class HutfileCfg:
         self.tag = "{}/{}:{}".format(self.author, self.name, self.version)
 
 
-secure_url_prefix = "https://api.stackhut.com/"
-unsecure_url_prefix = "http://api.stackhut.com/"
+def secure_url_prefix():
+    return "http://192.168.1.9:8083/" if DEBUG else "https://api.stackhut.com/"
+
+def unsecure_url_prefix():
+    return "http://192.168.1.9:8083/" if DEBUG else "http://api.stackhut.com/"
+
 headers = {'content-type': 'application/json'}
 
 import urllib.parse
 import requests
 
 def stackhut_api_call(endpoint, body, secure=False):
-    url_prefix = secure_url_prefix if secure else unsecure_url_prefix
+    url_prefix = secure_url_prefix() if secure else unsecure_url_prefix()
+    log.debug(url_prefix)
     url = urllib.parse.urljoin(url_prefix, endpoint)
     log.debug("Calling Stackhut {} with \n\t{}".format(endpoint, json.dumps(body)))
     r = requests.post(url, data=json.dumps(body), headers=headers)

@@ -32,6 +32,9 @@ def main():
     #                        default=utils.HUTFILE, type=argparse.FileType('r', encoding='utf-8'))
     parser.add_argument('-v', dest='verbose', help="Verbosity level, add multiple times to increase",
                         action='count', default=0)
+    parser.add_argument('-d', dest='debug', help="Debug mode",
+                        action='store_true')
+
     # build the subparsers
     subparsers = parser.add_subparsers(title="StackHut Commands", dest='command')
     [cmd.parse_cmds(subparsers) for cmd in COMMANDS]
@@ -42,6 +45,7 @@ def main():
         parser.exit(0, "No command given\n")
 
     # General App Setup
+    utils.DEBUG = args.debug
     utils.set_log_level(args.verbose)
     log.info("Starting up StackHut")
     log.debug(args)
