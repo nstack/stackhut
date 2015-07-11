@@ -232,7 +232,6 @@ class StackHutCfg(dict):
                 for v in self.encrypt_vals:
                     if v in self:
                         self[v] = self.xor_decrypt_string(self[v])
-                        print(self[v])
 
     # Yes - this is shit crypto but jsut so we don't store plaintext on the fileystem
     # password sent over SSL to web regardless
@@ -262,9 +261,9 @@ class StackHutCfg(dict):
 
     def wipe(self):
         # blank out the cfg file
-        self.usercfg['username'] = ''
-        for v in self.usercfg.encrypt_vals:
-            self.usercfg[v] = ''
+        self['username'] = ''
+        for v in self.encrypt_vals:
+            self[v] = ''
 
 
 class HutfileCfg:
