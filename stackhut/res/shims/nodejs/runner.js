@@ -78,13 +78,12 @@ process.on('uncaughtException', function(err) {
 // open the json req
 let req = JSON.parse(fs.readFileSync(REQ_JSON, 'utf8'));
 
-let root_dir = __dirname
 process.chdir(path.join('.stackhut', req['req_id']))
 
 // run the command
 let resp = run(req)
 // console.log('res - %j', resp);
-process.chdir(root_dir)
+process.chdir(stackhut.root_dir)
 
 // save the json resp
 write_resp(JSON.stringify(resp));

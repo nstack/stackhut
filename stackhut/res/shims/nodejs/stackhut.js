@@ -18,7 +18,7 @@ let url = "http://localhost:4000/jsonrpc"
 
 let id_val = 0
 module.exports.req_id = null
-//module.exports.root_dir = __dirname
+module.exports.root_dir = __dirname
 
 function make_call(method) {
     let params = [].slice.call(arguments, 1);
