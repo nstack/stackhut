@@ -25,6 +25,7 @@ import getpass
 import uuid
 import sh
 from jinja2 import Environment, FileSystemLoader
+from distutils.dir_util import copy_tree
 
 from stackhut import utils
 from stackhut.utils import log
@@ -93,7 +94,7 @@ class InitCmd(AdminCmd):
             self.service_name = os.path.basename(os.getcwd())
             log.info("Creating service {}".format(self.service_name))
             # copy the scaffold into the service
-            shutil.copytree(utils.get_res_path('scaffold'), '.')
+            copy_tree(utils.get_res_path('scaffold'), '.')
 
             # rename scaffold file to entrypoint and remove others
             os.rename(self.stack.scaffold_name, self.stack.entrypoint)
