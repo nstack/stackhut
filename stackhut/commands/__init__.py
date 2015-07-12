@@ -18,10 +18,10 @@ from .commands import *
 
 # StackHut primary commands
 COMMANDS = [
-    RunCloudCmd, RunLocalCmd, TestLocalCmd,
-    HutBuildCmd, DeployCmd,
-    StackBuildCmd,
     InitCmd,
     LoginCmd, LogoutCmd,
+    HutBuildCmd, DeployCmd, RunLocalCmd,
     # debug, push, pull, test, etc.
+    # internal
+    StackBuildCmd, RunCloudCmd,
 ]

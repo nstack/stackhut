@@ -65,7 +65,7 @@ class InitCmd(AdminCmd):
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(InitCmd, InitCmd).parse_cmds(subparser, 'init',
-            "Initialise a new StackHut service - we recommend alpine python", InitCmd)
+            "Initialise a new StackHut service", InitCmd)
         subparser.add_argument("baseos", help="Base Operating System", choices=bases.keys())
         subparser.add_argument("stack", help="Language stack to support", choices=stacks.keys())
         subparser.add_argument("--no-git", '-n', action='store_true', help="Disable creating a git repo")
@@ -123,8 +123,8 @@ class StackBuildCmd(AdminCmd):
     """Build StackHut service using docker"""
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(StackBuildCmd, StackBuildCmd).parse_cmds(subparser, 'stackbuild',
-                                                                   "Build the default OS and Stack images",
+        subparser = super(StackBuildCmd, StackBuildCmd).parse_cmds(subparser, '_stackbuild',
+                                                                   "(Internal) Build the default OS and Stack images",
                                                                    StackBuildCmd)
         subparser.add_argument("--outdir", '-o', default='stacks',
                                help="Directory to save stacks to")
@@ -166,7 +166,8 @@ class HutBuildCmd(HutCmd, AdminCmd):
         run_barrister()
         # Docker build
         service = Service(self.hutcfg, self.usercfg)
-        service.build(push, self.args.no_cache)
+        no_cache = self.args.no_cache if 'no_cache' in self.args else False
+        service.build(push, no_cache)
         log.info("{} build complete".format(self.hutcfg.name))
 
 

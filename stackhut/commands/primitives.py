@@ -42,11 +42,11 @@ class DockerEnv:
         log.debug("Running docker build for {}".format(tag))
         cache_flag = '--no-cache=True' if self.no_cache else '--no-cache=False'
         cmds = ['build', '-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
-        log.debug("Calling Docker with cmds - {}".format(cmds))
+        log.debug("Calling docker with cmds - {}".format(cmds))
         log.info("Starting build, this may take some time, please wait...")
         sh.docker(*cmds)
         if self.push:
-            log.info("Pushing {} to Docker Hub".format(tag))
+            log.info("Uploading image {}".format(tag))
             sh.docker('push', '-f', tag, _in='Y')
         return tag
 

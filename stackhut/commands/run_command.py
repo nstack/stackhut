@@ -31,7 +31,7 @@ RESP_FIFO = 'resp.json'
 class RunCmd(HutCmd):
     """Base Run Command functionality"""
     def __init__(self, args):
-        HutCmd.__init__(self, args)
+        super().__init__(args)
         # setup the service contracts
         contract = barrister.contract_from_file(utils.CONTRACTFILE)
         self.server = barrister.Server(contract)
@@ -167,22 +167,22 @@ class RunLocalCmd(RunCmd):
                                                                RunLocalCmd)
         subparser.add_argument("reqfile", default='test_request.json',
                                help="Test request file to use")
-        subparser.add_argument("--container", '-c', type='store_true',
+        subparser.add_argument("--container", '-c', action='store_true',
                                help="Run and test the service inside the container (requires you run build first)")
 
     def __init__(self, args):
-        super().__init__(self, args)
-        self.store = LocalStore(args.infile)
+        super().__init__(args)
+        self.store = LocalStore(args.reqfile)
 
-        self.infile = self.args.infile
+        self.reqfile = self.args.reqfile
         self.container = self.args.container
 
     def run(self):
         if self.container:
             tag = self.hutcfg.tag
-            infile = os.path.abspath(self.infile)
+            infile = os.path.abspath(self.reqfile)
 
-            log.info("Running test service with {}".format(self.infile))
+            log.info("Running test service with {}".format(self.reqfile))
             # call docker to run the same command but in the container
             out = sh.docker.run('-v', '{}:/workdir/test_request.json:ro'.format(infile),
                                 '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', _out=lambda x: print(x, end=''))
@@ -193,17 +193,15 @@ class RunLocalCmd(RunCmd):
             super().run()
 
 
-
 class RunCloudCmd(RunCmd):
     """Concrete Run Command using Cloud systems for prod"""
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(RunCloudCmd, RunCloudCmd).parse_cmds(subparser,
-                                                               'runcloud',
-                                                               "(internal) Run a StackHut service",
+                                                               '_runcloud',
+                                                               "(internal) Run StackHut service on host",
                                                                RunCloudCmd)
 
     def __init__(self, args):
-        RunCmd.__init__(self, args)
+        super().__init__(args)
         self.store = CloudStore(self.hutcfg.name)
-
