@@ -230,7 +230,7 @@ class NodeJS(Stack):
         return 'npm install {}'.format(str.join(' ', self.stack_pkgs))
 
     def install_service_pkgs(self):
-        return 'npm install'
+        return 'npm install; exit 0'
 
 # Our BaseOS / Stack Dispatchers (e.g. pattern matching)
 # we need this as pkds installed per OS are OS dependent
@@ -269,7 +269,6 @@ def get_baseos_stack_pkgs(base_os, stack):
     return None
     # raise NotImplementedError()
 
-
 bases = dict([(b.name, b) for b in [Alpine(), Fedora()]])
 stacks = dict([(s.name, s) for s in [Python(), NodeJS(), Python2()]])
 
@@ -279,7 +278,6 @@ def is_stack_supported(base, stack):
         return True
     else:
         return False
-
 
 class Service(DockerEnv):
     """Main primitive representing a StackHut service"""

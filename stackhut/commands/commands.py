@@ -106,6 +106,9 @@ class ScaffoldCmd(AdminCmd):
             [self.render_file(template_env, f, dict(scaffold=self))
                 for f in os.listdir('.') if os.path.isfile(f)]
 
+            # add the package file if present?
+            open(self.stack.package_file, 'w').close()
+
             # git commit
             if not self.args.no_git:
                 sh.git.init()

@@ -7,4 +7,4 @@ RUN echo "Starting..." && \
     {% for cmd in baseos.setup_cmds() -%}
     {{ cmd }} && \
     {% endfor -%}
-    echo "...done" && exit
+    echo "...done" && exit 0
