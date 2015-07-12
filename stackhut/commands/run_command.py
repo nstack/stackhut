@@ -165,7 +165,7 @@ class RunLocalCmd(RunCmd):
                                                                'run',
                                                                "Run StackHut service locally",
                                                                RunLocalCmd)
-        subparser.add_argument("reqfile", default='test_request.json',
+        subparser.add_argument("reqfile", nargs='?', default='test_request.json',
                                help="Test request file to use")
         subparser.add_argument("--container", '-c', action='store_true',
                                help="Run and test the service inside the container (requires you run build first)")
