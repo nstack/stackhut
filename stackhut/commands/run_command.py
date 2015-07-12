@@ -62,7 +62,7 @@ class RunCmd(HutCmd):
             def gen_id(d, v):
                 d[v] = str(uuid.uuid4()) if v not in d else str(d[v])
 
-            # massage the JSON-RPC request if we don't receieve an entirely valid req
+            # massage the JSON-RPC request if we don't receive an entirely valid req
             default_service = 'Default'  # input_json['serviceName']
             gen_id(input_json, 'id')
             self.store.set_task_id(input_json['id'])
@@ -105,7 +105,8 @@ class RunCmd(HutCmd):
             """Make a pseudo-function call across languages"""
             # TODO - optimise
             # make dir to hold any output
-            os.mkdir(req_id) if not os.path.exists(req_id) else None
+            req_path = os.path.join(utils.STACKHUT_DIR, req_id)
+            os.mkdir(req_path) if not os.path.exists(req_path) else None
 
             # create the req
             req = dict(method=method, params=params, req_id=req_id)
@@ -158,34 +159,51 @@ class RunCmd(HutCmd):
 
 class RunLocalCmd(RunCmd):
     """"Concrete Run Command using local files for dev"""
-    def __init__(self, args):
-        # setup
-        run_barrister()
-        RunCmd.__init__(self, args)
-        self.store = LocalStore(args.infile)
-
-    def run(self):
-        super().run()
-
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(RunLocalCmd, RunLocalCmd).parse_cmds(subparser,
-                                                               'runlocal',
-                                                               "Run a StackHut service locally",
+                                                               'run',
+                                                               "Run StackHut service locally",
                                                                RunLocalCmd)
-        subparser.add_argument("--infile", '-i', default='example_request.json',
-                               help="Local file to use for input")
+        subparser.add_argument("reqfile", default='test_request.json',
+                               help="Test request file to use")
+        subparser.add_argument("--container", '-c', type='store_true',
+                               help="Run and test the service inside the container (requires you run build first)")
 
-class RunCloudCmd(RunCmd, CloudStore):
+    def __init__(self, args):
+        super().__init__(self, args)
+        self.store = LocalStore(args.infile)
+
+        self.infile = self.args.infile
+        self.container = self.args.container
+
+    def run(self):
+        if self.container:
+            tag = self.hutcfg.tag
+            infile = os.path.abspath(self.infile)
+
+            log.info("Running test service with {}".format(self.infile))
+            # call docker to run the same command but in the container
+            out = sh.docker.run('-v', '{}:/workdir/test_request.json:ro'.format(infile),
+                                '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', _out=lambda x: print(x, end=''))
+            log.info("Finished test service")
+        else:
+            # make sure have latest idl
+            run_barrister()
+            super().run()
+
+
+
+class RunCloudCmd(RunCmd):
     """Concrete Run Command using Cloud systems for prod"""
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(RunCloudCmd, RunCloudCmd).parse_cmds(subparser,
+                                                               'runcloud',
+                                                               "(internal) Run a StackHut service",
+                                                               RunCloudCmd)
 
     def __init__(self, args):
         RunCmd.__init__(self, args)
         self.store = CloudStore(self.hutcfg.name)
 
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(RunCloudCmd, RunCloudCmd).parse_cmds(subparser,
-                                                               'run',
-                                                               "Run a StackHut service",
-                                                               RunCloudCmd)

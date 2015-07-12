@@ -14,8 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// any 3rd-party modules here
+// any 1st & 3rd-party modules here
 let fs = require('fs');
+let path = require('path');
+let process = require('process');
 // load the app to call into
 let app = require('./app');
 let stackhut = require('./stackhut')
@@ -75,11 +77,16 @@ process.on('uncaughtException', function(err) {
 // Main
 // open the json req
 let req = JSON.parse(fs.readFileSync(REQ_JSON, 'utf8'));
+
+let root_dir = __dirname
+process.chdir(path.join('.stackhut', req['req_id']))
+
 // run the command
 let resp = run(req)
-console.log('res - %j', resp);
+// console.log('res - %j', resp);
+process.chdir(root_dir)
+
 // save the json resp
 write_resp(JSON.stringify(resp));
 // fs.writeFileSync(RESP_JSON, JSON.stringify(resp), 'utf8');
 process.exit(0);
-

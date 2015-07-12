@@ -16,4 +16,4 @@ stack: {{ scaffold.stack.name }}
 
 # a list of files we wish to copy into the image
 files:
-    - example_request.json
+    - test_request.json

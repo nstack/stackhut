@@ -61,21 +61,19 @@ class AdminCmd(BaseCmd):
         self.usercfg = utils.StackHutCfg()
 
 
-class ScaffoldCmd(AdminCmd):
+class InitCmd(AdminCmd):
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(ScaffoldCmd, ScaffoldCmd).parse_cmds(subparser, 'scaffold',
-            "Configure a new StackHut service - we recommend alpine python", ScaffoldCmd)
+        subparser = super(InitCmd, InitCmd).parse_cmds(subparser, 'init',
+            "Initialise a new StackHut service - we recommend alpine python", InitCmd)
         subparser.add_argument("baseos", help="Base Operating System", choices=bases.keys())
         subparser.add_argument("stack", help="Language stack to support", choices=stacks.keys())
-        subparser.add_argument("name", help="Service name", type=str)
         subparser.add_argument("--no-git", '-n', action='store_true', help="Disable creating a git repo")
 
     def __init__(self, args):
         super().__init__(args)
         self.baseos = bases[args.baseos]
         self.stack = stacks[args.stack]
-        self.service_name = args.name
         self.task_id = uuid.uuid4()
 
     def render_file(self, env, fname, params):
@@ -92,10 +90,10 @@ class ScaffoldCmd(AdminCmd):
             return 1
 
         if is_stack_supported(self.baseos, self.stack):
+            self.service_name = os.path.basename(os.getcwd())
             log.info("Creating service {}".format(self.service_name))
             # copy the scaffold into the service
-            shutil.copytree(utils.get_res_path('scaffold'), self.service_name)
-            os.chdir(self.service_name)
+            shutil.copytree(utils.get_res_path('scaffold'), '.')
 
             # rename scaffold file to entrypoint and remove others
             os.rename(self.stack.scaffold_name, self.stack.entrypoint)
@@ -155,46 +153,21 @@ class HutBuildCmd(HutCmd, AdminCmd):
     def parse_cmds(subparser):
         subparser = super(HutBuildCmd, HutBuildCmd).parse_cmds(subparser, 'build',
                                                                "Build a StackHut service", HutBuildCmd)
-        subparser.add_argument("--push", '-p', action='store_true', help="Push image to public after")
+#        subparser.add_argument("--push", '-p', action='store_true', help="Push image to public after")
         subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
 
     def __init__(self, args):
         super().__init__(args)
 
     # TODO - run clean cmd first
-    def run(self):
+    def run(self, push=False):
         super().run()
         # setup
         run_barrister()
-
         # Docker build
         service = Service(self.hutcfg, self.usercfg)
-        service.build(self.args.push, self.args.no_cache)
-
+        service.build(push, self.args.no_cache)
         log.info("{} build complete".format(self.hutcfg.name))
-
-
-class TestLocalCmd(HutCmd):
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(ScaffoldCmd, ScaffoldCmd).parse_cmds(subparser, 'testlocal',
-                            "Test Service inside container using specified input", TestLocalCmd)
-        subparser.add_argument("--infile", '-i', default='example_request.json',
-                               help="Local file to use for test input")
-
-    def __init__(self, args):
-        super().__init__(args)
-        self.infile = self.args.infile
-
-    def run(self):
-        super().run()
-        tag = self.hutcfg.tag
-        infile = os.path.abspath(self.infile)
-
-        log.info("Running test service with {}".format(self.infile))
-        out = sh.docker.run('-v', '{}:/workdir/example_request.json:ro'.format(infile),
-                            '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'runlocal', _out=lambda x: print(x, end=''))
-        log.info("Finished test service")
 
 
 # Base command implementing common func
@@ -251,6 +224,7 @@ class LogoutCmd(AdminCmd):
 class DeployCmd(HutCmd, AdminCmd):
     def __init__(self, args):
         super().__init__(args)
+        self.hutbuild = HutBuildCmd(args)
 
     @staticmethod
     def parse_cmds(subparser):
@@ -290,10 +264,13 @@ class DeployCmd(HutCmd, AdminCmd):
     def run(self):
         super().run()
 
+        # call build+push first
+        self.hutbuild.run(True)
+
         # build up the deploy message body
         example_request = None
-        if os.path.exists('example_request.json'):
-            with open('example_request.json') as f:
+        if os.path.exists('test_request.json'):
+            with open('test_request.json') as f:
                 example_request = json.load(f)
 
         # if self.usercfg['username'] != self.hutcfg.email:

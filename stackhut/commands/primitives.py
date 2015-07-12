@@ -43,10 +43,11 @@ class DockerEnv:
         cache_flag = '--no-cache=True' if self.no_cache else '--no-cache=False'
         cmds = ['build', '-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
         log.debug("Calling Docker with cmds - {}".format(cmds))
+        log.info("Starting build, this may take some time, please wait...")
         sh.docker(*cmds)
         if self.push:
             log.info("Pushing {} to Docker Hub".format(tag))
-            sh.docker('push', '-f', tag)
+            sh.docker('push', '-f', tag, _in='Y')
         return tag
 
     def stack_build(self, template_name, template_params, outdir, image_name):
@@ -307,4 +308,4 @@ def run_barrister():
     # TODO - move barrister call into process as running on py2.7 ?
     if not os.path.exists(utils.STACKHUT_DIR):
         os.mkdir(utils.STACKHUT_DIR)
-    sh.barrister('-j', utils.CONTRACTFILE, 'service.idl')
+    sh.barrister('-j', utils.CONTRACTFILE, 'api.idl')

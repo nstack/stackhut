@@ -53,7 +53,8 @@ if __name__ == "__main__":
     with open("req.json", "r") as f:
         req = json.loads(f.read())
 
-    os.chdir(req['req_id'])
+    root_dir = os.getcwd()
+    os.chdir(os.path.join('.stackhut', req['req_id']))
 
     # run the command
     try:
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     except Exception as e:
         resp = gen_error(-32000, str(e))
 
-    os.chdir(stackhut.root_dir)
+    os.chdir(root_dir)
 
     # save the output
     with open("resp.json", "w") as f:

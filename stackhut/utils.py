@@ -35,7 +35,7 @@ CFGFILE = os.path.expanduser(os.path.join('~', '.stackhut.cfg'))
 LOGFILE = '.stackhut.log'
 HUTFILE = 'Hutfile'
 CONTRACTFILE = os.path.join(STACKHUT_DIR, 'service.json')
-IDLFILE = 'service.idl'
+IDLFILE = 'api.idl'
 S3_BUCKET = 'stackhut-payloads'
 ROOT_DIR = os.getcwd()
 DEBUG = False
@@ -60,9 +60,10 @@ log = setup_logging()
 def set_log_level(args_level):
     global log
     # setup the logger
-    loglevel = logging.WARN
+    # loglevel = logging.WARN
+    loglevel = logging.INFO
     if args_level == 1:
-        loglevel = logging.INFO
+        loglevel = logging.DEBUG
     elif args_level >= 2:
         loglevel = logging.DEBUG
     log.setLevel(loglevel)
@@ -237,7 +238,7 @@ class CloudStore(IOStore):
 
 class LocalStore(IOStore):
     """Mock storage system for local testing"""
-    local_store = "local_task"
+    local_store = "run_result"
 
     def _get_path(self, name):
         return "{}/{}".format(self.local_store, name)

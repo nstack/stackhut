@@ -21,7 +21,7 @@ headers = {'content-type': 'application/json'}
 
 id_val = 0
 req_id = None
-root_dir = os.getcwd()
+# root_dir = os.getcwd()
 
 def make_call(method, *_params):
     global id_val
