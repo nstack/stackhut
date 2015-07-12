@@ -16,6 +16,7 @@ import subprocess
 import uuid
 import os
 import sh
+import shutil
 
 from stackhut import barrister
 from stackhut import utils
@@ -148,6 +149,7 @@ class RunCmd(HutCmd):
         finally:
             # cleanup
             self.stack.del_shim()
+            shutil.rmtree('__pycache__')
             os.remove(REQ_FIFO)
             os.remove(RESP_FIFO)
             os.remove(utils.LOGFILE)
