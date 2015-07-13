@@ -42,6 +42,16 @@ S3_BUCKET = 'stackhut-payloads'
 ROOT_DIR = os.getcwd()
 DEBUG = False
 
+OS_TYPE = None
+try:
+    os_str = (str(sh.lsb_release('-i', '-s'))).strip()
+    if os_str in ['Fedora']:
+        OS_TYPE = 'SELINUX'
+    else:
+        OS_TYPE = 'UNKNOWN'
+except sh.CommandNotFound as e:
+    OS_TYPE = 'UNKNOWN'
+
 # Logging
 def setup_logging():
     log = logging.getLogger('stackhut')

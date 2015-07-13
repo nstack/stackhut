@@ -12,5 +12,5 @@ class DefaultService:
     def add(self, x, y):
         return x + y
 
-# export the services here
+# export the services
 SERVICES = {"Default": DefaultService()}

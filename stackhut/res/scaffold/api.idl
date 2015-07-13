@@ -1,5 +1,4 @@
 interface Default {
     // add 2 integers and return the result
-    add(a int, b int) int
+    add(x int, y int) int
 }
-

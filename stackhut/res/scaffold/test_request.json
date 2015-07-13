@@ -1,0 +1,7 @@
+{
+    "serviceName": "{{ scaffold.service_name }}",
+    "req": {
+        "method": "add",
+        "params": [1, 2]
+    }
+}

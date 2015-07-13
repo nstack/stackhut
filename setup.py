@@ -27,7 +27,8 @@ requirements = [
     "redis",
     "multipledispatch",
     "werkzeug",
-    "json-rpc"
+    "json-rpc",
+    "docker-py",
 ]
 
 # conditional requirements for py 2 or 3

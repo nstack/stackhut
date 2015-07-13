@@ -180,7 +180,6 @@ class RunLocalCmd(RunCmd):
         self.reqfile = args.reqfile
         self.container = args.container
         self.uid_gid = args.uid
-        print(args.uid)
         self.store = LocalStore(args.reqfile, args.uid)
 
     def run(self):
@@ -190,14 +189,16 @@ class RunLocalCmd(RunCmd):
             host_store_dir = os.path.abspath(self.store.local_store)
             uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
 
-            log.info("Running test service with {}".format(self.reqfile))
+            log.info("Running service with {} in container - log below...".format(self.reqfile))
             # call docker to run the same command but in the container
             # use data vols for req and run_output
+
+            flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
             out = sh.docker.run('-v', '{}:/workdir/test_request.json:ro'.format(host_req_file),
-                                '-v', '{}:/workdir/{}:z'.format(host_store_dir, self.store.local_store),
+                                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, self.store.local_store, flag),
                                 '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', '--uid', uid_gid,
                                 _out=lambda x: print(x, end=''))
-            log.info("Finished test service")
+            log.info("...finished service in container")
         else:
             # make sure have latest idl
             run_barrister()
