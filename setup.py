@@ -44,7 +44,7 @@ test_requirements = [
 
 setup(
     name='stackhut',
-    version='0.1.30',
+    version='0.1.31',
     description="Run your software in the cloud",
     long_description=(read('README.rst') + '\n\n' +
                       read('HISTORY.rst').replace('.. :changelog:', '') + '\n\n' +
