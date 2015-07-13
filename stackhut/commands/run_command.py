@@ -180,6 +180,7 @@ class RunLocalCmd(RunCmd):
         self.reqfile = args.reqfile
         self.container = args.container
         self.uid_gid = args.uid
+        print(args.uid)
         self.store = LocalStore(args.reqfile, args.uid)
 
     def run(self):
@@ -196,13 +197,12 @@ class RunLocalCmd(RunCmd):
                                 '-v', '{}:/workdir/{}:z'.format(host_store_dir, self.store.local_store),
                                 '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', '--uid', uid_gid,
                                 _out=lambda x: print(x, end=''))
-
-            self.store.cleanup()
             log.info("Finished test service")
         else:
             # make sure have latest idl
             run_barrister()
             super().run()
+            self.store.cleanup()
 
 
 class RunCloudCmd(RunCmd):
