@@ -64,7 +64,8 @@ release: dist
 	twine upload dist/*
 
 dist: clean
-	python3 setup.py sdist
+	# we don't want src-dist's anymore
+	# python3 setup.py sdist
 	python3 setup.py bdist_wheel
 	ls -l dist
 

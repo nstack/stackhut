@@ -160,7 +160,6 @@ class HutBuildCmd(HutCmd, AdminCmd):
     def parse_cmds(subparser):
         subparser = super(HutBuildCmd, HutBuildCmd).parse_cmds(subparser, 'build',
                                                                "Build a StackHut service", HutBuildCmd)
-#        subparser.add_argument("--push", '-p', action='store_true', help="Push image to public after")
         subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
 
     def __init__(self, args):
@@ -230,14 +229,16 @@ class LogoutCmd(AdminCmd):
 # exampleRequest : Option[JsValue],
 # description : String)
 class DeployCmd(HutCmd, AdminCmd):
-    def __init__(self, args):
-        super().__init__(args)
-        self.hutbuild = HutBuildCmd(args)
-
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(DeployCmd, DeployCmd).parse_cmds(subparser, 'deploy',
                                                            "deploy service to StackHut", DeployCmd)
+        subparser.add_argument("--no-build", '-n', action='store_true', help="Deploy without re-building & pushing the image")
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.hutbuild = HutBuildCmd(args)
+        self.no_build = args.no_build
 
     def create_methods(self):
         with open(utils.CONTRACTFILE, 'r') as f:
@@ -273,7 +274,8 @@ class DeployCmd(HutCmd, AdminCmd):
         super().run()
 
         # call build+push first
-        self.hutbuild.run(True)
+        if not self.no_build:
+            self.hutbuild.run(True)
 
         # build up the deploy message body
         example_request = None
