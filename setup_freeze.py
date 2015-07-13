@@ -44,6 +44,8 @@ options = {
     'build_exe': {
         'compressed': True,
         'optimize': 2,
+        'include_files': ['stackhut/res']
+        
 #        'init_script':'Console',
 #        'includes': [
 #            'testfreeze_1',
@@ -61,6 +63,9 @@ executables = [
     )
         
 ]
+
+
+
 
 setup(
     executables=executables,

@@ -71,7 +71,14 @@ def set_log_level(args_level):
 
 # setup app paths
 # src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
-res_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), './res'))
+sys_dir = None
+if getattr(sys, 'frozen', False):
+    # The application is frozen
+    sys_dir = os.path.dirname(sys.executable)
+else:
+    # The application is not frozen
+    sys_dir = os.path.dirname(__file__)
+res_dir = os.path.normpath(os.path.join(sys_dir, './res'))
 # f = open(os.path.join(os.path.dirname(__file__),'templates','file1.txt'))
 #log.debug("StackHut src dir is {}".format(src_dir))
 log.debug("StackHut res dir is {}".format(res_dir))

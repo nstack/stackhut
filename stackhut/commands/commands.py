@@ -27,9 +27,9 @@ import sh
 from jinja2 import Environment, FileSystemLoader
 from distutils.dir_util import copy_tree
 
-from stackhut import utils
+from stackhut import utils, __version__
 from stackhut.utils import log
-from .primitives import Service, BaseOS, Stack, bases, stacks, is_stack_supported, run_barrister
+from .primitives import Service, bases, stacks, is_stack_supported, run_barrister
 
 # Base command implementing common func
 class BaseCmd:
@@ -42,6 +42,12 @@ class BaseCmd:
 
     def __init__(self, args):
         self.args = args
+        # log sys info
+        log.debug("StackHut version {}".format(__version__))
+        try:
+            log.debug(sh.docker("-v"))
+        except sh.CommandNotFound as e:
+            log.debug("Docker not installed")
 
     @abc.abstractmethod
     def run(self):

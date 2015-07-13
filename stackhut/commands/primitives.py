@@ -47,7 +47,7 @@ class DockerEnv:
         sh.docker(*cmds)
         if self.push:
             log.info("Uploading image {}".format(tag))
-            sh.docker('push', '-f', tag, _in='Y')
+            sh.docker('push', tag, _in='Y')
         return tag
 
     def stack_build(self, template_name, template_params, outdir, image_name):
