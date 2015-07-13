@@ -33,13 +33,10 @@ class RunCmd(HutCmd):
     """Base Run Command functionality"""
     def __init__(self, args):
         super().__init__(args)
-        # setup the service contracts
-        contract = barrister.contract_from_file(utils.CONTRACTFILE)
-        self.server = barrister.Server(contract)
         # select the stack
         self.stack = stacks.get(self.hutcfg.stack)
         if self.stack is None:
-            log.error("Unknown stack - {}".format(stack))
+            log.error("Unknown stack - {}".format(self.hutcfg.stack))
             exit(1)
 
     def run(self):
@@ -48,6 +45,10 @@ class RunCmd(HutCmd):
         # called by service on startup
         def _startup():
             log.debug('Starting up service')
+
+            # setup the service contracts
+            contract = barrister.contract_from_file(utils.CONTRACTFILE)
+            self.server = barrister.Server(contract)
 
             # startup the local helper service
             shim_server.init(self.store)
@@ -175,7 +176,6 @@ class RunLocalCmd(RunCmd):
     def __init__(self, args):
         super().__init__(args)
         self.store = LocalStore(args.reqfile)
-
         self.reqfile = self.args.reqfile
         self.container = self.args.container
 

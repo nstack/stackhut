@@ -34,7 +34,7 @@ STACKHUT_DIR = '.stackhut'
 CFGFILE = os.path.expanduser(os.path.join('~', '.stackhut.cfg'))
 LOGFILE = '.stackhut.log'
 HUTFILE = 'Hutfile'
-CONTRACTFILE = os.path.join(STACKHUT_DIR, 'service.json')
+CONTRACTFILE = os.path.join(STACKHUT_DIR, 'api.json')
 IDLFILE = 'api.idl'
 S3_BUCKET = 'stackhut-payloads'
 ROOT_DIR = os.getcwd()
@@ -79,8 +79,13 @@ log.debug("StackHut res dir is {}".format(res_dir))
 pyconfig.set('res_dir', res_dir)
 
 def get_res_path(res_name):
-    return (os.path.join(res_dir, res_name))
+    return os.path.join(res_dir, res_name)
 
+def get_req_dir(req_id):
+    return os.path.join(STACKHUT_DIR, req_id)
+
+def get_req_file(req_id, fname):
+    return os.path.join(STACKHUT_DIR, req_id, fname)
 
 # Error handling
 class ParseError(barrister.RpcException):
@@ -224,9 +229,15 @@ class CloudStore(IOStore):
     def put_file(self, fname, req_id='', make_public=True):
         """Upload file to S3"""
         log.info("Uploading to S3")
-        req_fname = os.path.join(req_id, fname)
-        k = self._create_key(req_fname)
+        k = self._create_key(os.path.join(req_id, fname))
+
+        if req_id == '':
+            req_fname = fname
+        else:
+            req_fname = get_req_file(req_id, fname)
+
         k.set_contents_from_filename(req_fname)
+
         log.info("Uploaded {} to {} in S3".format(req_fname, k))
 
         if make_public:
@@ -256,7 +267,7 @@ class LocalStore(IOStore):
         return x
 
     def put_response(self, s):
-        with open(self._get_path('output.json'), "w") as f:
+        with open(self._get_path('response.json'), "w") as f:
             f.write(s)
 
     # def get_file(self, name):
@@ -264,12 +275,16 @@ class LocalStore(IOStore):
 
     def put_file(self, fname, req_id='', make_public=True):
         """Put file into a subdir keyed by req_id in local store"""
-        req_fname = os.path.join(req_id, fname)
-        local_store_dir = os.path.join(self.local_store, req_id)
+        if req_id == '':
+            req_fname = fname
+        else:
+            req_fname = get_req_file(req_id, fname)
+
+        local_store_dir = self._get_path(req_id)
 
         os.mkdir(local_store_dir) if not os.path.exists(local_store_dir) else None
         shutil.copy(req_fname, local_store_dir)
-        return os.path.join(self.local_store, req_fname)
+        return os.path.join(local_store_dir, fname)
 
 
 class StackHutCfg(dict):

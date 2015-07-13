@@ -20,6 +20,7 @@ from werkzeug.wrappers import Request, Response
 from werkzeug.serving import run_simple
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from stackhut.utils import ServerError, NonZeroExitError, log
+from stackhut import utils
 
 store = None
 
@@ -32,11 +33,10 @@ def put_file(req_id, fname, make_public=True):
 def download_file(req_id, url, fname=None):
     """from http://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py"""
     fname = url.split('/')[-1] if fname is None else fname
-    log.info(req_id)
-    task_fname = os.path.join(req_id, fname)
-    log.info("Downloading file {} from {}".format(task_fname, url))
+    req_fname = utils.get_req_file(req_id, fname)
+    log.info("Downloading file {} from {}".format(fname, url))
     r = requests.get(url, stream=True)
-    with open(task_fname, 'wb') as f:
+    with open(req_fname, 'wb') as f:
         for chunk in r.iter_content(chunk_size=1024):
             if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
@@ -70,22 +70,3 @@ def init(_store):
 
 def shutdown():
     pass
-
-# def run_command(cmd, stdin=''):
-#     try:
-#         p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#         stdout, stderr= p.communicate(input=stdin.encode())
-#         exitcode = p.returncode
-#     except OSError as e:
-#         raise ServerError(-32002, 'OS error', dict(error=e.strerror))
-#
-#     if exitcode is not 0:
-#         raise NonZeroExitError(exitcode, stderr.decode())
-#     else:
-#         return dict(stdout=stdout.decode())
-
-# def call_files(cmd, stdin, stdout, stderr):
-#     ret_val = subprocess.call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
-#     return ret_val
-
-

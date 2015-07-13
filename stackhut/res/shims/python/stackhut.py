@@ -21,7 +21,6 @@ headers = {'content-type': 'application/json'}
 
 id_val = 0
 req_id = None
-root_dir = os.getcwd()
 
 def make_call(method, *_params):
     global id_val
@@ -45,6 +44,10 @@ def make_call(method, *_params):
         return response['result']
     else:
         raise RuntimeError(response['error'])
+
+# stackhut fields
+root_dir = os.getcwd()
+in_container = True if os.path.exists('/workdir') else False
 
 # stackhut library functions
 def put_file(fname, make_public=True):
