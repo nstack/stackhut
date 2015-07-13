@@ -172,23 +172,32 @@ class RunLocalCmd(RunCmd):
                                help="Test request file to use")
         subparser.add_argument("--container", '-c', action='store_true',
                                help="Run and test the service inside the container (requires you run build first)")
+        subparser.add_argument("--uid", '-u', #default='0:0',
+                               help="uid:gid to chown the run_results dir to")
 
     def __init__(self, args):
         super().__init__(args)
-        self.store = LocalStore(args.reqfile)
-        self.reqfile = self.args.reqfile
-        self.container = self.args.container
+        self.reqfile = args.reqfile
+        self.container = args.container
+        self.uid_gid = args.uid
+        self.store = LocalStore(args.reqfile, args.uid)
 
     def run(self):
         if self.container:
             tag = self.hutcfg.tag
-            infile = os.path.abspath(self.reqfile)
+            host_req_file = os.path.abspath(self.reqfile)
+            host_store_dir = os.path.abspath(self.store.local_store)
+            uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
 
             log.info("Running test service with {}".format(self.reqfile))
             # call docker to run the same command but in the container
             # use data vols for req and run_output
-            out = sh.docker.run('-v', '{}:/workdir/test_request.json:ro'.format(infile),
-                                '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', _out=lambda x: print(x, end=''))
+            out = sh.docker.run('-v', '{}:/workdir/test_request.json:ro'.format(host_req_file),
+                                '-v', '{}:/workdir/{}:z'.format(host_store_dir, self.store.local_store),
+                                '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', '--uid', uid_gid,
+                                _out=lambda x: print(x, end=''))
+
+            self.store.cleanup()
             log.info("Finished test service")
         else:
             # make sure have latest idl

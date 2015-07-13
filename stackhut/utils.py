@@ -22,12 +22,14 @@ import threading
 import shutil
 from itertools import cycle
 import codecs
+import sh
 import redis
 import pyconfig
 import yaml
 import json
 
 from stackhut import barrister
+
 
 # global constants
 STACKHUT_DIR = '.stackhut'
@@ -261,7 +263,8 @@ class LocalStore(IOStore):
     def _get_path(self, name):
         return "{}/{}".format(self.local_store, name)
 
-    def __init__(self, request_file):
+    def __init__(self, request_file, uid_gid):
+        self.uid_gid = uid_gid
         # delete and recreate local_store
         shutil.rmtree(self.local_store, ignore_errors=True)
         if not os.path.exists(self.local_store):
@@ -270,6 +273,11 @@ class LocalStore(IOStore):
         # copy any files that should be there into the dir
         shutil.copy(request_file, self.local_store)
         self.request_file = self._get_path(request_file)
+
+    def cleanup(self):
+        # change the results owner
+        if self.uid_gid is not None:
+            sh.chown('-R', self.uid_gid, self.local_store)
 
     def get_request(self):
         with open(self.request_file, "r") as f:
