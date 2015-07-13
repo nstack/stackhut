@@ -262,8 +262,11 @@ class LocalStore(IOStore):
         return "{}/{}".format(self.local_store, name)
 
     def __init__(self, request_file):
+        # delete and recreate local_store
         shutil.rmtree(self.local_store, ignore_errors=True)
-        os.mkdir(self.local_store)
+        if not os.path.exists(self.local_store):
+            os.mkdir(self.local_store)
+
         # copy any files that should be there into the dir
         shutil.copy(request_file, self.local_store)
         self.request_file = self._get_path(request_file)

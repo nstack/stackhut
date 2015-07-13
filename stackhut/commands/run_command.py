@@ -186,6 +186,7 @@ class RunLocalCmd(RunCmd):
 
             log.info("Running test service with {}".format(self.reqfile))
             # call docker to run the same command but in the container
+            # use data vols for req and run_output
             out = sh.docker.run('-v', '{}:/workdir/test_request.json:ro'.format(infile),
                                 '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', _out=lambda x: print(x, end=''))
             log.info("Finished test service")
