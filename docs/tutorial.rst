@@ -1,5 +1,5 @@
-Getting Started
-===============
+Tutorial
+========
 
 This section repreesents a quick overview of how to use StackHut to develop, test and deploy a simple service on the cloud. The best way to start is to watch the following screen-cast.
 

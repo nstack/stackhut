@@ -12,14 +12,9 @@ Contents:
     :maxdepth: 2
 
     introduction
-    installation
-    gettingstarted
+    getting_started
     usage
-    faq
-
-.. other stuff - misc, contributing, authors, history
-    
-
+    misc
 
 
 Indices and tables
