@@ -12,9 +12,9 @@ Contents:
     :maxdepth: 2
 
     introduction
-    getting_started
-    usage
-    misc
+    getting_started/index
+    usage/index
+    misc/index
 
 
 Indices and tables
