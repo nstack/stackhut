@@ -102,3 +102,5 @@ As before we receive a JSON-RPC response object, however this time the ``result`
 We hope this shows how you can call any StackHut service from your code - you may either use an existing JSON-RPC library or roll your own functions to make the request and handle the response respectively.
 Thanks for reading this tutorial - you can find more information on calling services, for instance using StackHut client-side libraries, in :ref:`usage_your_code`.
 
+Further documentation on how to create a StackHut and cloud API from your code can be found in :ref:`tutorial_create`.
+

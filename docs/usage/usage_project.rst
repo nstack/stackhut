@@ -1,8 +1,14 @@
+.. _usage_project:
+
 StackHut Project Description
 ============================
 
 Introduction
 ------------
+
+
+.. _usage_project_hutfile:
+
 
 Hutfile
 -------
@@ -15,9 +21,5 @@ App Code
 
 Notes
 -----
-
-
-Hutfile
--------
 
 

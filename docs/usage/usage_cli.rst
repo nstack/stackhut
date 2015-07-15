@@ -1,5 +1,9 @@
+.. _usage_cli:
+
 StackHut CLI
 ============
+
+**TODO**
 
 Introduction
 ------------
@@ -12,10 +16,5 @@ Commands
 
 Deploy
 ^^^^^^
-
-sadsad
-
-as
-dsad
 
 
