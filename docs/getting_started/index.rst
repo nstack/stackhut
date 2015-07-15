@@ -5,6 +5,6 @@ Getting Started
 .. toctree::
    
    installation
-   tutorial 
-
+   tutorial_use
+   tutorial_create
 
