@@ -1,7 +1,7 @@
 Installation
 ============
 
-There are a few parts to StackHut - the website and hosting platform, the command line tool, and the library of functions you an use when writing your services. This page deals with setting up the comamndd lie tool so you can rapidly develop, test, and deploy your services rapidly from your computer to the StackHut platform.
+There are a few parts to StackHut - the website and hosting platform, the command line tool, and the library of functions you an use when writing your services. This page deals with setting up the command lie tool so you can rapidly develop, test, and deploy your services rapidly from your computer to the StackHut platform.
 
 The StackHut command-line tool (StackHut CLI) is written in Python and requires a few dependencies to get going.
 
