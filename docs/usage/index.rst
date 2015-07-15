@@ -2,8 +2,7 @@
 Usage
 *****
 
-StackHut is comprised of several components, the StackHut hosting platform, command-line tool (CLI), and the stackhut runtie library. In this reference sectio we describe each comopnent in detail.
-
+StackHut is comprised of several components, the StackHut hosting platform, command-line tool (CLI), and the stackhut runtime library. In this reference sectio we describe each comopnent in detail.
 
 .. toctree::
    

@@ -1,8 +1,13 @@
-Installation
-============
+Platform Installation
+=====================
 
-There are a few parts to StackHut - the website and hosting platform, the command line tool, and the library of functions you an use when writing your services. This page deals with setting up the comamndd lie tool so you can rapidly develop, test, and deploy your services rapidly from your computer to the StackHut platform.
+StackHut is comprised of 2 major parts - the hosting platform full of live APIs that you can call from your code, and the development platform with which to create your own live APIs.
 
+To use a StackHut service from within your own code you just need to make a JSON-RPC HTTP request - as described in :ref:`tutorial_create`.
+
+.. There are a few parts to StackHut - the website and hosting platform from which you can call services in your own code, the command line tool, and the library of functions you an use when writing your services.
+
+This page describes installing the command line tool so you can rapidly develop, test, and deploy your services rapidly from your computer to the StackHut platform.
 The StackHut command-line tool (StackHut CLI) is written in Python and requires a few dependencies to get going.
 
 
@@ -74,9 +79,4 @@ Upgrading
 Development on the StackHut CLI moves pretty fast, so if you find a bug it may be worth updating first before reporting an issue. Using pip this is easy
 
 * ``pip3 install --upgrade stackhut``
-
-
-
-
-
 
