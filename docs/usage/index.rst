@@ -8,6 +8,7 @@ StackHut is comprised of several components, the StackHut hosting platform, comm
 .. toctree::
    
    usage_hosting
+   usage_your_code
    usage_cli
    usage_project
    usage_runtime

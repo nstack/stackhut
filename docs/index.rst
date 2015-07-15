@@ -6,7 +6,7 @@
 Welcome to StackHut's documentation!
 ====================================
 
-Thank you for browsing our documentation, it's all a bit rought at the moment. Please let us know at docs@stackhut.com if anything is unclear or you find a mistake. Better still, submit a pull-request at www.github.com/StackHut/stackhut-docs, thanks!
+Thank you for browsing our documentation, it's all a bit rought at the moment. Please let us know at docs@stackhut.com if anything is unclear or you find a mistake. Better still, submit a pull-request using the link at the top-right, thanks!
 
 Contents:
 

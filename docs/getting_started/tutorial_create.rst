@@ -1,3 +1,5 @@
+.. _tutorial_create:
+
 Tutorial - Creating a Service
 =============================
 
