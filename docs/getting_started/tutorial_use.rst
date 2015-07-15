@@ -95,6 +95,9 @@ Let's say we call the same serice method ``helloName`` but with a number, rather
 As before we receive a JSON-RPC repsonse object, however this time the HTTP status code is xx and  the ``result`` field has been replaced with an ``error`` field, contatining an object with an error code, a human readable text message, and an optional ``data`` object containing further information. You can use this information within your application to handle the error as required. (*NOTE* - the error codes are defined by the JSON-RPC spec and can be found here (ref)).
 
 
+As you can see, it's quite straightforward to call any StackHut service from your code. Either use an existing JSON-RPC library or it's possible to roll your own with 2 functinos to make the request and handling the responcce respectively.
+
+
 
 Access a service using client-side libraries
 --------------------------------------------
@@ -108,22 +111,63 @@ Client-side libraries are provided/under-development for the following platforms
  * Java/JVM (coming soon)
  * C#/.NET (coming soon)
 
+These libraries abstract away the entire JSON-RPC mechansism and make it as easy as calling a function to utilise a StackHut service. They marshal the data, colelct the responce, handling erros messages along the way, and check the validity of the message before it's sent.
 
+Example usage, in Ruby::
 
+    example = Stackhut('example-python')
+    result = example.helloName('StackHut :)')
+    puts result
+    >> Hello StackHut :)
+  
 
-Usage Notes
------------
+Notes
+-----
 
 Files
 ^^^^^
 
-Batching
-^^^^^^^^
+Often you will want to pass a file from your code to be processed by a StackHut service, for instance when processing a video or converting a PDF.
+At the moment we require files to be uploaded separetly to a online locatino from where it can be retreived by the serice over HTTP, for instance S3. We recognise this is an extra step and are working hard to remove this limitation.
+
+Reuult files can are automatically placed onto S3 for easy retireval by clients altouggh can be upoaded elsehere if required.
 
 State
 ^^^^^
 
+Similar to files, we are currently hard at work on providing a standardised solution to handling state within a service - at the moment all services are state-less by default. 
+However a service may be pgrmme in such a sway to save to an extranl platform, e.g. a database, on an individual service basis.
 
+Batching
+^^^^^^^^
+
+We have currently only described StackHut as peformfing a single reqeust per call, however it's also possible to collect serverl requirest and perform them sequentially within a single call. This is termed ``batching`` mode and is easily accomplished in StackHut by simply sending a list of reesusts within the ``req`` object in the call::
+
+Request::
+
+    {
+        "serviceName" : "example-python",
+        "req" : [
+            {
+                "method" : "helloName",
+                "params" : ["StackHut"]        
+                "id" : 1
+            },
+            {
+                "method" : "helloName",
+                "params" : ["World"]        
+                "id" : 2
+            },
+            {
+                "method" : "add",
+                "params" : [1, 2]        
+                "id" : 3
+            }
+        ]
+    }    
+
+These request will all be peformed within a single service-call, great for increasing throughput and keeping your external calls over the cloud to StackHut to a minimum.
+We have some exciting features planned invovling batching that will allow you to setup complex cloud-based processing pipelines easily.
 
 
 
