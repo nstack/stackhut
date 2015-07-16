@@ -47,8 +47,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'StackHut'
-copyright = u'2015, Mandeep Gill & Leo Anthias'
-author = u'Mandeep Gill & Leo Anthias'
+copyright = u'2015, StackHut'
+author = u'Team StackHut'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
