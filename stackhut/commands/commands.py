@@ -198,7 +198,15 @@ class LoginCmd(AdminCmd):
             self.usercfg['username'] = username
             self.usercfg['password'] = password
             # cfg['token'] = token
+
+            # get docker username
+            stdout = sh.docker('info')
+            docker_username = ([x for x in a if x.startswith('Username')][0]).split(':')[1].strip()
+            log.info("Docker username is '{}'".format(docker_username))
+            self.usercfg['docker_username'] = docker_username
+
             self.usercfg.save()
+
         else:
             print("Incorrect username or password, please try again")
 
@@ -270,6 +278,13 @@ class DeployCmd(HutCmd, AdminCmd):
 
         return interfaces
 
+    def _read_file(self, fname):
+        x = None
+        if os.path.exists(fname):
+            with open(fname) as f:
+                x = f.read()
+        return x
+
     def run(self):
         super().run()
 
@@ -278,10 +293,8 @@ class DeployCmd(HutCmd, AdminCmd):
             self.hutbuild.run(True)
 
         # build up the deploy message body
-        example_request = None
-        if os.path.exists('test_request.json'):
-            with open('test_request.json') as f:
-                example_request = json.load(f)
+        test_request = json.loads(self._read_file('test_request.json'))
+        readme = self._read_file('README.md')
 
         # if self.usercfg['username'] != self.hutcfg.email:
         #     log.error("StackHut username ({}) not equal to Hutfile contact email ({})".format(self.usercfg['username'], self.hutcfg.email))
@@ -290,8 +303,9 @@ class DeployCmd(HutCmd, AdminCmd):
         data = {
             'dockerImage': self.hutcfg.tag,
             'githubUrl': self.hutcfg.github_url,
-            'exampleRequest': example_request,
+            'exampleRequest': test_request,
             'description': self.hutcfg.description,
+            #'readme': readme,
             'schema': self.create_methods()
         }
 

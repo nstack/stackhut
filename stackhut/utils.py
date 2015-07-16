@@ -327,7 +327,7 @@ class StackHutCfg(dict):
                     if v in self:
                         self[v] = self.xor_decrypt_string(self[v])
 
-    # Yes - this is shit crypto but jsut so we don't store plaintext on the fileystem
+    # Yes - this is shit crypto but just so we don't store plaintext on the fileystem
     # password sent over SSL to web regardless
     key = 'stackhut_is_G_dawg'
     encrypt_vals = ['password', 'token']
@@ -359,6 +359,10 @@ class StackHutCfg(dict):
         for v in self.encrypt_vals:
             self[v] = ''
 
+    @property
+    def docker_username(self):
+        return self.get('docker_username', self['username'])
+
 
 class HutfileCfg:
     def __init__(self):
@@ -370,7 +374,7 @@ class HutfileCfg:
 
         # get vals from the hutfile
         self.name = hutfile['name'].lower()
-        self.author = 'stackhut'  # hutfile['author'].lower()
+        # self.author = 'stackhut'  # hutfile['author'].lower()
         self.version = 'latest'
         # self.email = hutfile['contact']
         self.description = hutfile['description']

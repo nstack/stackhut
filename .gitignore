@@ -1,4 +1,8 @@
-# nested repos
+.stackhut.log
+*.json
+!test_request.json
+run_result
+.stackhut
 
 # ide
 *.iml
@@ -28,11 +32,6 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-bin/
-
-# package testing / venvs
-*-wheel
-*-sdist
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -66,13 +65,3 @@ docs/_build/
 
 # PyBuilder
 target/
-
-# Complexity
-output/*.html
-output/*/index.html
-
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
-

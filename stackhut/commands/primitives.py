@@ -59,6 +59,13 @@ class DockerEnv:
         self.build_dockerfile(image_name)
         os.chdir(utils.ROOT_DIR)
 
+    @staticmethod
+    def image_tag(self, hutcfg, usercfg):
+        """Returns the tag for the image"""
+        tag = "{}/{}:{}".format(self.usercfg.docker_username, self.hutcfg.name, self.hutcfg.version)
+        return tag
+
+
 
 # Base OS's that we support
 class BaseOS(DockerEnv):

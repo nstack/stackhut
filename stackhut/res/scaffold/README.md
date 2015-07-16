@@ -1,9 +1,6 @@
 # {{ scaffold.service_name | capitalize }} Service
 
-Add info here
+_TODO_ - describe service
 
 ## Usage
-* Edit the `Hutfile` to describe your service parameters
-* Edit the `api.idl` to describe the service interface
-* Write your app service in `{{ scaffold.stack.entrypoint }}`
-* Dev, run and push using the `stackhut` app
+* Look at the API (defined in `api.idl`) to see what functions are available, friend.

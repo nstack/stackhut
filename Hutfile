@@ -1,0 +1,15 @@
+# Name for the service - we recommend using snake-case
+name: stackhut-tool
+
+# A unique name to identify the author
+author: Huts
+
+# A contact email address
+contact: huts@stackhut.com
+
+# description of the service
+description: Awesome service in python
+
+# stack we use, in terms of the OS and language runtime
+baseos: fedora
+stack: python
