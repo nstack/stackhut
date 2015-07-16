@@ -91,9 +91,14 @@ class InitCmd(AdminCmd):
     def run(self):
         super().run()
         if 'username' in self.usercfg and len(self.usercfg['username']) > 0:
-            self.author = (self.usercfg['username'].split('@')[0]).capitalize()
+            # self.author = (self.usercfg['username'].split('@')[0]).capitalize()
+            pass
         else:
             log.error("Please login first")
+            return 1
+
+        if os.path.exists('.git'):
+            log.error('Found existing git repo, not initialising')
             return 1
 
         if is_stack_supported(self.baseos, self.stack):

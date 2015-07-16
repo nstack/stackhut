@@ -1,7 +1,0 @@
-{
-    "serviceName": "stackhut-tool",
-    "req": {
-        "method": "add",
-        "params": [1, 2]
-    }
-}
