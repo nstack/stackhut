@@ -37,8 +37,7 @@ class DockerEnv:
         with open(dockerfile, 'w') as f:
             f.write(rendered_template)
 
-    def build_dockerfile(self, image_name, author='stackhut', version='latest', dockerfile='Dockerfile'):
-        tag = "{}/{}:{}".format(author, image_name, version)
+    def build_dockerfile(self, tag, dockerfile='Dockerfile'):
         log.debug("Running docker build for {}".format(tag))
         cache_flag = '--no-cache=True' if self.no_cache else '--no-cache=False'
         cmds = ['build', '-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
@@ -56,14 +55,11 @@ class DockerEnv:
             os.mkdir(image_dir)
         os.chdir(image_dir)
         self.gen_dockerfile(template_name, template_params)
-        self.build_dockerfile(image_name)
+
+        tag = "{}/{}:{}".format('stackhut', image_name, 'latest')
+        self.build_dockerfile(tag)
         os.chdir(utils.ROOT_DIR)
 
-    @staticmethod
-    def image_tag(self, hutcfg, usercfg):
-        """Returns the tag for the image"""
-        tag = "{}/{}:{}".format(self.usercfg.docker_username, self.hutcfg.name, self.hutcfg.version)
-        return tag
 
 
 
@@ -306,7 +302,8 @@ class Service(DockerEnv):
         super().build(*args)
         dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
         self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-        self.build_dockerfile(self.hutcfg.name, self.hutcfg.author, self.hutcfg.version, dockerfile)
+        tag = self.hutcfg.tag(self.usercfg)
+        self.build_dockerfile(tag, dockerfile)
 
 
 # Helper functions

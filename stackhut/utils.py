@@ -361,7 +361,9 @@ class StackHutCfg(dict):
 
     @property
     def docker_username(self):
-        return self.get('docker_username', self['username'])
+        x = self.get('docker_username', self['username'])
+        log.debug("Using docker username '{}'".format(x))
+        return x
 
 
 class HutfileCfg:
@@ -370,8 +372,7 @@ class HutfileCfg:
         with open(HUTFILE, 'r') as f:
             hutfile = yaml.safe_load(f)
 
-        # TODO - validatdation
-
+        # TODO - validation
         # get vals from the hutfile
         self.name = hutfile['name'].lower()
         # self.author = 'stackhut'  # hutfile['author'].lower()
@@ -390,7 +391,10 @@ class HutfileCfg:
         self.baseos = hutfile['baseos']
         self.stack = hutfile['stack']
         self.from_image = "{}-{}".format(self.baseos, self.stack)
-        self.tag = "{}/{}:{}".format(self.author, self.name, self.version)
+
+    def tag(self, usercfg):
+        """Returns the tag for the image"""
+        return "{}/{}:{}".format(usercfg.docker_username, self.name, self.version)
 
 
 def secure_url_prefix():

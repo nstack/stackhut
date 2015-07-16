@@ -184,7 +184,8 @@ class RunLocalCmd(RunCmd):
 
     def run(self):
         if self.container:
-            tag = self.hutcfg.tag
+            usercfg = utils.StackHutCfg()
+            tag = self.hutcfg.tag(usercfg)
             host_req_file = os.path.abspath(self.reqfile)
             host_store_dir = os.path.abspath(self.store.local_store)
             uid_gid = '{}:{}'.format(os.getuid(), os.getgid())

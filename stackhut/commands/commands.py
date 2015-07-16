@@ -206,10 +206,9 @@ class LoginCmd(AdminCmd):
 
             # get docker username
             stdout = sh.docker('info')
-            docker_username = ([x for x in a if x.startswith('Username')][0]).split(':')[1].strip()
+            docker_username = ([x for x in stdout if x.startswith('Username')][0]).split(':')[1].strip()
             log.info("Docker username is '{}'".format(docker_username))
             self.usercfg['docker_username'] = docker_username
-
             self.usercfg.save()
 
         else:
@@ -304,9 +303,11 @@ class DeployCmd(HutCmd, AdminCmd):
         # if self.usercfg['username'] != self.hutcfg.email:
         #     log.error("StackHut username ({}) not equal to Hutfile contact email ({})".format(self.usercfg['username'], self.hutcfg.email))
         #     return 1
+        tag = self.hutcfg.tag(self.usercfg)
+
 
         data = {
-            'dockerImage': self.hutcfg.tag,
+            'dockerImage': tag,
             'githubUrl': self.hutcfg.github_url,
             'exampleRequest': test_request,
             'description': self.hutcfg.description,
@@ -314,7 +315,7 @@ class DeployCmd(HutCmd, AdminCmd):
             'schema': self.create_methods()
         }
 
-        log.info("Deploying image {} to StackHut".format(self.hutcfg.tag))
+        log.info("Deploying image '{}' to StackHut".format(tag))
         r = utils.stackhut_api_secure_call('add', data, self.usercfg)
         log.info("Image {} has been {}".format(r['serviceName'], r['message']))
 
