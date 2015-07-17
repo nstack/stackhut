@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 import time
+import json
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
 import sh
@@ -20,6 +21,7 @@ from distutils.dir_util import copy_tree
 
 from stackhut import utils
 from stackhut.utils import log
+from stackhut.barrister import parse
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
 
@@ -308,8 +310,19 @@ class Service(DockerEnv):
 
 # Helper functions
 # TODO - we should move these into a dep-style system - maybe use Makefiled in interrim
+# def run_barrister():
+#     # TODO - move barrister call into process as running on py2.7 ?
+#     if not os.path.exists(utils.STACKHUT_DIR):
+#         os.mkdir(utils.STACKHUT_DIR)
+#     sh.barrister('-j', utils.CONTRACTFILE, 'api.idl')
+
 def run_barrister():
-    # TODO - move barrister call into process as running on py2.7 ?
-    if not os.path.exists(utils.STACKHUT_DIR):
-        os.mkdir(utils.STACKHUT_DIR)
-    sh.barrister('-j', utils.CONTRACTFILE, 'api.idl')
+    idl_fname = 'api.idl'
+
+    with open(idl_fname, 'r') as idl_file:
+        parsed = parse(idl_file, idl_fname)
+
+    with open(utils.CONTRACTFILE, "w") as out_file:
+        out_file.write(json.dumps(parsed))
+
+
