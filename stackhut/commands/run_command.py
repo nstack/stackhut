@@ -150,7 +150,6 @@ class RunCmd(HutCmd):
         finally:
             # cleanup
             self.stack.del_shim()
-            shutil.rmtree('__pycache__')
             os.remove(REQ_FIFO)
             os.remove(RESP_FIFO)
             os.remove(utils.LOGFILE)
@@ -174,11 +173,14 @@ class RunLocalCmd(RunCmd):
                                help="Run and test the service inside the container (requires you run build first)")
         subparser.add_argument("--uid", '-u', #default='0:0',
                                help="uid:gid to chown the run_results dir to")
+        subparser.add_argument("--server-only", '-s', action='store_true',
+                               help="Run and test the stackshut shim server only)")
 
     def __init__(self, args):
         super().__init__(args)
         self.reqfile = args.reqfile
         self.container = args.container
+        self.server_only = args.server_only
         self.uid_gid = args.uid
         self.store = LocalStore(args.reqfile, args.uid)
 
@@ -200,6 +202,15 @@ class RunLocalCmd(RunCmd):
                                 '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', '--uid', uid_gid,
                                 _out=lambda x: print(x, end=''))
             log.info("...finished service in container")
+
+        elif self.server_only:
+            # startup the local helper service
+            t = shim_server.init(self.store, False)
+
+            self.store.set_task_id(str(uuid.uuid4()))
+            self.stack.copy_shim()
+#            t.join()
+
         else:
             # make sure have latest idl
             gen_barrister_contract()

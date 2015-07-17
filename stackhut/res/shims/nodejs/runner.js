@@ -33,13 +33,29 @@ function gen_error(code, msg) {
     return { error: code, msg: msg }
 }
 
-// custom write file as stupid Node can't write to a named pipe otherwise!
+function gen_p_error(code, msg) {
+    return Promise.resolve(gen_error(code, msg))
+}
+
+// custom write func as (stupid) Node can't write to a named pipe otherwise!
 function write_resp(resp) {
     let buf = new Buffer(resp);
     let fd = fs.openSync(RESP_JSON, 'w');
     fs.writeSync(fd, buf, 0, buf.length, -1);
     fs.closeSync(fd);
 }
+
+
+function shutdown(resp) {
+    // console.log('res - %j', resp);
+    process.chdir(stackhut.root_dir)
+
+    // save the json resp
+    write_resp(JSON.stringify(resp));
+    // fs.writeFileSync(RESP_JSON, JSON.stringify(resp), 'utf8');
+    process.exit(0);
+}
+
 
 function run(req) {
     // tell the client helper the current taskid
@@ -56,13 +72,11 @@ function run(req) {
 
         if (func_name in iface_impl) {
             let func_impl = iface_impl[func_name];
-            let resp = func_impl.apply(iface_impl, params);
-            // return the result
-            return { result: resp }
+            return func_impl.apply(iface_impl, params)
         }
-        else { return gen_error(-32601, 'Method not found') }
+        else { return gen_p_error(-32601, 'Method not found') }
     }
-    else { return gen_error(-32601, 'Service not found') }
+    else { return gen_p_error(-32601, 'Service not found') }
 }
 
 // top-level error handling
@@ -80,12 +94,13 @@ let req = JSON.parse(fs.readFileSync(REQ_JSON, 'utf8'));
 
 process.chdir(path.join('.stackhut', req['req_id']))
 
-// run the command
-let resp = run(req)
-// console.log('res - %j', resp);
-process.chdir(stackhut.root_dir)
-
-// save the json resp
-write_resp(JSON.stringify(resp));
-// fs.writeFileSync(RESP_JSON, JSON.stringify(resp), 'utf8');
-process.exit(0);
+// run the command sync/async and then shutdown
+run(req)
+.then(function(resp) {
+    // return the result
+    console.log(resp)
+    shutdown({ result: resp })
+})
+.catch(function(err) {
+    shutdown(gen_error(-32600, err))
+})

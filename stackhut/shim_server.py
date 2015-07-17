@@ -32,6 +32,7 @@ def put_file(req_id, fname, make_public=True):
 @dispatcher.add_method
 def download_file(req_id, url, fname=None):
     """from http://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py"""
+
     fname = url.split('/')[-1] if fname is None else fname
     req_fname = utils.get_req_file(req_id, fname)
     log.info("Downloading file {} from {}".format(fname, url))
@@ -56,17 +57,19 @@ def application(request):
     response = JSONRPCResponseManager.handle(request.data, dispatcher)
     return Response(response.json, mimetype='application/json')
 
-def init(_store):
+def init(_store, daemon=True):
     global store
     store = _store
 
     def run_server():
          # start in a new thread
          log.debug("Starting StackHut helper-server")
-         run_simple('localhost', 4000, application, threaded=False)
+         run_simple('localhost', 4000, application, threaded=True)
 
     # start server in sep thread
-    threading.Thread(target=run_server, daemon=True).start()
+    t = threading.Thread(target=run_server, daemon=daemon)
+    t.start()
+    return t
 
 def shutdown():
     pass

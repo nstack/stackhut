@@ -182,6 +182,11 @@ class Stack(DockerEnv):
         shim_dir = os.path.join(utils.get_res_path('shims'), self.name)
         copy_tree(shim_dir, utils.ROOT_DIR)
 
+    def link_shim(self):
+        shim_dir = os.path.join(utils.get_res_path('shims'), self.name)
+        for f in self.shim_files:
+            os.symlink(os.path.join(shim_dir, f), f)
+
     def del_shim(self):
         for f in self.shim_files:
             os.remove(os.path.join(utils.ROOT_DIR, f))

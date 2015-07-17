@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-let request = require('sync-request')
+let request = require('request')
 let url = "http://localhost:4000/jsonrpc"
 
 let id_val = 0
@@ -21,6 +21,8 @@ module.exports.req_id = null
 module.exports.root_dir = __dirname
 
 function make_call(method) {
+    console.log('make_call_1')
+
     let params = [].slice.call(arguments, 1);
     params.unshift(module.exports.req_id)
 
@@ -33,13 +35,28 @@ function make_call(method) {
 
     console.log(payload)
 
-    let res = request('POST', url, {json: payload})
-    id_val += 1
-    let body = JSON.parse(res.getBody())
+    console.log('make_call_2')
 
-    if ('result' in body) {
-        return body['result'];
-    } else { throw body['error'] }
+    return new Promise(function(resolve, reject) {
+        request({
+            url: url,
+            method: 'POST',
+            body: payload,
+            json: true
+            },
+            function(error, response, body) {
+                console.log('in callback')
+                if(!error && response.statusCode >= 200 && response.statusCode < 300) {
+                    id_val += 1
+                    if ('result' in body) {
+                        resolve(body['result']);
+                    } else { reject(body['error']) }
+                } else {
+                    reject('error: '+ response.statusCode + error)
+                }
+            }
+        )
+    })
 }
 
 // stackhut library functions
@@ -49,6 +66,7 @@ module.exports.put_file = function(fname, make_public) {
 }
 
 module.exports.download_file = function(url, fname) {
+    console.log('download file')
     let _fname = typeof fname !== 'undefined' ? fname : null;
     return make_call('download_file', url, _fname)
 }
