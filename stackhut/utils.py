@@ -328,9 +328,10 @@ class StackHutCfg(dict):
                         self[v] = self.xor_decrypt_string(self[v])
 
     # Yes - this is shit crypto but just so we don't store plaintext on the fileystem
-    # password sent over SSL to web regardless
+    # password sent via HTTPS to web regardless
     key = 'stackhut_is_G_dawg'
-    encrypt_vals = ['password', 'token']
+    encrypt_vals = ['password']
+    basic_vals = ['username', 'docker_username', 'email']
 
     def xor_crypt_string(self, plaintext):
         ciphertext = ''.join(chr(ord(x) ^ ord(y)) for (x, y) in zip(plaintext, cycle(self.key)))
@@ -355,9 +356,12 @@ class StackHutCfg(dict):
 
     def wipe(self):
         # blank out the cfg file
-        self['username'] = ''
-        for v in self.encrypt_vals:
-            self[v] = ''
+        self.clear()
+        # for v in self.basic_vals:
+        #     self[v] = ''
+        #
+        # for v in self.encrypt_vals:
+        #     del self[v]
 
     @property
     def docker_username(self):

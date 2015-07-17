@@ -1,12 +1,6 @@
 # Name for the service - we recommend using snake-case
 name: {{ scaffold.service_name }}
 
-# A unique name to identify the author
-author: {{ scaffold.author }}
-
-# A contact email address
-contact: {{ scaffold.usercfg.username }}
-
 # description of the service
 description: Awesome service in {{ scaffold.stack.name }}
 

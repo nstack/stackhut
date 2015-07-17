@@ -90,12 +90,12 @@ class InitCmd(AdminCmd):
 
     def run(self):
         super().run()
-        if 'username' in self.usercfg and len(self.usercfg['username']) > 0:
-            # self.author = (self.usercfg['username'].split('@')[0]).capitalize()
-            pass
-        else:
-            log.error("Please login first")
-            return 1
+        # if 'username' in self.usercfg and len(self.usercfg['username']) > 0:
+        #     # self.author = (self.usercfg['username'].split('@')[0]).capitalize()
+        #     pass
+        # else:
+        #     log.error("Please login first")
+        #     return 1
 
         if os.path.exists('.git'):
             log.error('Found existing git repo, not initialising')
@@ -127,7 +127,8 @@ class InitCmd(AdminCmd):
                 sh.git.branch("stackhut")
 
         else:
-            print("Sorry that combination is not supported")
+            log.info("Sorry the combination of {} and {} is not supported".format(self.baseos,
+                                                                                  self.stack))
             return 1
 
 
@@ -195,20 +196,23 @@ class LoginCmd(AdminCmd):
     def run(self):
         super().run()
 
-        username = input("Username: ")
+        # get docker username
+        stdout = sh.docker('info')
+        docker_username = ([x for x in stdout if x.startswith('Username')][0]).split(':')[1].strip()
+        log.info("Docker user is '{}'".format(docker_username))
+
+        # username = input("Username: ")
+        email = input("Email: ")
         password = getpass.getpass("Password: ")
 
         # connect to Stackhut service to get token
         if True:
-            self.usercfg['username'] = username
+            self.usercfg['docker_user'] = docker_username
+            self.usercfg['username'] = docker_username
             self.usercfg['password'] = password
+            self.usercfg['email'] = email
             # cfg['token'] = token
 
-            # get docker username
-            stdout = sh.docker('info')
-            docker_username = ([x for x in stdout if x.startswith('Username')][0]).split(':')[1].strip()
-            log.info("Docker username is '{}'".format(docker_username))
-            self.usercfg['docker_username'] = docker_username
             self.usercfg.save()
 
         else:
@@ -228,7 +232,7 @@ class LogoutCmd(AdminCmd):
     def run(self):
         super().run()
         # connect to Stackhut service to get token?
-        print("Logged out {}".format(self.usercfg['username']))
+        print("Logged out {}".format(self.usercfg.get('email', '')))
         self.usercfg.wipe()
         self.usercfg.save()
 
