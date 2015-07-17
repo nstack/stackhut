@@ -33,10 +33,10 @@ requirements = [
 
 # conditional requirements for py 2 or 3
 # NOTE - switch to extra_require at some point to build uni-wheel
-if sys.version_info[0] == 2:
-    requirements += ['barrister']
-else:
-    requirements += []
+# if sys.version_info[0] == 2:
+#     requirements += ['barrister']
+# else:
+#     requirements += []
 
 # put package test requirements here
 test_requirements = [
@@ -56,7 +56,8 @@ setup(
     url='https://github.com/stackhut/stackhut-tool',
     # download_url = 'https://github.com/stackhut/stackhut-tool/tarball/0.1.0'
     packages=[
-        'stackhut', 'stackhut.barrister', 'stackhut.commands'
+        'stackhut', 'stackhut.commands',
+        'stackhut.barrister', 'stackhut.barrister.cythonplex3',
     ],
     # package_dir={'stackhut-tool':
     #              'stackhut-tool'},
