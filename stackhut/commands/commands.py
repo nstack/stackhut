@@ -198,8 +198,13 @@ class LoginCmd(AdminCmd):
 
         # get docker username
         stdout = sh.docker('info')
-        docker_username = ([x for x in stdout if x.startswith('Username')][0]).split(':')[1].strip()
-        log.info("Docker user is '{}'".format(docker_username))
+        docker_user_list = [x for x in stdout if x.startswith('Username')]
+        if len(docker_user_list) == 1:
+            docker_username = docker_user_list[0].split(':')[1].strip()
+            log.info("Docker user is '{}'".format(docker_username))
+        else:
+            log.error("Please run 'docker login' first")
+            return 1
 
         # username = input("Username: ")
         email = input("Email: ")
