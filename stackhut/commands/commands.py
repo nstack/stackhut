@@ -29,7 +29,7 @@ from distutils.dir_util import copy_tree
 
 from stackhut import utils, __version__
 from stackhut.utils import log
-from .primitives import Service, bases, stacks, is_stack_supported, run_barrister
+from .primitives import Service, bases, stacks, is_stack_supported, gen_barrister_contract
 
 # Base command implementing common func
 class BaseCmd:
@@ -175,7 +175,7 @@ class HutBuildCmd(HutCmd, AdminCmd):
     def run(self, push=False):
         super().run()
         # setup
-        run_barrister()
+        gen_barrister_contract()
         # Docker build
         service = Service(self.hutcfg, self.usercfg)
         no_cache = self.args.no_cache if 'no_cache' in self.args else False

@@ -22,5 +22,14 @@ from .runtime import ERR_PARSE, ERR_INVALID_REQ, ERR_METHOD_NOT_FOUND, \
 
 from .parser import parse
 
+import json
 # from barrister.docco import docco_html
 # from barrister.graphviz import to_dotfile
+
+
+def generate_contract(idl_fname, contract_fname):
+    with open(idl_fname, 'r') as idl_file:
+        parsed = parse(idl_file, idl_fname)
+
+    with open(contract_fname, "w") as contract_file:
+        contract_file.write(json.dumps(parsed))

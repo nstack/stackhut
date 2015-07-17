@@ -23,7 +23,7 @@ from stackhut import utils
 from stackhut.utils import log, CloudStore, LocalStore
 from stackhut import shim_server
 from .commands import HutCmd
-from .primitives import run_barrister, stacks
+from .primitives import gen_barrister_contract, stacks
 
 # Module Consts
 REQ_FIFO = 'req.json'
@@ -202,7 +202,7 @@ class RunLocalCmd(RunCmd):
             log.info("...finished service in container")
         else:
             # make sure have latest idl
-            run_barrister()
+            gen_barrister_contract()
             super().run()
             self.store.cleanup()
 
