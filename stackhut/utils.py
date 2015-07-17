@@ -328,10 +328,10 @@ class StackHutCfg(dict):
                         self[v] = self.xor_decrypt_string(self[v])
 
     # Yes - this is shit crypto but just so we don't store plaintext on the fileystem
-    # password sent via HTTPS to web regardless
+    # token sent via HTTPS to web regardless
     key = 'stackhut_is_G_dawg'
-    encrypt_vals = ['password']
-    basic_vals = ['username', 'docker_username', 'email']
+    encrypt_vals = ['token']
+    basic_vals = ['username', 'docker_username']
 
     def xor_crypt_string(self, plaintext):
         ciphertext = ''.join(chr(ord(x) ^ ord(y)) for (x, y) in zip(plaintext, cycle(self.key)))
@@ -355,19 +355,13 @@ class StackHutCfg(dict):
             json.dump(self, f)
 
     def wipe(self):
-        # blank out the cfg file
+        """blank out the cfg file"""
         self.clear()
-        # for v in self.basic_vals:
-        #     self[v] = ''
-        #
-        # for v in self.encrypt_vals:
-        #     del self[v]
 
     @property
     def docker_username(self):
-        x = self.get('docker_username', self['username'])
-        log.debug("Using docker username '{}'".format(x))
-        return x
+        log.debug("Using docker username '{}'".format(self['docker_username']))
+        return self['docker_username']
 
 
 class HutfileCfg:
@@ -412,7 +406,7 @@ headers = {'content-type': 'application/json'}
 import urllib.parse
 import requests
 
-def stackhut_api_call(endpoint, body, secure=False):
+def stackhut_api_call(endpoint, body, secure=True):
     url_prefix = secure_url_prefix() if secure else unsecure_url_prefix()
     log.debug(url_prefix)
     url = urllib.parse.urljoin(url_prefix, endpoint)
@@ -426,7 +420,7 @@ def stackhut_api_call(endpoint, body, secure=False):
         log.error(r.text)
         r.raise_for_status()
 
-def stackhut_api_secure_call(endpoint, body, usercfg):
+def stackhut_api_user_call(endpoint, body, usercfg):
     body['userName'] = usercfg['username']
     body['password'] = usercfg['password']
-    return stackhut_api_call(endpoint, body, secure=True)
+    return stackhut_api_call(endpoint, body)

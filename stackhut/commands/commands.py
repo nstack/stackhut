@@ -206,16 +206,18 @@ class LoginCmd(AdminCmd):
             log.error("Please run 'docker login' first")
             return 1
 
-        # username = input("Username: ")
-        email = input("Email: ")
+        username = input("Username (GitHub username): ")
+        # email = input("Email: ")
         password = getpass.getpass("Password: ")
 
-        # connect to Stackhut service to get token
-        if True:
+        # connect securely to Stackhut service to get token
+        r = utils.stackhut_api_call('login', dict(userName=username, password=password))
+
+        if r['loggedIn']:
             self.usercfg['docker_user'] = docker_username
-            self.usercfg['username'] = docker_username
-            self.usercfg['password'] = password
-            self.usercfg['email'] = email
+            self.usercfg['username'] = username
+            self.usercfg['token'] = r['token']
+            # self.usercfg['email'] = email
             # cfg['token'] = token
 
             self.usercfg.save()
@@ -325,6 +327,6 @@ class DeployCmd(HutCmd, AdminCmd):
         }
 
         log.info("Deploying image '{}' to StackHut".format(tag))
-        r = utils.stackhut_api_secure_call('add', data, self.usercfg)
+        r = utils.stackhut_api_user_call('add', data, self.usercfg)
         log.info("Image {} has been {}".format(r['serviceName'], r['message']))
 
