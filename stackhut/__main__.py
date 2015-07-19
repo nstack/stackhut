@@ -18,7 +18,7 @@ import argparse
 from stackhut import utils, __version__
 from stackhut.utils import log
 from stackhut.commands import COMMANDS
-
+import sys
 
 def main():
     # Parse the cmd args
@@ -58,4 +58,4 @@ def main():
 
 if __name__ == '__main__':
     retval = main()
-    exit(retval)
+    sys.exit(retval)

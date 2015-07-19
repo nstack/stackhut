@@ -27,25 +27,15 @@ requirements = [
     "json-rpc"
 ]
 
-# conditional requirements for py 2 or 3
-# NOTE - switch to extra_require at some point to build uni-wheel
-if sys.version_info[0] == 2:
-    requirements += ['barrister']
-else:
-    requirements += []
-
 # put package test requirements here
-test_requirements = [
-
-]
-
+test_requirements = []
 
 options = {
     'build_exe': {
         'compressed': True,
         'optimize': 2,
         'include_files': ['stackhut/res']
-        
+
 #        'init_script':'Console',
 #        'includes': [
 #            'testfreeze_1',
@@ -61,23 +51,21 @@ executables = [
         script='stackhut.py',
         initScript='Console',
     )
-        
+
 ]
-
-
 
 
 setup(
     executables=executables,
     options=options,
     name='stackhut',
-    version='0.1.19',
+    version='latest',
     description="Run your software in the cloud",
     long_description=(read('README.rst') + '\n\n' +
                       read('HISTORY.rst').replace('.. :changelog:', '') + '\n\n' +
                       read('AUTHORS.rst')),
     license='Apache',
-    author="Mandeep Gill  Leo Anthias",
+    author="StackHut",
     author_email='mandeep@stackhut.com',
     url='https://github.com/stackhut/stackhut-tool',
     # download_url = 'https://github.com/stackhut/stackhut-tool/tarball/0.1.0'

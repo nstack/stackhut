@@ -69,5 +69,17 @@ dist: clean
 	python3 setup.py bdist_wheel
 	ls -l dist
 
+release_freeze: dist_freeze
+	git push
+	git push --tags
+	aws s3 cp ./dist/stackhut-latest.linux-x86_64.tar.gz s3://stackhut-releases --acl public-read      
+
+dist_freeze: clean
+	python3 setup_freeze.py bdist
+	ls -l dist
+
+
 install: clean
 	python3 setup.py install
+
+
