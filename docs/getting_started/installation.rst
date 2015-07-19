@@ -18,25 +18,20 @@ General Requirements
 
 * Python 3.4
 * Docker
-* Barrister RPC system (Python 2 package)
 
 Linux Install Instructions
 --------------------------
 
-* Install Docker, Python 3 and Python 2 (and pip installer)from OS repository, e.g.
+* Install Docker and Python 3 (including Pip installer) from OS repository, e.g.
 
-  * ``sudo dnf install docker python3 python3-pip python python-pip``
-  * or ``sudo apt-get install docker python3 python3-pip python python-pip``
-
-* Install Barrister RPC system (currently uses Python 2)
-  
-  * ``sudo pip2 install barrister``
+  * ``sudo dnf install docker python3 python3-pip``
+  * or ``sudo apt-get install docker.io python3 python3-pip``
   
 * Install StackHut CLI
 
   * ``sudo pip3 install stackhut``
 
-*Note* - by default ``pip`` installs globally and requires root access, however you can pass the ``--user`` flag to install to the user ``$HOME`` directory, e.g. ``pip3 install --user stackhut``
+.. note:: By default ``pip`` installs globally and requires root access, however you can pass the ``--user`` flag to install to the user ``$HOME`` directory, e.g. ``pip3 install --user stackhut``
 
 
 OSX Install Instructions
@@ -50,30 +45,20 @@ OSX Install Instructions
 
   * Install either direct from <https://www.python.org/downloads/mac-osx/> or via `Brew <http://brew.sh/>_` 
 
-
-* Install Barrister RPC System (currently uses Python 2)
-
-  * Get Pip for Python 2
-    
-    *  ``sudo easy_install pip``
-  
-  * ``sudo pip install barrister``
-
 * Install StackHut CLI
 
   * ``sudo pip3 install stackhut``
 
-*Note* - again similar to Linux ``pip`` installs globally and requires root access. You can again using the ``--user`` flag to install to the user ``$HOME`` directory, however on OSX you'll have to manually add the binary to your PATH.
+.. note:: As with Linux, ``pip`` installs globally and requires root access. You can again using the ``--user`` flag to install to the user ``$HOME`` directory, however on OSX you'll have to manually add the binary to your PATH.
 
-*Note* - remember to run ``boot2docker up`` to startup Docker before using the StackHut CLI.
-
+.. note:: Remember to run ``boot2docker up`` on OSX to initialise Docker before using the StackHut CLI.
 
 Windows Install Instructions
 ----------------------------
 
-We haven't tested StackHut on Windows yet, however the code-base is cross-platform and it should work as long as you install the dependencies. Similar to OSX you'll have to install  `Boot2docker <http://boot2docker.io/>`_ and obtain both Python 2 and 3 before ``pip`` installing StackHut.
+We haven't tested StackHut on Windows yet, however the code-base is cross-platform and it should work as long as you install the dependencies. Similar to OSX you'll have to install  `Boot2docker <http://boot2docker.io/>`_ and obtain Python 3 before ``pip`` installing StackHut.
 
-Please let us know how it goes, we'd love to get Windows support working.
+Please let us know how it goes at hi@stackhut.com, we'd love to get Windows support working.
 
 Upgrading
 ---------
