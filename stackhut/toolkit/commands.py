@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO - small commands go here...
+# TODO - small toolkit.commands go here...
 # different classes for common tasks
 # i.e. shell out, python code, etc.
 # & payload pattern matching helper classes
@@ -27,9 +27,11 @@ import sh
 from jinja2 import Environment, FileSystemLoader
 from distutils.dir_util import copy_tree
 
-from stackhut import utils, __version__
-from stackhut.utils import log
-from .primitives import Service, bases, stacks, is_stack_supported, gen_barrister_contract
+from stackhut import __version__
+from stackhut.common import utils
+from stackhut.common.utils import log
+from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, gen_barrister_contract
+
 
 # Base command implementing common func
 class BaseCmd:
@@ -267,7 +269,7 @@ class DeployCmd(HutCmd, AdminCmd):
         with open(utils.CONTRACTFILE, 'r') as f:
             contract = json.load(f)
 
-        # remove the barrister element
+        # remove the common.barrister element
         interfaces = [x for x in contract if 'barrister_version' not in x]
 
         def render_param(param):
@@ -330,3 +332,13 @@ class DeployCmd(HutCmd, AdminCmd):
         r = utils.stackhut_api_user_call('add', data, self.usercfg)
         log.info("Image {} has been {}".format(r['serviceName'], r['message']))
 
+
+# StackHut primary toolkit commands
+COMMANDS = [
+    InitCmd,
+    LoginCmd, LogoutCmd,
+    HutBuildCmd, DeployCmd,
+    # debug, push, pull, test, etc.
+    # internal
+    StackBuildCmd,
+]

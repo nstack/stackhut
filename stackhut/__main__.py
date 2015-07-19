@@ -15,10 +15,14 @@
 # limitations under the License.
 
 import argparse
-from stackhut import utils, __version__
-from stackhut.utils import log
-from stackhut.commands import COMMANDS
 import sys
+from stackhut import __version__
+from stackhut.common import utils
+from stackhut.common.utils import log
+import stackhut.toolkit
+import stackhut.runner
+
+COMMANDS = stackhut.toolkit.COMMANDS + stackhut.runner.COMMANDS
 
 def main():
     # Parse the cmd args

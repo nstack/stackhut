@@ -19,8 +19,8 @@ import sh
 from werkzeug.wrappers import Request, Response
 from werkzeug.serving import run_simple
 from jsonrpc import JSONRPCResponseManager, dispatcher
-from stackhut.utils import ServerError, NonZeroExitError, log
-from stackhut import utils
+from stackhut.common import utils
+from stackhut.common.utils import ServerError, NonZeroExitError, log
 
 store = None
 

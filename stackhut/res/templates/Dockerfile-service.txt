@@ -24,14 +24,14 @@ COPY .stackhut ./.stackhut
 COPY {{ d }} ./{{ d }}
 {% endfor -%}
 
-# any other Docker commands
+# any other Docker toolkit.commands
 {% for cmd in service.hutcfg.docker_cmds -%}
 {{ cmd }}
 {% endfor -%}
 
 # OK - now setup stackhut runner
 # TODO - move into Docker-runtime.txt, inject stackhut cmd in on server?
-# following commands never cached
+# following toolkit.commands never cached
 
 # setup the entrypoint (using -vv for now)
 ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-vv", "run"]

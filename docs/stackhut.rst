@@ -6,7 +6,7 @@ Subpackages
 
 .. toctree::
 
-    stackhut.barrister
+    stackhut.common.barrister
 
 Submodules
 ----------
@@ -19,10 +19,10 @@ stackhut.build_commands module
     :undoc-members:
     :show-inheritance:
 
-stackhut.commands module
+stackhut.toolkit.commands module
 ------------------------
 
-.. automodule:: stackhut.commands
+.. automodule:: stackhut.toolkit.commands
     :members:
     :undoc-members:
     :show-inheritance:

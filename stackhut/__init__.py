@@ -4,4 +4,4 @@ __email__ = 'stackhut@stackhut.com'
 __version__ = '0.2.3'
 
 from .__main__ import main
-from .utils import log
+from stackhut.common.utils import log

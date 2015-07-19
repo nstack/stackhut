@@ -28,8 +28,7 @@ import pyconfig
 import yaml
 import json
 
-from stackhut import barrister
-
+from . import barrister
 
 # global constants
 STACKHUT_DIR = '.stackhut'

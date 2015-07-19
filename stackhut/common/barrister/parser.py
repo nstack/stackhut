@@ -1,7 +1,7 @@
 """
     Parser lib for converting IDL prose into a parsed representation suitable for saving as JSON
 
-    http://barrister.bitmechanic.com/
+    http://common.barrister.bitmechanic.com/
 
     :copyright: 2012 by James Cooper.
     :license: MIT, see LICENSE for more details.

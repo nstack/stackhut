@@ -1,13 +1,13 @@
-stackhut.barrister package
+stackhut.common.barrister package
 ==========================
 
 Submodules
 ----------
 
-stackhut.barrister.runtime module
+stackhut.common.barrister.runtime module
 ---------------------------------
 
-.. automodule:: stackhut.barrister.runtime
+.. automodule:: stackhut.common.barrister.runtime
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ stackhut.barrister.runtime module
 Module contents
 ---------------
 
-.. automodule:: stackhut.barrister
+.. automodule:: stackhut.common.barrister
     :members:
     :undoc-members:
     :show-inheritance:

@@ -237,7 +237,7 @@ class Server(object):
             if they are malformed
         """
         logging.basicConfig()
-        self.log = logging.getLogger("barrister")
+        self.log = logging.getLogger("common.barrister")
         self.validate_req = validate_request
         self.validate_resp = validate_response
         self.contract = contract
@@ -377,7 +377,7 @@ class Server(object):
 
     def _call(self, context):
         """
-        Executes a single request against a handler.  If the req.method == 'barrister-idl', the
+        Executes a single request against a handler.  If the req.method == 'common.barrister-idl', the
         Contract IDL JSON structure is returned.  Otherwise the method is resolved to a handler
         based on the interface name, and the appropriate function is called on the handler.
 
@@ -391,7 +391,7 @@ class Server(object):
 
         method = req["method"]
 
-        if method == "barrister-idl":
+        if method == "common.barrister-idl":
             return self.contract.idl_parsed
 
         iface_name, func_name = unpack_method(method)
@@ -527,7 +527,7 @@ class Client(object):
 
     ::
 
-      client = barrister.Client(barrister.HttpTransport("http://localhost:8080/OrderManagement"))
+      client = common.barrister.Client(common.barrister.HttpTransport("http://localhost:8080/OrderManagement"))
       status = client.OrderService.getOrderStatus("order-123")
 
     """
@@ -556,12 +556,12 @@ class Client(object):
             function if you prefer something shorter.
         """
         logging.basicConfig()
-        self.log = logging.getLogger("barrister")
+        self.log = logging.getLogger("common.barrister")
         self.transport = transport
         self.validate_req = validate_request
         self.validate_resp = validate_response
         self.id_gen = id_gen
-        req = {"jsonrpc": "2.0", "method": "barrister-idl", "id": "1"}
+        req = {"jsonrpc": "2.0", "method": "common.barrister-idl", "id": "1"}
         resp = transport.request(req)
         self.contract = Contract(resp["result"])
         for k, v in list(self.contract.interfaces.items()):

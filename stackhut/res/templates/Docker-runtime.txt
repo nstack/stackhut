@@ -3,7 +3,7 @@ MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}>
 LABEL description="{{ service.hutcfg.description }}"
 
 # OK - now setup stackhut runner
-# following commands never cached
+# following toolkit.commands never cached
 
 # setup the entrypoint (using -vv for now)
 ENTRYPOINT ["/usr/bin/stackhut", "-vv", "run"]

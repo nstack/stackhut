@@ -11,17 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
-from .run_command import RunCloudCmd, RunLocalCmd
-from .commands import *
-
-# StackHut primary commands
-COMMANDS = [
-    InitCmd,
-    LoginCmd, LogoutCmd,
-    HutBuildCmd, DeployCmd, RunLocalCmd,
-    # debug, push, pull, test, etc.
-    # internal
-    StackBuildCmd, RunCloudCmd,
-]

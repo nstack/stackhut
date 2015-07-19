@@ -19,9 +19,9 @@ from multipledispatch import dispatch
 import sh
 from distutils.dir_util import copy_tree
 
-from stackhut import utils
-from stackhut.utils import log
-from stackhut.barrister import generate_contract
+from . import utils
+from .utils import log
+from .barrister import generate_contract
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
 
@@ -61,8 +61,6 @@ class DockerEnv:
         tag = "{}/{}:{}".format('stackhut', image_name, 'latest')
         self.build_dockerfile(tag)
         os.chdir(utils.ROOT_DIR)
-
-
 
 
 # Base OS's that we support

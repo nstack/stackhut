@@ -18,12 +18,12 @@ import os
 import sh
 import shutil
 
-from stackhut import barrister
-from stackhut import utils
-from stackhut.utils import log, CloudStore, LocalStore
-from stackhut import shim_server
-from .commands import HutCmd
-from .primitives import gen_barrister_contract, stacks
+from stackhut.common import barrister
+from stackhut.common import utils
+from stackhut.common.utils import log, CloudStore, LocalStore
+from . import shim_server
+from stackhut.toolkit.commands import HutCmd
+from stackhut.common.primitives import gen_barrister_contract, stacks
 
 # Module Consts
 REQ_FIFO = 'req.json'
@@ -139,7 +139,7 @@ class RunCmd(HutCmd):
             # return if no issue
             return resp['result']
 
-        # Now run the main rpc commands
+        # Now run the main rpc toolkit.commands
         try:
             reqs = _startup()
             resp = self.server.call(reqs, dict(callback=_run_ext))
@@ -230,3 +230,9 @@ class RunCloudCmd(RunCmd):
     def __init__(self, args):
         super().__init__(args)
         self.store = CloudStore(self.hutcfg.name)
+
+
+# StackHut primary run commands
+COMMANDS = [
+    RunLocalCmd, RunCloudCmd,
+]
