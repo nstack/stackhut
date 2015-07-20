@@ -92,7 +92,7 @@ if getattr(sys, 'frozen', False):
 else:
     # The application is not frozen
     sys_dir = os.path.dirname(__file__)
-res_dir = os.path.normpath(os.path.join(sys_dir, './res'))
+res_dir = os.path.normpath(os.path.join(sys_dir, '../res'))
 # f = open(os.path.join(os.path.dirname(__file__),'templates','file1.txt'))
 #log.debug("StackHut src dir is {}".format(src_dir))
 log.debug("StackHut res dir is {}".format(res_dir))
