@@ -198,7 +198,7 @@ class LoginCmd(UserCmd):
         # connect securely to Stackhut service to get token
         r = utils.stackhut_api_call('login', dict(userName=username, password=password))
 
-        if 'success' in r:
+        if r['success']:
             self.usercfg['docker_username'] = docker_username
             self.usercfg['username'] = username
             self.usercfg['token'] = r['token']
