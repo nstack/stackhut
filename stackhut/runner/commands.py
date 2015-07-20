@@ -179,7 +179,7 @@ class RunLocalCmd(RunCmd):
         subparser.add_argument("--uid", '-u', #default='0:0',
                                help="uid:gid to chown the run_results dir to")
         subparser.add_argument("--server-only", '-s', action='store_true',
-                               help="Run and test the stackshut shim server only)")
+                               help="Run and test the stackhut shim server only)")
 
     def __init__(self, args):
         super().__init__(args)
@@ -217,8 +217,9 @@ class RunLocalCmd(RunCmd):
 #            t.join()
 
         else:
-            # make sure have latest idl
-            gen_barrister_contract()
+            if not utils.IN_CONTAINER:
+                # make sure have latest idl
+                gen_barrister_contract()
             super().run()
             self.store.cleanup()
 

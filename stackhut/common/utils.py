@@ -44,6 +44,8 @@ S3_BUCKET = 'stackhut-payloads'
 ROOT_DIR = os.getcwd()
 DEBUG = None
 
+IN_CONTAINER = os.path.exists('/workdir')
+
 # OS Types - for docker flags
 OS_TYPE = None
 try:
