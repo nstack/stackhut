@@ -206,6 +206,7 @@ class LoginCmd(UserCmd):
             # cfg['token'] = token
 
             self.usercfg.save()
+            log.info("User {} logged in successfully".format(username))
 
         else:
             print("Incorrect username or password, please try again")
