@@ -366,7 +366,19 @@ class StackHutCfg(dict):
         self.clear()
 
     @property
+    def logged_in(self):
+        return 'username' in self
+
+    def ensure_logged_in(self):
+        if not self.logged_in:
+            log.error("Please login first - run 'stackhut login'")
+            sys.exit(1)
+        else:
+            pass
+
+    @property
     def docker_username(self):
+        self.ensure_logged_in()
         log.debug("Using docker username '{}'".format(self['docker_username']))
         return self['docker_username']
 
