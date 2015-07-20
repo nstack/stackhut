@@ -37,13 +37,9 @@ def main():
     parser.add_argument('-d', dest='debug', help=argparse.SUPPRESS)
 
     # build the subparsers
-
-    x = [cmd.name for cmd in COMMANDS if cmd.visible == True]
-    metavar = '{{{}}}'.format(str.join(',', x))
+    metavar = '{{{}}}'.format(str.join(',', [cmd.name for cmd in COMMANDS if cmd.visible]))
     subparsers = parser.add_subparsers(title="StackHut Commands", dest='command', metavar=metavar)
-
     [cmd.parse_cmds(subparsers) for cmd in COMMANDS]
-
 
     # parse the args
     args = parser.parse_args()
