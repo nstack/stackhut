@@ -199,7 +199,7 @@ class LoginCmd(UserCmd):
         r = utils.stackhut_api_call('login', dict(userName=username, password=password))
 
         if r['loggedIn']:
-            self.usercfg['docker_user'] = docker_username
+            self.usercfg['docker_username'] = docker_username
             self.usercfg['username'] = username
             self.usercfg['token'] = r['token']
             # self.usercfg['email'] = email
