@@ -201,9 +201,10 @@ class RunLocalCmd(RunCmd):
             # call docker to run the same command but in the container
             # use data vols for req and run_output
 
-            flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
-            out = sh.docker.run('-v', '{}:/workdir/test_request.json:ro'.format(host_req_file),
-                                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, self.store.local_store, flag),
+            req_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'ro'
+            res_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
+            out = sh.docker.run('-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
+                                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, self.store.local_store, res_flag),
                                 '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', '--uid', uid_gid,
                                 _out=lambda x: print(x, end=''))
             log.info("...finished service in container")
