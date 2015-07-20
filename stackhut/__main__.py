@@ -34,7 +34,7 @@ def main():
     #                        default=utils.HUTFILE, type=argparse.FileType('r', encoding='utf-8'))
     parser.add_argument('-v', dest='verbose', help="Verbosity level, add multiple times to increase",
                         action='count', default=0)
-    parser.add_argument('-d', dest='debug', help="Debug URL (Internal use)")
+    parser.add_argument('-d', dest='debug', help=argparse.SUPPRESS)
 
     # build the subparsers
 
