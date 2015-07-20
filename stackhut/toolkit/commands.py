@@ -191,14 +191,14 @@ class LoginCmd(UserCmd):
             log.error("Please run 'docker login' first")
             return 1
 
-        username = input("Username (GitHub username): ")
+        username = input("Username: ")
         # email = input("Email: ")
         password = getpass.getpass("Password: ")
 
         # connect securely to Stackhut service to get token
         r = utils.stackhut_api_call('login', dict(userName=username, password=password))
 
-        if r['loggedIn']:
+        if 'success' in r:
             self.usercfg['docker_username'] = docker_username
             self.usercfg['username'] = username
             self.usercfg['token'] = r['token']
