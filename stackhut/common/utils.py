@@ -484,5 +484,5 @@ def stackhut_api_call(endpoint, body, secure=True):
 
 def stackhut_api_user_call(endpoint, body, usercfg):
     body['userName'] = usercfg['username']
-    body['password'] = usercfg['password']
+    body['token'] = usercfg['token']
     return stackhut_api_call(endpoint, body)
