@@ -458,7 +458,7 @@ class HutCmd(BaseCmd):
 ###################################################################################################
 # StackHut server comms
 def secure_url_prefix():
-    return "https://{}/".format(DEBUG) if DEBUG is not None else "https://api.stackhut.com/"
+    return "http://{}/".format(DEBUG) if DEBUG is not None else "https://api.stackhut.com/"
 
 def unsecure_url_prefix():
     return "http://{}/".format(DEBUG) if DEBUG is not None else "http://api.stackhut.com/"
