@@ -17,12 +17,12 @@ import uuid
 import os
 import sh
 import shutil
+import argparse
 
 from stackhut.common import barrister
 from stackhut.common import utils
-from stackhut.common.utils import log, CloudStore, LocalStore
+from stackhut.common.utils import log, CloudStore, LocalStore, HutCmd
 from . import shim_server
-from stackhut.toolkit.commands import HutCmd
 from stackhut.common.primitives import gen_barrister_contract, stacks
 
 # Module Consts
@@ -31,6 +31,7 @@ RESP_FIFO = 'resp.json'
 
 class RunCmd(HutCmd):
     """Base Run Command functionality"""
+
     def __init__(self, args):
         super().__init__(args)
         # select the stack
@@ -53,7 +54,7 @@ class RunCmd(HutCmd):
             # startup the local helper service
             shim_server.init(self.store)
 
-            # get/wait for a request
+            # (blocking) get/wait for a request
             try:
                 in_str = self.store.get_request()
                 input_json = json.loads(in_str)
@@ -113,8 +114,10 @@ class RunCmd(HutCmd):
             # create the req
             req = dict(method=method, params=params, req_id=req_id)
 
-            # call out to sub process
+            # run the shim
+            # TODO - move this into init so shim is already loadade and waiting
             p = subprocess.Popen(self.stack.shim_cmd, shell=False, stderr=subprocess.STDOUT)
+
             # blocking-wait to send the request
             with open(REQ_FIFO, "w") as f:
                 f.write(json.dumps(req))
@@ -161,10 +164,12 @@ class RunCmd(HutCmd):
 
 class RunLocalCmd(RunCmd):
     """"Concrete Run Command using local files for dev"""
+    name = 'run'
+
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(RunLocalCmd, RunLocalCmd).parse_cmds(subparser,
-                                                               'run',
+                                                               RunLocalCmd.name,
                                                                "Run StackHut service locally",
                                                                RunLocalCmd)
         subparser.add_argument("reqfile", nargs='?', default='test_request.json',
@@ -220,10 +225,14 @@ class RunLocalCmd(RunCmd):
 
 class RunCloudCmd(RunCmd):
     """Concrete Run Command using Cloud systems for prod"""
+
+    name = 'runcloud'
+    visible = False
+
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(RunCloudCmd, RunCloudCmd).parse_cmds(subparser,
-                                                               '_runcloud',
+                                                               RunCloudCmd.name,
                                                                "(internal) Run StackHut service on host",
                                                                RunCloudCmd)
 

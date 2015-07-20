@@ -24,56 +24,29 @@ import shutil
 import getpass
 import uuid
 import sh
+import argparse
 from jinja2 import Environment, FileSystemLoader
 from distutils.dir_util import copy_tree
 
-from stackhut import __version__
 from stackhut.common import utils
-from stackhut.common.utils import log
+from stackhut.common.utils import log, BaseCmd, HutCmd
 from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, gen_barrister_contract
 
 
 # Base command implementing common func
-class BaseCmd:
-    """The Base Command"""
-    @staticmethod
-    def parse_cmds(subparsers, cmd_name, description, cls):
-        sp = subparsers.add_parser(cmd_name, help=description, description=description)
-        sp.set_defaults(func=cls)
-        return sp
-
-    def __init__(self, args):
-        self.args = args
-        # log sys info
-        log.debug("StackHut version {}".format(__version__))
-        try:
-            log.debug(sh.docker("-v"))
-        except sh.CommandNotFound as e:
-            log.debug("Docker not installed")
-
-    @abc.abstractmethod
-    def run(self):
-        """Main entry point for a command with parsed cmd args"""
-        pass
-
-class HutCmd(BaseCmd):
-    """Hut Commands are run from a Hut stack dir requiring a Hutfile"""
-    def __init__(self, args):
-        super().__init__(args)
-        # import the hutfile
-        self.hutcfg = utils.HutfileCfg()
-
-# Base command implementing common func
-class AdminCmd(BaseCmd):
+class UserCmd(BaseCmd):
+    """Admin commands require the userconfig file"""
     def __init__(self, args):
         super().__init__(args)
         self.usercfg = utils.StackHutCfg()
 
 
-class InitCmd(AdminCmd):
+class InitCmd(UserCmd):
+    name = 'init'
+
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(InitCmd, InitCmd).parse_cmds(subparser, 'init',
+        subparser = super(InitCmd, InitCmd).parse_cmds(subparser, InitCmd.name,
             "Initialise a new StackHut service", InitCmd)
         subparser.add_argument("baseos", help="Base Operating System", choices=bases.keys())
         subparser.add_argument("stack", help="Language stack to support", choices=stacks.keys())
@@ -134,12 +107,15 @@ class InitCmd(AdminCmd):
             return 1
 
 
-class StackBuildCmd(AdminCmd):
+class StackBuildCmd(UserCmd):
     """Build StackHut service using docker"""
+    name = 'stackbuild'
+    visible = False
+
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(StackBuildCmd, StackBuildCmd).parse_cmds(subparser, '_stackbuild',
-                                                                   "(Internal) Build the default OS and Stack images",
+        subparser = super(StackBuildCmd, StackBuildCmd).parse_cmds(subparser, StackBuildCmd.name,
+                                                                   '',
                                                                    StackBuildCmd)
         subparser.add_argument("--outdir", '-o', default='stacks',
                                help="Directory to save stacks to")
@@ -162,11 +138,13 @@ class StackBuildCmd(AdminCmd):
         log.info("All base OS and Stack images built and deployed")
 
 
-class HutBuildCmd(HutCmd, AdminCmd):
+class HutBuildCmd(HutCmd, UserCmd):
     """Build StackHut service using docker"""
+    name = 'build'
+
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(HutBuildCmd, HutBuildCmd).parse_cmds(subparser, 'build',
+        subparser = super(HutBuildCmd, HutBuildCmd).parse_cmds(subparser, HutBuildCmd.name,
                                                                "Build a StackHut service", HutBuildCmd)
         subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
 
@@ -186,14 +164,16 @@ class HutBuildCmd(HutCmd, AdminCmd):
 
 
 # Base command implementing common func
-class LoginCmd(AdminCmd):
-    def __init__(self, args):
-        super().__init__(args)
+class LoginCmd(UserCmd):
+    name = 'login'
 
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(LoginCmd, LoginCmd).parse_cmds(subparser, 'login',
+        subparser = super(LoginCmd, LoginCmd).parse_cmds(subparser, LoginCmd.name,
                                                          "login to stackhut", LoginCmd)
+
+    def __init__(self, args):
+        super().__init__(args)
 
     def run(self):
         super().run()
@@ -229,14 +209,16 @@ class LoginCmd(AdminCmd):
 
 
 # Base command implementing common func
-class LogoutCmd(AdminCmd):
-    def __init__(self, args):
-        super().__init__(args)
+class LogoutCmd(UserCmd):
+    name = 'logout'
 
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(LogoutCmd, LogoutCmd).parse_cmds(subparser, 'logout',
+        subparser = super(LogoutCmd, LogoutCmd).parse_cmds(subparser, LogoutCmd.name,
                                                            "logout to stackhut", LogoutCmd)
+
+    def __init__(self, args):
+        super().__init__(args)
 
     def run(self):
         super().run()
@@ -253,10 +235,11 @@ class LogoutCmd(AdminCmd):
 # githubUrl : Option[String],
 # exampleRequest : Option[JsValue],
 # description : String)
-class DeployCmd(HutCmd, AdminCmd):
+class DeployCmd(HutCmd, UserCmd):
+    name = 'deploy'
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(DeployCmd, DeployCmd).parse_cmds(subparser, 'deploy',
+        subparser = super(DeployCmd, DeployCmd).parse_cmds(subparser, DeployCmd.name,
                                                            "deploy service to StackHut", DeployCmd)
         subparser.add_argument("--no-build", '-n', action='store_true', help="Deploy without re-building & pushing the image")
 
@@ -317,7 +300,6 @@ class DeployCmd(HutCmd, AdminCmd):
         #     log.error("StackHut username ({}) not equal to Hutfile contact email ({})".format(self.usercfg['username'], self.hutcfg.email))
         #     return 1
         tag = self.hutcfg.tag(self.usercfg)
-
 
         data = {
             'dockerImage': tag,

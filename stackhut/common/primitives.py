@@ -312,6 +312,6 @@ class Service(DockerEnv):
 
 
 # Helper functions
-# TODO - we should move these into a dep-style system - maybe use Makefiled in interrim
+# TODO - we should move these into a dep-style system - maybe use Makefile in interrim
 def gen_barrister_contract():
     generate_contract('api.idl', utils.CONTRACTFILE)

@@ -27,9 +27,12 @@ import redis
 import pyconfig
 import yaml
 import json
-
 from . import barrister
+from stackhut import __version__
 
+
+####################################################################################################
+# App Config
 # global constants
 STACKHUT_DIR = '.stackhut'
 CFGFILE = os.path.expanduser(os.path.join('~', '.stackhut.cfg'))
@@ -39,8 +42,9 @@ CONTRACTFILE = os.path.join(STACKHUT_DIR, 'api.json')
 IDLFILE = 'api.idl'
 S3_BUCKET = 'stackhut-payloads'
 ROOT_DIR = os.getcwd()
-DEBUG = False
+DEBUG = None
 
+# OS Types - for docker flags
 OS_TYPE = None
 try:
     os_str = (str(sh.lsb_release('-i', '-s'))).strip()
@@ -79,8 +83,7 @@ def set_log_level(args_level):
         loglevel = logging.DEBUG
     log.setLevel(loglevel)
 
-
-# setup app paths
+# Setup app paths
 # src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 sys_dir = None
 if getattr(sys, 'frozen', False):
@@ -105,6 +108,8 @@ def get_req_dir(req_id):
 def get_req_file(req_id, fname):
     return os.path.join(STACKHUT_DIR, req_id, fname)
 
+
+####################################################################################################
 # Error handling
 class ParseError(barrister.RpcException):
     def __init__(self, data=None):
@@ -135,28 +140,10 @@ class NonZeroExitError(barrister.RpcException):
         super(NonZeroExitError, self).__init__(code, msg, data)
 
 
-class IOStore:
-    """A base wrapper wrapper around common IO task state"""
-    @abc.abstractmethod
-    def get_request(self):
-        pass
-
-    @abc.abstractmethod
-    def put_response(self, s):
-        pass
-
-    def get_file(self, name):
-        log.error("Store.get_file called")
-
-    @abc.abstractmethod
-    def put_file(self, fname, req_id='', make_public=False):
-        pass
-
-    def set_task_id(self, task_id):
-        log.debug("Task id is {}".format(task_id))
-        self.task_id = task_id
-
+###################################################################################################
+# StackHut IO Handling on local and cloud backends
 class ControlListener(threading.Thread):
+    """Listener listens for requests on Redis Control channel common to all services"""
     def __init__(self, store, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.store = store
@@ -180,7 +167,6 @@ class ControlListener(threading.Thread):
                     log.error("Got unknown message on control channel - \n\t{}".format(item))
                     os._exit(os.EX_DATAERR)
 
-
     # NOTE - this is not thread-safe in case of control msg received 1st, then data msg on blpop
     # channel during shutdown itself - will result in a lost message but unlikely to occur.
     # Solve by putting blpop on another thread and sync between them
@@ -189,6 +175,26 @@ class ControlListener(threading.Thread):
             self.can_quit = False
             self.cv.notify_all()  # this is not needed - as will never run again
 
+class IOStore:
+    """A base wrapper wrapper around common IO task state"""
+    @abc.abstractmethod
+    def get_request(self):
+        pass
+
+    @abc.abstractmethod
+    def put_response(self, s):
+        pass
+
+    def get_file(self, name):
+        log.error("Store.get_file called")
+
+    @abc.abstractmethod
+    def put_file(self, fname, req_id='', make_public=False):
+        pass
+
+    def set_task_id(self, task_id):
+        log.debug("Task id is {}".format(task_id))
+        self.task_id = task_id
 
 class CloudStore(IOStore):
     """Main storage subsytem for use in prod env"""
@@ -313,9 +319,11 @@ class LocalStore(IOStore):
         shutil.copy(req_fname, local_store_dir)
         return os.path.join(local_store_dir, fname)
 
-
 class StackHutCfg(dict):
-    """Wrapper calss around dict that uses a json backing store"""
+    """
+    UserConfig configuration handling
+    Wrapper class around dict that uses a json backing store
+    """
     def __init__(self):
         super().__init__()
 
@@ -362,8 +370,8 @@ class StackHutCfg(dict):
         log.debug("Using docker username '{}'".format(self['docker_username']))
         return self['docker_username']
 
-
 class HutfileCfg:
+    """Hutfile configuration file handling"""
     def __init__(self):
         # import the hutfile
         with open(HUTFILE, 'r') as f:
@@ -394,11 +402,54 @@ class HutfileCfg:
         return "{}/{}:{}".format(usercfg.docker_username, self.name, self.version)
 
 
+###################################################################################################
+# StackHut Commands Handling
+import argparse
+
+class BaseCmd:
+    """The Base Command implementing common func"""
+    visible = True
+    name = ''
+
+    @staticmethod
+    def parse_cmds(subparsers, cmd_name, description, cls):
+        if cls.visible:
+            sp = subparsers.add_parser(cmd_name, help=description, description=description)
+        else:
+            sp = subparsers.add_parser(cmd_name)
+
+        sp.set_defaults(func=cls)
+        return sp
+
+    def __init__(self, args):
+        self.args = args
+        # log sys info
+        log.debug("StackHut version {}".format(__version__))
+        try:
+            log.debug(sh.docker("-v"))
+        except sh.CommandNotFound as e:
+            log.debug("Docker not installed")
+
+    @abc.abstractmethod
+    def run(self):
+        """Main entry point for a command with parsed cmd args"""
+        pass
+
+class HutCmd(BaseCmd):
+    """Hut Commands are run from a Hut stack dir requiring a Hutfile"""
+    def __init__(self, args):
+        super().__init__(args)
+        # import the hutfile
+        self.hutcfg = HutfileCfg()
+
+
+###################################################################################################
+# StackHut server comms
 def secure_url_prefix():
-    return "http://192.168.1.9:8083/" if DEBUG else "https://api.stackhut.com/"
+    return "https://{}/".format(DEBUG) if DEBUG is not None else "https://api.stackhut.com/"
 
 def unsecure_url_prefix():
-    return "http://192.168.1.9:8083/" if DEBUG else "http://api.stackhut.com/"
+    return "http://{}/".format(DEBUG) if DEBUG is not None else "http://api.stackhut.com/"
 
 headers = {'content-type': 'application/json'}
 

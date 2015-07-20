@@ -14,8 +14,9 @@
 
 # dummy wrapper to call stackhut main for console use
 
+import sys
 import stackhut
 
 if __name__ == '__main__':
     retval = stackhut.main()
-    exit(retval)
+    sys.exit(retval)

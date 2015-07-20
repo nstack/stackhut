@@ -26,20 +26,25 @@ COMMANDS = stackhut.toolkit.COMMANDS + stackhut.runner.COMMANDS
 
 def main():
     # Parse the cmd args
-    parser = argparse.ArgumentParser(description="StackHut CLI",
-                                     epilog="Now build some crazy shit :)")
-    parser.add_argument('-V', help='StackHut CLI Version',
+    parser = argparse.ArgumentParser(description="StackHut Toolkit",
+                                     epilog="Have fun :)")
+    parser.add_argument('-V', help='StackHut Toolkit Version',
                         action="version", version="%(prog)s {}".format(__version__))
     #    parser.add_argument("--hutfile", help="Path to user-defined hutfile (default: %(default)s)",
     #                        default=utils.HUTFILE, type=argparse.FileType('r', encoding='utf-8'))
     parser.add_argument('-v', dest='verbose', help="Verbosity level, add multiple times to increase",
                         action='count', default=0)
-    parser.add_argument('-d', dest='debug', help="Debug mode",
-                        action='store_true')
+    parser.add_argument('-d', dest='debug', help="Debug URL (Internal use)")
 
     # build the subparsers
-    subparsers = parser.add_subparsers(title="StackHut Commands", dest='command')
+
+    x = [cmd.name for cmd in COMMANDS if cmd.visible == True]
+    metavar = '{{{}}}'.format(str.join(',', x))
+    subparsers = parser.add_subparsers(title="StackHut Commands", dest='command', metavar=metavar)
+
     [cmd.parse_cmds(subparsers) for cmd in COMMANDS]
+
+
     # parse the args
     args = parser.parse_args()
     if args.command is None:
