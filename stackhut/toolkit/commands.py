@@ -241,6 +241,7 @@ class LogoutCmd(UserCmd):
 # description : String)
 class DeployCmd(HutCmd, UserCmd):
     name = 'deploy'
+
     @staticmethod
     def parse_cmds(subparser):
         subparser = super(DeployCmd, DeployCmd).parse_cmds(subparser, DeployCmd.name,
