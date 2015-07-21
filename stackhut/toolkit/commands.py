@@ -27,7 +27,9 @@ import sh
 import argparse
 from jinja2 import Environment, FileSystemLoader
 from distutils.dir_util import copy_tree
+import sys
 import docker
+from docker.utils import kwargs_from_env
 import arrow
 
 from stackhut.common import utils
@@ -190,7 +192,7 @@ class LoginCmd(UserCmd):
             docker_user_list = [x for x in stdout if x.startswith('Username')]
             if len(docker_user_list) == 1:
                 docker_username = docker_user_list[0].split(':')[1].strip()
-                log.info("Docker user is '{}'".format(docker_username))
+                log.debug("Docker user is '{}', note this may be different to your StackHut login".format(docker_username))
             else:
                 log.error("Please run 'docker login' first")
                 return 1
@@ -214,9 +216,10 @@ class LoginCmd(UserCmd):
 
             self.usercfg.save()
             log.info("User {} logged in successfully".format(username))
-
+            return 0
         else:
             print("Incorrect username or password, please try again")
+            return 1
 
 
 # Base command implementing common func
@@ -404,7 +407,11 @@ class ToolkitRunCmd(HutCmd):
 
         tag = self.hutcfg.tag(usercfg)
 
-        c = docker.Client()
+        if sys.platform == 'linux':
+            c = docker.Client()
+        else:
+            c = docker.Client(**kwargs_from_env())
+
         image_info = c.inspect_image(tag)
         image_build_string = image_info['Created']
 
