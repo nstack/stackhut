@@ -162,72 +162,58 @@ class RunCmd(HutCmd):
         return 0
 
 
-class RunLocalCmd(RunCmd):
-    """"Concrete Run Command using local files for dev"""
-    name = 'run'
+########################################################################################
+# Concrete runner commands - on host OS (temp?), in container, on cloud
+class RunHostCmd(RunCmd):
+    """Concrete Run Command using Local system for dev on Host OS"""
+    name = 'runhost'
 
     @staticmethod
     def parse_cmds(subparser):
-        subparser = super(RunLocalCmd, RunLocalCmd).parse_cmds(subparser,
-                                                               RunLocalCmd.name,
-                                                               "Run StackHut service locally",
-                                                               RunLocalCmd)
+        subparser = super(RunHostCmd, RunHostCmd).parse_cmds(subparser,
+                                                             RunHostCmd.name,
+                                                               "(internal) Run StackHut service on host",
+                                                             RunHostCmd)
         subparser.add_argument("reqfile", nargs='?', default='test_request.json',
                                help="Test request file to use")
-        subparser.add_argument("--container", '-c', action='store_true',
-                               help="Run and test the service inside the container (requires you run build first)")
-        subparser.add_argument("--uid", '-u', #default='0:0',
-                               help="uid:gid to chown the run_results dir to")
-        subparser.add_argument("--server-only", '-s', action='store_true',
-                               help="Run and test the stackhut shim server only)")
 
     def __init__(self, args):
         super().__init__(args)
         self.reqfile = args.reqfile
-        self.container = args.container
-        self.server_only = args.server_only
-        self.uid_gid = args.uid
+        self.store = LocalStore(args.reqfile)
+
+    def run(self):
+        gen_barrister_contract()
+        super().run()
+        self.store.cleanup()
+
+class RunContainerCmd(RunCmd):
+    """Concrete Run Command using Local system for dev on Container OS"""
+    name = 'runcontainer'
+    visible = False
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(RunContainerCmd, RunContainerCmd).parse_cmds(subparser,
+                                                                       RunContainerCmd.name,
+                                                                       "(internal) Run StackHut service on host",
+                                                                       RunContainerCmd)
+        subparser.add_argument("reqfile", nargs='?', default='test_request.json',
+                               help="Test request file to use")
+        subparser.add_argument("--uid", '-u', #default='0:0',
+                               help="uid:gid to chown the run_results dir to")
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.reqfile = args.reqfile
         self.store = LocalStore(args.reqfile, args.uid)
 
     def run(self):
-        if self.container:
-            usercfg = utils.StackHutCfg()
-            tag = self.hutcfg.tag(usercfg)
-            host_req_file = os.path.abspath(self.reqfile)
-            host_store_dir = os.path.abspath(self.store.local_store)
-            uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
-
-            log.info("Running service with {} in container - log below...".format(self.reqfile))
-            # call docker to run the same command but in the container
-            # use data vols for req and run_output
-
-            req_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'ro'
-            res_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
-            out = sh.docker.run('-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
-                                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, self.store.local_store, res_flag),
-                                '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'run', '--uid', uid_gid,
-                                _out=lambda x: print(x, end=''))
-            log.info("...finished service in container")
-
-        elif self.server_only:
-            # startup the local helper service
-            t = shim_server.init(self.store, False)
-
-            self.store.set_task_id(str(uuid.uuid4()))
-            self.stack.copy_shim()
-#            t.join()
-
-        else:
-            if not utils.IN_CONTAINER:
-                # make sure have latest idl
-                gen_barrister_contract()
-            super().run()
-            self.store.cleanup()
-
+        super().run()
+        self.store.cleanup()
 
 class RunCloudCmd(RunCmd):
     """Concrete Run Command using Cloud systems for prod"""
-
     name = 'runcloud'
     visible = False
 
@@ -245,5 +231,5 @@ class RunCloudCmd(RunCmd):
 
 # StackHut primary run commands
 COMMANDS = [
-    RunLocalCmd, RunCloudCmd,
+    RunHostCmd, RunContainerCmd, RunCloudCmd,
 ]

@@ -182,13 +182,17 @@ class LoginCmd(UserCmd):
         super().run()
 
         # get docker username
-        stdout = sh.docker('info')
-        docker_user_list = [x for x in stdout if x.startswith('Username')]
-        if len(docker_user_list) == 1:
-            docker_username = docker_user_list[0].split(':')[1].strip()
-            log.info("Docker user is '{}'".format(docker_username))
-        else:
-            log.error("Please run 'docker login' first")
+        try:
+            stdout = sh.docker('info')
+            docker_user_list = [x for x in stdout if x.startswith('Username')]
+            if len(docker_user_list) == 1:
+                docker_username = docker_user_list[0].split(':')[1].strip()
+                log.info("Docker user is '{}'".format(docker_username))
+            else:
+                log.error("Please run 'docker login' first")
+                return 1
+        except sh.ErrorReturnCode as e:
+            log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
             return 1
 
         username = input("Username: ")
@@ -318,6 +322,54 @@ class DeployCmd(HutCmd, UserCmd):
         log.info("Deploying image '{}' to StackHut".format(tag))
         r = utils.stackhut_api_user_call('add', data, self.usercfg)
         log.info("Image {} has been {}".format(r['serviceName'], r['message']))
+
+
+class ToolkitRunCmd(HutCmd):
+    """"Concrete Run Command within a container"""
+    name = 'run'
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(ToolkitRunCmd, ToolkitRunCmd).parse_cmds(subparser,
+                                                                   ToolkitRunCmd.name,
+                                                                   "Run StackHut service in a container",
+                                                                   ToolkitRunCmd)
+        subparser.add_argument("reqfile", nargs='?', default='test_request.json',
+                               help="Test request file to use")
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.reqfile = args.reqfile
+
+    def run(self):
+        usercfg = utils.StackHutCfg()
+        tag = self.hutcfg.tag(usercfg)
+
+        # TODO - run dep mgmt and build here
+        # check image exists first
+        image_id = (sh.docker.images('-q', tag.split(':')[0])).stdout
+        if len(str(image_id).strip()) == 0:
+            print("No images found, please run 'stackhut build' before 'stackhut run -c'")
+            return 1
+
+        host_req_file = os.path.abspath(self.reqfile)
+
+        host_store_dir = os.path.abspath(utils.LocalStore.local_store)
+        uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
+
+        log.info("Running service with {} in container - log below...".format(self.reqfile))
+        # call docker to run the same command but in the container
+        # use data vols for req and run_output
+
+        # damn SELINUX issues - can
+        req_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'ro'
+        res_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
+        out = sh.docker.run('-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
+                            '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
+                            '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'runcontainer', '--uid', uid_gid,
+                            _out=lambda x: print(x, end=''))
+        log.info("...finished service in container")
+
 
 
 # StackHut primary toolkit commands

@@ -279,7 +279,7 @@ class LocalStore(IOStore):
     def _get_path(self, name):
         return "{}/{}".format(self.local_store, name)
 
-    def __init__(self, request_file, uid_gid):
+    def __init__(self, request_file, uid_gid=None):
         self.uid_gid = uid_gid
         # delete and recreate local_store
         shutil.rmtree(self.local_store, ignore_errors=True)
@@ -417,8 +417,6 @@ class HutfileCfg:
 
 ###################################################################################################
 # StackHut Commands Handling
-import argparse
-
 class BaseCmd:
     """The Base Command implementing common func"""
     visible = True
