@@ -27,6 +27,8 @@ import sh
 import argparse
 from jinja2 import Environment, FileSystemLoader
 from distutils.dir_util import copy_tree
+import docker
+import arrow
 
 from stackhut.common import utils
 from stackhut.common.utils import log, BaseCmd, HutCmd
@@ -374,16 +376,62 @@ class ToolkitRunCmd(HutCmd):
         super().__init__(args)
         self.reqfile = args.reqfile
 
+    def files_mtime(self):
+        """Recurse over all files referenced by project and find max mtime"""
+        def max_mtime(dirpath, fnames):
+            """return max mtime from list of files in a dir"""
+            mtimes = (os.path.getmtime(os.path.join(dirpath, fname)) for fname in fnames)
+            return max(mtimes)
+
+        def max_mtime_dir(dirname):
+            """find max mtime of a single file in dir recurseively"""
+            for (dirpath, dirnames, fnames) in os.walk(dirname):
+                log.debug("Walking dir {}".format(dirname))
+                yield max_mtime(dirpath, fnames)
+
+        stack = stacks[self.hutcfg.stack]
+        default_files = [stack.entrypoint, stack.package_file, 'api.idl', 'Hutfile']
+
+        # find the max - from default files, hut file and hut dirs
+        max_mtime_default_files = max_mtime(os.getcwd(), default_files)
+        max_mtime_hutfiles = max_mtime(os.getcwd(), self.hutcfg.files) if self.hutcfg.files else 0
+        max_mtime_hutdirs = max((max_mtime_dir(dirname) for dirname in self.hutcfg.dirs)) if self.hutcfg.dirs else 0
+
+        return max([max_mtime_default_files, max_mtime_hutfiles, max_mtime_hutdirs])
+
+    def run_build(self, usercfg):
+        max_mtime = self.files_mtime()
+
+        tag = self.hutcfg.tag(usercfg)
+
+        c = docker.Client()
+        image_info = c.inspect_image(tag)
+        image_build_string = image_info['Created']
+
+        log.debug("Image {} last built at {}".format(tag, image_build_string))
+        build_date = arrow.get(image_build_string).datetime.timestamp()
+        log.debug("Files max mtime is {}, image build date is {}".format(max_mtime, build_date))
+
+        if max_mtime >= build_date:
+            log.debug("Image stale - rebuilding...")
+            hutbuild = HutBuildCmd(self.args)
+            hutbuild.run()
+        else:
+            log.debug("Image cached - not rebuilding")
+
+
     def run(self):
         usercfg = utils.UserCfg()
         tag = self.hutcfg.tag(usercfg)
 
-        # TODO - run dep mgmt and build here
         # check image exists first
         image_id = (sh.docker.images('-q', tag.split(':')[0]))
         if len(str(image_id).strip()) == 0:
             print("No images found, please run 'stackhut build' before 'stackhut run -c'")
             return 1
+
+        # check if need to build
+        self.run_build(usercfg)
 
         host_req_file = os.path.abspath(self.reqfile)
 

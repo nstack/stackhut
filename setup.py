@@ -29,6 +29,7 @@ requirements = [
     "werkzeug",
     "json-rpc",
     "docker-py",
+    "arrow",
 ]
 
 # conditional requirements for py 2 or 3
