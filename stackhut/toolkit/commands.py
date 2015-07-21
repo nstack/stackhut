@@ -410,7 +410,7 @@ class ToolkitRunCmd(HutCmd):
         if sys.platform == 'linux':
             c = docker.Client()
         else:
-            c = docker.Client(**kwargs_from_env(assert_hostname=False))
+            c = docker.Client(version='auto', **kwargs_from_env(assert_hostname=False))
 
         image_info = c.inspect_image(tag)
         image_build_string = image_info['Created']
