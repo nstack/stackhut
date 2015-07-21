@@ -28,8 +28,6 @@ import pyconfig
 import yaml
 import json
 from . import barrister
-from stackhut import __version__
-
 
 ####################################################################################################
 # App Config
@@ -320,7 +318,7 @@ class LocalStore(IOStore):
         shutil.copy(req_fname, local_store_dir)
         return os.path.join(local_store_dir, fname)
 
-class StackHutCfg(dict):
+class UserCfg(dict):
     """
     UserConfig configuration handling
     Wrapper class around dict that uses a json backing store
@@ -434,12 +432,6 @@ class BaseCmd:
 
     def __init__(self, args):
         self.args = args
-        # log sys info
-        log.debug("StackHut version {}".format(__version__))
-        try:
-            log.debug(sh.docker("-v"))
-        except sh.CommandNotFound as e:
-            log.debug("Docker not installed")
 
     @abc.abstractmethod
     def run(self):

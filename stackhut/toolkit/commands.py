@@ -31,6 +31,7 @@ from distutils.dir_util import copy_tree
 from stackhut.common import utils
 from stackhut.common.utils import log, BaseCmd, HutCmd
 from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, gen_barrister_contract
+from stackhut import __version__
 
 
 # Base command implementing common func
@@ -38,7 +39,7 @@ class UserCmd(BaseCmd):
     """Admin commands require the userconfig file"""
     def __init__(self, args):
         super().__init__(args)
-        self.usercfg = utils.StackHutCfg()
+        self.usercfg = utils.UserCfg()
 
 
 class InitCmd(UserCmd):
@@ -235,6 +236,38 @@ class LogoutCmd(UserCmd):
         self.usercfg.wipe()
         self.usercfg.save()
 
+# Base command implementing common func
+class InfoCmd(UserCmd):
+    name = 'info'
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(InfoCmd, InfoCmd).parse_cmds(subparser, InfoCmd.name,
+                                                       "Stackhut Infomation", InfoCmd)
+
+    def __init__(self, args):
+        super().__init__(args)
+
+    def run(self):
+        super().run()
+
+        # log sys info
+        log.info("StackHut version {}".format(__version__))
+        try:
+            log.info(str(sh.docker("-v")).strip())
+        except sh.CommandNotFound as e:
+            log.info("Docker not installed")
+
+        if self.usercfg.logged_in:
+            log.info("User logged in")
+
+            for x in self.usercfg.basic_vals:
+                log.info("{}: {}".format(x.capitalize(), self.usercfg[x]))
+        else:
+            log.info("User not logged in")
+
+        return 0
+
 
 # Base command implementing common func
 # dockerImage: String, userName : String,
@@ -342,12 +375,12 @@ class ToolkitRunCmd(HutCmd):
         self.reqfile = args.reqfile
 
     def run(self):
-        usercfg = utils.StackHutCfg()
+        usercfg = utils.UserCfg()
         tag = self.hutcfg.tag(usercfg)
 
         # TODO - run dep mgmt and build here
         # check image exists first
-        image_id = (sh.docker.images('-q', tag.split(':')[0])).stdout
+        image_id = (sh.docker.images('-q', tag.split(':')[0]))
         if len(str(image_id).strip()) == 0:
             print("No images found, please run 'stackhut build' before 'stackhut run -c'")
             return 1
@@ -361,23 +394,24 @@ class ToolkitRunCmd(HutCmd):
         # call docker to run the same command but in the container
         # use data vols for req and run_output
 
-        # damn SELINUX issues - can
+        # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
         req_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'ro'
         res_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
         out = sh.docker.run('-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
                             '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
-                            '--entrypoint=/usr/bin/stackhut', tag, '-vv', 'runcontainer', '--uid', uid_gid,
+                            '--entrypoint=/usr/bin/stackhut', tag, '-v', 'runcontainer', '--uid', uid_gid,
                             _out=lambda x: print(x, end=''))
         log.info("...finished service in container")
 
 
-
 # StackHut primary toolkit commands
+# debug, push, pull, test, etc.
 COMMANDS = [
+    # visible
     InitCmd,
-    LoginCmd, LogoutCmd,
+    LoginCmd, LogoutCmd, InfoCmd,
     HutBuildCmd, DeployCmd,
-    # debug, push, pull, test, etc.
-    # internal
+    ToolkitRunCmd,
+    # hidden
     StackBuildCmd,
 ]

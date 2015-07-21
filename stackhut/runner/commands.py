@@ -172,7 +172,7 @@ class RunHostCmd(RunCmd):
     def parse_cmds(subparser):
         subparser = super(RunHostCmd, RunHostCmd).parse_cmds(subparser,
                                                              RunHostCmd.name,
-                                                               "(internal) Run StackHut service on host",
+                                                             "Run StackHut service on host OS",
                                                              RunHostCmd)
         subparser.add_argument("reqfile", nargs='?', default='test_request.json',
                                help="Test request file to use")
@@ -231,5 +231,8 @@ class RunCloudCmd(RunCmd):
 
 # StackHut primary run commands
 COMMANDS = [
-    RunHostCmd, RunContainerCmd, RunCloudCmd,
+    # visible
+    RunHostCmd,
+    # hidden
+    RunContainerCmd, RunCloudCmd,
 ]
