@@ -71,7 +71,7 @@ class InitCmd(UserCmd):
         if is_stack_supported(self.baseos, self.stack):
             self.name = os.path.basename(os.getcwd())
             self.author = self.usercfg['username']
-            log.info("Creating service {}/{}:latest".format(self.author, self.name))
+            log.info("Creating service {}/{}".format(self.author, self.name))
             # copy the scaffold into the service
             copy_tree(utils.get_res_path('scaffold'), '.')
 
@@ -366,12 +366,6 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
     def run(self):
         tag = self.hutcfg.service
-
-        # check image exists first
-        image_id = (sh.docker.images('-q', tag.split(':')[0]))
-        if len(str(image_id).strip()) == 0:
-            print("No images found, please run 'stackhut build' before 'stackhut run -c'")
-            return 1
 
         # Docker builder (if needed)
         service = Service(self.hutcfg, self.usercfg)

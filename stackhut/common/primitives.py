@@ -21,6 +21,7 @@ import sh
 from distutils.dir_util import copy_tree
 import docker
 from docker.utils import kwargs_from_env
+from docker.errors import DockerException
 import arrow
 
 from . import utils
@@ -34,10 +35,15 @@ class DockerEnv:
         self.push = None
         self.no_cache = None
 
-        if sys.platform == 'linux':
-            self.client = docker.Client(version='auto')
-        else:
-            self.client = docker.Client(version='auto', **kwargs_from_env(assert_hostname=False))
+        try:
+            if sys.platform == 'linux':
+                self.client = docker.Client(version='auto')
+            else:
+                self.client = docker.Client(version='auto', **kwargs_from_env(assert_hostname=False))
+        except DockerException as e:
+            log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
+            sys.exit(1)
+
 
     def gen_dockerfile(self, template_name, template_params, dockerfile='Dockerfile'):
         rendered_template = template_env.get_template(template_name).render(template_params)
@@ -317,6 +323,10 @@ class Service(DockerEnv):
     def build_date(self):
         return int(time.time())
 
+    @property
+    def image_exists(self):
+        return (True if len(self.client.images(self.hutcfg.repo)) > 0 else False)
+
     def _files_mtime(self):
         """Recurse over all files referenced by project and find max mtime"""
         def max_mtime(dirpath, fnames):
@@ -340,7 +350,7 @@ class Service(DockerEnv):
 
         return max([max_mtime_default_files, max_mtime_hutfiles, max_mtime_hutdirs])
 
-    def _run_build(self):
+    def image_stale(self):
         """Runs the build only if a file has changed"""
         max_mtime = self._files_mtime()
 
@@ -359,21 +369,21 @@ class Service(DockerEnv):
         """Builds a user service, if changed, and pushes  to repo if requested"""
         super().build_push(*args)
 
-        service = self.hutcfg.service
+        service_name = self.hutcfg.service
 
-        if force or self._run_build():
+        if force or not self.image_exists or self.image_stale():
             log.debug("Image stale - rebuilding...")
             # setup
             gen_barrister_contract()
             dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
             self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-            self.build_dockerfile(service, dockerfile)
+            self.build_dockerfile(service_name, dockerfile)
 
             log.info("{} build complete".format(self.hutcfg.name))
         else:
             log.info("Build not necessary, run with '--force' to override")
 
-        self.push_image(service)
+        self.push_image(service_name)
 
 
 # Helper functions
