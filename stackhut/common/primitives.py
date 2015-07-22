@@ -46,7 +46,6 @@ def get_docker(_exit=True):
         else:
             return None
 
-
 class DockerEnv:
     def __init__(self):
         self.push = None
@@ -61,15 +60,16 @@ class DockerEnv:
     def build_dockerfile(self, tag, dockerfile='Dockerfile'):
         log.debug("Running docker build for {}".format(tag))
         cache_flag = '--no-cache=True' if self.no_cache else '--no-cache=False'
-        cmds = ['build', '-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
+        cmds = ['-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
         log.debug("Calling docker with cmds - {}".format(cmds))
         log.info("Starting build, this may take some time, please wait...")
-        sh.docker(*cmds)
+        sh.docker.build(*cmds)
 
     def push_image(self, tag):
         if self.push:
-            log.info("Uploading image {}".format(tag))
-            sh.docker('push', tag, _in='Y')
+            log.info("Uploading image {} - this may take a while...".format(tag))
+            self.docker.push(tag)
+            # sh.docker('push', tag, _in='Y')
 
     def build_push(self, push, no_cache):
         self.push = push

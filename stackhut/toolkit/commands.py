@@ -149,8 +149,9 @@ class LoginCmd(UserCmd):
         super().run()
 
         # get docker username
+        # NOTE - this is so hacky - why does cli return username but REST API doesn't
         try:
-            stdout = sh.docker('info')
+            stdout = sh.docker.info()
             docker_user_list = [x for x in stdout if x.startswith('Username')]
             if len(docker_user_list) == 1:
                 docker_username = docker_user_list[0].split(':')[1].strip()
