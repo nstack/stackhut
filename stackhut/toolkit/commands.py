@@ -62,12 +62,7 @@ class InitCmd(UserCmd):
 
     def run(self):
         super().run()
-
-        if self.usercfg.logged_in:
-            self.author = self.usercfg['username']
-        else:
-            log.error("Please login first")
-            return 1
+        self.usercfg.ensure_logged_in()
 
         if os.path.exists('.git'):
             log.error('Found existing git repo, not initialising')
@@ -75,6 +70,7 @@ class InitCmd(UserCmd):
 
         if is_stack_supported(self.baseos, self.stack):
             self.name = os.path.basename(os.getcwd())
+            self.author = self.usercfg['username']
             log.info("Creating service {}/{}:latest".format(self.author, self.name))
             # copy the scaffold into the service
             copy_tree(utils.get_res_path('scaffold'), '.')
@@ -170,16 +166,14 @@ class LoginCmd(UserCmd):
         # email = input("Email: ")
         password = getpass.getpass("Password: ")
 
-        # connect securely to Stackhut service to get token
+        # connect securely to Stackhut service to get hash
         r = utils.stackhut_api_call('login', dict(userName=username, password=password))
 
         if r['success']:
             self.usercfg['docker_username'] = docker_username
             self.usercfg['username'] = username
-            self.usercfg['token'] = r['token']
-            # self.usercfg['email'] = email
-            # cfg['token'] = token
-
+            self.usercfg['hash'] = r['hash']
+            self.usercfg['email'] = r['email']
             self.usercfg.save()
             log.info("User {} logged in successfully".format(username))
             return 0
@@ -202,7 +196,7 @@ class LogoutCmd(UserCmd):
 
     def run(self):
         super().run()
-        # connect to Stackhut service to get token?
+        # connect to Stackhut service to get hash?
         print("Logged out {}".format(self.usercfg.get('email', '')))
         self.usercfg.wipe()
         self.usercfg.save()
@@ -265,12 +259,6 @@ class HutBuildCmd(HutCmd, UserCmd):
 
 
 # Base command implementing common func
-# dockerImage: String, userName : String,
-# password : String,
-# methods : JsValue,
-# githubUrl : Option[String],
-# exampleRequest : Option[JsValue],
-# description : String)
 class DeployCmd(HutCmd, UserCmd):
     name = 'deploy'
 
@@ -326,6 +314,13 @@ class DeployCmd(HutCmd, UserCmd):
     def run(self):
         super().run()
 
+        self.usercfg.ensure_logged_in()
+
+        if self.usercfg['username'] != self.hutcfg.author:
+            log.error("StackHut username ({}) not equal to service author ({})".format(self.usercfg['username'],
+                                                                                       self.hutcfg.author))
+            return 1
+
         # call build+push first using Docker builder
         if not self.no_build:
             service = Service(self.hutcfg, self.usercfg)
@@ -334,24 +329,20 @@ class DeployCmd(HutCmd, UserCmd):
         # build up the deploy message body
         test_request = json.loads(self._read_file('test_request.json'))
         readme = self._read_file('README.md')
-
-        # if self.usercfg['username'] != self.hutcfg.email:
-        #     log.error("StackHut username ({}) not equal to Hutfile contact email ({})".format(self.usercfg['username'], self.hutcfg.email))
-        #     return 1
-        tag = self.hutcfg.tag(self.usercfg)
+        tag = self.hutcfg.service
 
         data = {
             'service': tag,
-            'githubUrl': self.hutcfg.github_url,
-            'exampleRequest': test_request,
+            'github_url': self.hutcfg.github_url,
+            'example_request': test_request,
             'description': self.hutcfg.description,
-            #'readme': readme,
+            'readme': readme,
             'schema': self.create_methods()
         }
 
         log.info("Deploying image '{}' to StackHut".format(tag))
         r = utils.stackhut_api_user_call('add', data, self.usercfg)
-        log.info("Image {} has been {}".format(r['serviceName'], r['message']))
+        log.info("Image {} has been {}".format(tag, r['message']))
 
 
 class ToolkitRunCmd(HutCmd, UserCmd):
@@ -374,7 +365,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         self.force = args.force
 
     def run(self):
-        tag = self.hutcfg.tag(self.usercfg)
+        tag = self.hutcfg.service
 
         # check image exists first
         image_id = (sh.docker.images('-q', tag.split(':')[0]))
@@ -398,12 +389,14 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
         req_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'ro'
         res_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
-        verbose_mode = '-v' if self.args.verbose else ''
+        verbose_mode = '-v' if self.args.verbose else None
 
-        out = sh.docker.run('-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
-                            '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
-                            '--entrypoint=/usr/bin/stackhut', tag, '-v', 'runcontainer', '--uid', uid_gid,
-                            _out=lambda x: print(x, end=''))
+        args = ['-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
+                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
+                '--entrypoint=/usr/bin/stackhut', tag, verbose_mode, 'runcontainer', '--uid', uid_gid]
+        args = [x for x in args if x is not None]
+
+        out = sh.docker.run(args, _out=lambda x: print(x, end=''))
         log.info("...finished service in container")
 
 

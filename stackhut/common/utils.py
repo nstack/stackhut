@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import subprocess
 import logging
 from boto.s3.connection import Key, S3Connection
 import sys
@@ -24,10 +23,10 @@ from itertools import cycle
 import codecs
 import sh
 import redis
-import pyconfig
 import yaml
 import json
 from . import barrister
+# import pyconfig
 
 ####################################################################################################
 # App Config
@@ -96,7 +95,7 @@ res_dir = os.path.normpath(os.path.join(sys_dir, '../res'))
 #log.debug("StackHut src dir is {}".format(src_dir))
 log.debug("StackHut res dir is {}".format(res_dir))
 #pyconfig.set('src_dir', src_dir)
-pyconfig.set('res_dir', res_dir)
+#pyconfig.set('res_dir', res_dir)
 
 def get_res_path(res_name):
     return os.path.join(res_dir, res_name)
@@ -147,12 +146,12 @@ class ControlListener(threading.Thread):
         super().__init__(*args, **kwargs)
         self.store = store
         self.pubsub = store.redis.pubsub()
-        self.pubsub.subscribe(['{}-control'.format(store.service_name)])
+        self.pubsub.subscribe(['{}-control'.format(store.service)])
         self.can_quit = True
         self.cv = threading.Condition()
 
     def run(self):
-        # infinte loop on listen generator
+        # infinite loop on listen channel generator
         for item in self.pubsub.listen():
             log.debug(item)
             if item['type'] == 'message':
@@ -202,8 +201,8 @@ class CloudStore(IOStore):
         del os.environ[k]
         return v
 
-    def __init__(self, service_name):
-        self.service_name = service_name
+    def __init__(self, service):
+        self.service = service
 
         # open connection to AWS
         aws_id = self._get_env('AWS_ID')
@@ -226,8 +225,8 @@ class CloudStore(IOStore):
 
     def get_request(self):
         """Get the request JSON"""
-        log.debug("Waiting on queue for service - {}".format(self.service_name))
-        x = self.redis.blpop(self.service_name, 0)[1].decode('utf-8')
+        log.debug("Waiting on queue for service - {}".format(self.service))
+        x = self.redis.blpop(self.service, 0)[1].decode('utf-8')
         # shutdown control listener
         self.control.stop()
         log.debug("Received message {}".format(x))
@@ -334,7 +333,7 @@ class UserCfg(dict):
                         self[v] = self.xor_decrypt_string(self[v])
 
     # Yes - this is shit crypto but just so we don't store plaintext on the fileystem
-    # token sent via HTTPS to web regardless
+    # hash sent via HTTPS to web regardless
     key = 'stackhut_is_G_dawg'
     encrypt_vals = ['hash']
     basic_vals = ['username', 'docker_username']
@@ -411,9 +410,10 @@ class HutfileCfg:
     def from_image(self):
         return "{}-{}".format(self.baseos, self.stack)
 
-    def tag(self, usercfg):
-        """Returns the tag for the image"""
-        return "{}/{}:{}".format(usercfg.docker_username, self.name, self.version)
+    @property
+    def service(self):
+        """Returns the service for the image"""
+        return "{}/{}:{}".format(self.author, self.name, self.version)
 
 
 ###################################################################################################
@@ -462,12 +462,12 @@ headers = {'content-type': 'application/json'}
 import urllib.parse
 import requests
 
-def stackhut_api_call(endpoint, body, secure=True):
+def stackhut_api_call(endpoint, msg, secure=True):
     url_prefix = secure_url_prefix() if secure else unsecure_url_prefix()
     log.debug(url_prefix)
     url = urllib.parse.urljoin(url_prefix, endpoint)
-    log.debug("Calling Stackhut {} with \n\t{}".format(endpoint, json.dumps(body)))
-    r = requests.post(url, data=json.dumps(body), headers=headers)
+    log.debug("Calling Stackhut {} with \n\t{}".format(endpoint, json.dumps(msg)))
+    r = requests.post(url, data=json.dumps(msg), headers=headers)
 
     if r.status_code == requests.codes.ok:
         return r.json()
@@ -476,7 +476,7 @@ def stackhut_api_call(endpoint, body, secure=True):
         log.error(r.text)
         r.raise_for_status()
 
-def stackhut_api_user_call(endpoint, body, usercfg):
-    body['userName'] = usercfg['username']
-    body['token'] = usercfg['token']
-    return stackhut_api_call(endpoint, body)
+def stackhut_api_user_call(endpoint, data, usercfg):
+    auth = dict(username=usercfg['username'], hash=usercfg['hash'])
+    message = dict(auth=auth, data=data)
+    return stackhut_api_call(endpoint, message)

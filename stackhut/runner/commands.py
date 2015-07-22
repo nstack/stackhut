@@ -63,7 +63,7 @@ class RunCmd(HutCmd):
                 d[v] = str(uuid.uuid4()) if v not in d else str(d[v])
 
             # massage the JSON-RPC request if we don't receive an entirely valid req
-            default_service = 'Default'  # input_json['serviceName']
+            default_service = 'Default'
             gen_id(input_json, 'id')
             self.store.set_task_id(input_json['id'])
 
@@ -92,9 +92,12 @@ class RunCmd(HutCmd):
             self.stack.copy_shim()
             return reqs  # anything else
 
-        # called by service on exit - clean the system, write all output data and return control back to docker
-        # intended to upload all files into S#
         def _shutdown(res):
+            """
+            - called by service on exit - clean the system, write all output data and
+                return control back to docker
+            - intended to upload all files into S3
+            """
             log.info('Output - \n{}'.format(res))
             log.info('Shutting down service')
             # save output and log
@@ -223,7 +226,7 @@ class RunCloudCmd(RunCmd):
 
     def __init__(self, args):
         super().__init__(args)
-        self.store = CloudStore(self.hutcfg.name)
+        self.store = CloudStore(self.hutcfg.service)
 
 
 # StackHut primary run commands

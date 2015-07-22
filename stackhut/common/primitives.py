@@ -68,7 +68,7 @@ class DockerEnv:
         os.chdir(image_dir)
 
         self.gen_dockerfile(template_name, template_params)
-        # hardcode the tag under stackhut name
+        # hardcode the service under stackhut name
         tag = "{}/{}:{}".format('stackhut', image_name, 'latest')
 
         self.build_dockerfile(tag)
@@ -344,7 +344,7 @@ class Service(DockerEnv):
         """Runs the build only if a file has changed"""
         max_mtime = self._files_mtime()
 
-        tag = self.hutcfg.tag(self.usercfg)
+        tag = self.hutcfg.service
 
         image_info = self.client.inspect_image(tag)
         image_build_string = image_info['Created']
@@ -359,7 +359,7 @@ class Service(DockerEnv):
         """Builds a user service, if changed, and pushes  to repo if requested"""
         super().build_push(*args)
 
-        tag = self.hutcfg.tag(self.usercfg)
+        tag = self.hutcfg.service
 
         if force or self._run_build():
             log.debug("Image stale - rebuilding...")
