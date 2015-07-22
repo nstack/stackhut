@@ -415,6 +415,10 @@ class HutfileCfg:
         """Returns the service for the image"""
         return "{}/{}:{}".format(self.author, self.name, self.version)
 
+    @property
+    def repo(self):
+        """Returns the repo name for the image"""
+        return "{}/{}".format(self.author, self.name)
 
 ###################################################################################################
 # StackHut Commands Handling

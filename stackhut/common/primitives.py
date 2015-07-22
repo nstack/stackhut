@@ -344,12 +344,12 @@ class Service(DockerEnv):
         """Runs the build only if a file has changed"""
         max_mtime = self._files_mtime()
 
-        tag = self.hutcfg.service
+        repo = self.hutcfg.repo
 
-        image_info = self.client.inspect_image(tag)
+        image_info = self.client.inspect_image(repo)
         image_build_string = image_info['Created']
 
-        log.debug("Image {} last built at {}".format(tag, image_build_string))
+        log.debug("Image {} last built at {}".format(repo, image_build_string))
         build_date = arrow.get(image_build_string).datetime.timestamp()
         log.debug("Files max mtime is {}, image build date is {}".format(max_mtime, build_date))
 
@@ -359,7 +359,7 @@ class Service(DockerEnv):
         """Builds a user service, if changed, and pushes  to repo if requested"""
         super().build_push(*args)
 
-        tag = self.hutcfg.service
+        service = self.hutcfg.service
 
         if force or self._run_build():
             log.debug("Image stale - rebuilding...")
@@ -367,13 +367,13 @@ class Service(DockerEnv):
             gen_barrister_contract()
             dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
             self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-            self.build_dockerfile(tag, dockerfile)
+            self.build_dockerfile(service, dockerfile)
 
             log.info("{} build complete".format(self.hutcfg.name))
         else:
             log.info("Build not necessary, run with '--force' to override")
 
-        self.push_image(tag)
+        self.push_image(service)
 
 
 # Helper functions
