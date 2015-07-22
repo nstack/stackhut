@@ -16,25 +16,17 @@
 # different classes for common tasks
 # i.e. shell out, python code, etc.
 # & payload pattern matching helper classes
-import abc
-import yaml
 import json
 import os
-import shutil
 import getpass
 import uuid
 import sh
-import argparse
 from jinja2 import Environment, FileSystemLoader
 from distutils.dir_util import copy_tree
-import sys
-import docker
-from docker.utils import kwargs_from_env
-import arrow
 
 from stackhut.common import utils
 from stackhut.common.utils import log, BaseCmd, HutCmd
-from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, gen_barrister_contract
+from stackhut.common.primitives import Service, bases, stacks, is_stack_supported
 from stackhut import __version__
 
 
@@ -139,37 +131,11 @@ class StackBuildCmd(UserCmd):
     def run(self):
         super().run()
         # build bases and stacks
-        [b.build(self.outdir, self.args.push, self.args.no_cache) for b in bases.values()]
-        [s.build(b, self.outdir, self.args.push, self.args.no_cache)
+        [b.build_push(self.outdir, self.args.push, self.args.no_cache) for b in bases.values()]
+        [s.build_push(b, self.outdir, self.args.push, self.args.no_cache)
             for b in bases.values()
             for s in stacks.values()]
         log.info("All base OS and Stack images built and deployed")
-
-
-class HutBuildCmd(HutCmd, UserCmd):
-    """Build StackHut service using docker"""
-    name = 'build'
-
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(HutBuildCmd, HutBuildCmd).parse_cmds(subparser, HutBuildCmd.name,
-                                                               "Build a StackHut service", HutBuildCmd)
-        subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
-
-    def __init__(self, args):
-        super().__init__(args)
-
-    # TODO - run clean cmd first
-    def run(self, push=False):
-        super().run()
-        # setup
-        gen_barrister_contract()
-        # Docker build
-        service = Service(self.hutcfg, self.usercfg)
-        no_cache = self.args.no_cache if 'no_cache' in self.args else False
-        service.build(push, no_cache)
-        log.info("{} build complete".format(self.hutcfg.name))
-
 
 # Base command implementing common func
 class LoginCmd(UserCmd):
@@ -274,6 +240,30 @@ class InfoCmd(UserCmd):
         return 0
 
 
+class HutBuildCmd(HutCmd, UserCmd):
+    """Build StackHut service using docker"""
+    name = 'build'
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(HutBuildCmd, HutBuildCmd).parse_cmds(subparser, HutBuildCmd.name,
+                                                               "Build a StackHut service", HutBuildCmd)
+        subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
+        subparser.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.no_cache = self.args.no_cache if 'no_cache' in self.args else False
+        self.force = self.args.force if 'force' in self.args else False
+
+    # TODO - run clean cmd first
+    def run(self):
+        super().run()
+        # Docker builder
+        service = Service(self.hutcfg, self.usercfg)
+        service.build_push(self.force, False, self.no_cache)
+
+
 # Base command implementing common func
 # dockerImage: String, userName : String,
 # password : String,
@@ -289,11 +279,12 @@ class DeployCmd(HutCmd, UserCmd):
         subparser = super(DeployCmd, DeployCmd).parse_cmds(subparser, DeployCmd.name,
                                                            "deploy service to StackHut", DeployCmd)
         subparser.add_argument("--no-build", '-n', action='store_true', help="Deploy without re-building & pushing the image")
+        subparser.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
 
     def __init__(self, args):
         super().__init__(args)
-        self.hutbuild = HutBuildCmd(args)
         self.no_build = args.no_build
+        self.force = args.force
 
     def create_methods(self):
         with open(utils.CONTRACTFILE, 'r') as f:
@@ -335,9 +326,10 @@ class DeployCmd(HutCmd, UserCmd):
     def run(self):
         super().run()
 
-        # call build+push first
+        # call build+push first using Docker builder
         if not self.no_build:
-            self.hutbuild.run(True)
+            service = Service(self.hutcfg, self.usercfg)
+            service.build_push(self.force, True, False)
 
         # build up the deploy message body
         test_request = json.loads(self._read_file('test_request.json'))
@@ -362,7 +354,7 @@ class DeployCmd(HutCmd, UserCmd):
         log.info("Image {} has been {}".format(r['serviceName'], r['message']))
 
 
-class ToolkitRunCmd(HutCmd):
+class ToolkitRunCmd(HutCmd, UserCmd):
     """"Concrete Run Command within a container"""
     name = 'run'
 
@@ -374,62 +366,15 @@ class ToolkitRunCmd(HutCmd):
                                                                    ToolkitRunCmd)
         subparser.add_argument("reqfile", nargs='?', default='test_request.json',
                                help="Test request file to use")
+        subparser.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
 
     def __init__(self, args):
         super().__init__(args)
         self.reqfile = args.reqfile
-
-    def files_mtime(self):
-        """Recurse over all files referenced by project and find max mtime"""
-        def max_mtime(dirpath, fnames):
-            """return max mtime from list of files in a dir"""
-            mtimes = (os.path.getmtime(os.path.join(dirpath, fname)) for fname in fnames)
-            return max(mtimes)
-
-        def max_mtime_dir(dirname):
-            """find max mtime of a single file in dir recurseively"""
-            for (dirpath, dirnames, fnames) in os.walk(dirname):
-                log.debug("Walking dir {}".format(dirname))
-                yield max_mtime(dirpath, fnames)
-
-        stack = stacks[self.hutcfg.stack]
-        default_files = [stack.entrypoint, stack.package_file, 'api.idl', 'Hutfile']
-
-        # find the max - from default files, hut file and hut dirs
-        max_mtime_default_files = max_mtime(os.getcwd(), default_files)
-        max_mtime_hutfiles = max_mtime(os.getcwd(), self.hutcfg.files) if self.hutcfg.files else 0
-        max_mtime_hutdirs = max((max_mtime_dir(dirname) for dirname in self.hutcfg.dirs)) if self.hutcfg.dirs else 0
-
-        return max([max_mtime_default_files, max_mtime_hutfiles, max_mtime_hutdirs])
-
-    def run_build(self, usercfg):
-        max_mtime = self.files_mtime()
-
-        tag = self.hutcfg.tag(usercfg)
-
-        if sys.platform == 'linux':
-            c = docker.Client()
-        else:
-            c = docker.Client(version='auto', **kwargs_from_env(assert_hostname=False))
-
-        image_info = c.inspect_image(tag)
-        image_build_string = image_info['Created']
-
-        log.debug("Image {} last built at {}".format(tag, image_build_string))
-        build_date = arrow.get(image_build_string).datetime.timestamp()
-        log.debug("Files max mtime is {}, image build date is {}".format(max_mtime, build_date))
-
-        if max_mtime >= build_date:
-            log.debug("Image stale - rebuilding...")
-            hutbuild = HutBuildCmd(self.args)
-            hutbuild.run()
-        else:
-            log.debug("Image cached - not rebuilding")
-
+        self.force = args.force
 
     def run(self):
-        usercfg = utils.UserCfg()
-        tag = self.hutcfg.tag(usercfg)
+        tag = self.hutcfg.tag(self.usercfg)
 
         # check image exists first
         image_id = (sh.docker.images('-q', tag.split(':')[0]))
@@ -437,8 +382,9 @@ class ToolkitRunCmd(HutCmd):
             print("No images found, please run 'stackhut build' before 'stackhut run -c'")
             return 1
 
-        # check if need to build
-        self.run_build(usercfg)
+        # Docker builder (if needed)
+        service = Service(self.hutcfg, self.usercfg)
+        service.build_push(self.force, False, False)
 
         host_req_file = os.path.abspath(self.reqfile)
 

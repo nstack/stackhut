@@ -15,9 +15,6 @@ import json
 import subprocess
 import uuid
 import os
-import sh
-import shutil
-import argparse
 
 from stackhut.common import barrister
 from stackhut.common import utils

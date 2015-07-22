@@ -11,13 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import os
+import sys
 import time
-import json
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
 import sh
 from distutils.dir_util import copy_tree
+import docker
+from docker.utils import kwargs_from_env
+import arrow
 
 from . import utils
 from .utils import log
@@ -30,9 +34,10 @@ class DockerEnv:
         self.push = None
         self.no_cache = None
 
-    def build(self, push, no_cache):
-        self.push = push
-        self.no_cache = no_cache
+        if sys.platform == 'linux':
+            self.client = docker.Client()
+        else:
+            self.client = docker.Client(version='auto', **kwargs_from_env(assert_hostname=False))
 
     def gen_dockerfile(self, template_name, template_params, dockerfile='Dockerfile'):
         rendered_template = template_env.get_template(template_name).render(template_params)
@@ -46,20 +51,29 @@ class DockerEnv:
         log.debug("Calling docker with cmds - {}".format(cmds))
         log.info("Starting build, this may take some time, please wait...")
         sh.docker(*cmds)
+
+    def push_image(self, tag):
         if self.push:
             log.info("Uploading image {}".format(tag))
             sh.docker('push', tag, _in='Y')
-        return tag
 
-    def stack_build(self, template_name, template_params, outdir, image_name):
+    def build_push(self, push, no_cache):
+        self.push = push
+        self.no_cache = no_cache
+
+    def stack_build_push(self, template_name, template_params, outdir, image_name):
         image_dir = os.path.join(outdir, image_name)
-        if not os.path.exists(image_dir):
-            os.mkdir(image_dir)
-        os.chdir(image_dir)
-        self.gen_dockerfile(template_name, template_params)
+        os.mkdir(image_dir) if not os.path.exists(image_dir) else None
 
+        os.chdir(image_dir)
+
+        self.gen_dockerfile(template_name, template_params)
+        # hardcode the tag under stackhut name
         tag = "{}/{}:{}".format('stackhut', image_name, 'latest')
+
         self.build_dockerfile(tag)
+        self.push_image(tag)
+
         os.chdir(utils.ROOT_DIR)
 
 
@@ -74,11 +88,11 @@ class BaseOS(DockerEnv):
     def description(self):
         return "Base OS image using {}".format(self.name.capitalize())
 
-    def build(self, outdir, *args):
-        super().build(*args)
+    def build_push(self, outdir, *args):
+        super().build_push(*args)
         log.info("Building image for base {}".format(self.name))
         image_name = self.name
-        super().stack_build('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name)
+        super().stack_build_push('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name)
 
 
 class Fedora(BaseOS):
@@ -149,8 +163,8 @@ class Stack(DockerEnv):
     def description(self):
         return "Support for language stack {}".format(self.name.capitalize())
 
-    def build(self, baseos, outdir, *args):
-        super().build(*args)
+    def build_push(self, baseos, outdir, *args):
+        super().build_push(*args)
         log.info("Building image for base {} with stack {}".format(baseos.name, self.name))
         image_name = "{}-{}".format(baseos.name, self.name)
         baseos_stack_cmds_pkgs = get_baseos_stack_pkgs(baseos, self)
@@ -160,9 +174,9 @@ class Stack(DockerEnv):
             stack_cmds = os_cmds + pkg_cmds
 
             # only render the template if apy supported config
-            super().stack_build('Dockerfile-stack.txt',
-                                dict(baseos=baseos, stack=self, stack_cmds=stack_cmds),
-                                outdir, image_name)
+            super().stack_build_push('Dockerfile-stack.txt',
+                                     dict(baseos=baseos, stack=self, stack_cmds=stack_cmds),
+                                     outdir, image_name)
 
     def install_service_pkgs(self):
         """Anything needed to run the service"""
@@ -303,12 +317,62 @@ class Service(DockerEnv):
     def build_date(self):
         return int(time.time())
 
-    def build(self, *args):
-        super().build(*args)
-        dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
-        self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
+    def _files_mtime(self):
+        """Recurse over all files referenced by project and find max mtime"""
+        def max_mtime(dirpath, fnames):
+            """return max mtime from list of files in a dir"""
+            mtimes = (os.path.getmtime(os.path.join(dirpath, fname)) for fname in fnames)
+            return max(mtimes)
+
+        def max_mtime_dir(dirname):
+            """find max mtime of a single file in dir recurseively"""
+            for (dirpath, dirnames, fnames) in os.walk(dirname):
+                log.debug("Walking dir {}".format(dirname))
+                yield max_mtime(dirpath, fnames)
+
+        stack = stacks[self.hutcfg.stack]
+        default_files = [stack.entrypoint, stack.package_file, 'api.idl', 'Hutfile']
+
+        # find the max - from default files, hut file and hut dirs
+        max_mtime_default_files = max_mtime(os.getcwd(), default_files)
+        max_mtime_hutfiles = max_mtime(os.getcwd(), self.hutcfg.files) if self.hutcfg.files else 0
+        max_mtime_hutdirs = max((max_mtime_dir(dirname) for dirname in self.hutcfg.dirs)) if self.hutcfg.dirs else 0
+
+        return max([max_mtime_default_files, max_mtime_hutfiles, max_mtime_hutdirs])
+
+    def _run_build(self):
+        """Runs the build only if a file has changed"""
+        max_mtime = self._files_mtime()
+
         tag = self.hutcfg.tag(self.usercfg)
-        self.build_dockerfile(tag, dockerfile)
+
+        image_info = self.client.inspect_image(tag)
+        image_build_string = image_info['Created']
+
+        log.debug("Image {} last built at {}".format(tag, image_build_string))
+        build_date = arrow.get(image_build_string).datetime.timestamp()
+        log.debug("Files max mtime is {}, image build date is {}".format(max_mtime, build_date))
+
+        return max_mtime >= build_date
+
+    def build_push(self, force, *args):
+        super().build_push(*args)
+
+        tag = self.hutcfg.tag(self.usercfg)
+
+        if force or self._run_build():
+            log.debug("Image stale - rebuilding...")
+            # setup
+            gen_barrister_contract()
+            dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
+            self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
+            self.build_dockerfile(tag, dockerfile)
+
+            log.info("{} build complete".format(self.hutcfg.name))
+        else:
+            log.info("Build not necessary, run with '--force' to override")
+
+        self.push_image(tag)
 
 
 # Helper functions
