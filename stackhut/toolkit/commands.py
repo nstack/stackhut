@@ -26,7 +26,7 @@ from distutils.dir_util import copy_tree
 
 from stackhut.common import utils
 from stackhut.common.utils import log, BaseCmd, HutCmd
-from stackhut.common.primitives import Service, bases, stacks, is_stack_supported
+from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, get_docker
 from stackhut import __version__
 
 
@@ -218,9 +218,11 @@ class InfoCmd(UserCmd):
 
         # log sys info
         log.info("StackHut version {}".format(__version__))
-        try:
-            log.info(str(sh.docker("-v")).strip())
-        except sh.CommandNotFound as e:
+
+        docker = get_docker(_exit=False)
+        if docker:
+            log.info("Docker version {}".format(docker.version().get('Version')))
+        else:
             log.info("Docker not installed")
 
         if self.usercfg.logged_in:

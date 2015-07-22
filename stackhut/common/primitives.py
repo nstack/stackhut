@@ -19,7 +19,7 @@ from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
 import sh
 from distutils.dir_util import copy_tree
-import docker
+import docker as docker_py
 from docker.utils import kwargs_from_env
 from docker.errors import DockerException
 import arrow
@@ -30,20 +30,28 @@ from .barrister import generate_contract
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
 
+docker = None
+
+def get_docker(_exit=True):
+    try:
+        if sys.platform == 'linux':
+            docker_client = docker_py.Client(version='auto')
+        else:
+            docker_client = docker_py.Client(version='auto', **kwargs_from_env(assert_hostname=False))
+        return docker_client
+    except DockerException as e:
+        log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
+        if _exit:
+            sys.exit(1)
+        else:
+            return None
+
+
 class DockerEnv:
     def __init__(self):
         self.push = None
         self.no_cache = None
-
-        try:
-            if sys.platform == 'linux':
-                self.client = docker.Client(version='auto')
-            else:
-                self.client = docker.Client(version='auto', **kwargs_from_env(assert_hostname=False))
-        except DockerException as e:
-            log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
-            sys.exit(1)
-
+        self.docker = get_docker()
 
     def gen_dockerfile(self, template_name, template_params, dockerfile='Dockerfile'):
         rendered_template = template_env.get_template(template_name).render(template_params)
@@ -325,7 +333,7 @@ class Service(DockerEnv):
 
     @property
     def image_exists(self):
-        return (True if len(self.client.images(self.hutcfg.repo)) > 0 else False)
+        return (True if len(self.docker.images(self.hutcfg.repo)) > 0 else False)
 
     def _files_mtime(self):
         """Recurse over all files referenced by project and find max mtime"""
@@ -356,7 +364,7 @@ class Service(DockerEnv):
 
         repo = self.hutcfg.repo
 
-        image_info = self.client.inspect_image(repo)
+        image_info = self.docker.inspect_image(repo)
         image_build_string = image_info['Created']
 
         log.debug("Image {} last built at {}".format(repo, image_build_string))
@@ -372,7 +380,7 @@ class Service(DockerEnv):
         service_name = self.hutcfg.service
 
         if force or not self.image_exists or self.image_stale():
-            log.debug("Image stale - rebuilding...")
+            log.debug("Image not found or stale - building...")
             # setup
             gen_barrister_contract()
             dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
