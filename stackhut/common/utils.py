@@ -336,7 +336,7 @@ class UserCfg(dict):
     # Yes - this is shit crypto but just so we don't store plaintext on the fileystem
     # token sent via HTTPS to web regardless
     key = 'stackhut_is_G_dawg'
-    encrypt_vals = ['token']
+    encrypt_vals = ['hash']
     basic_vals = ['username', 'docker_username']
 
     def xor_crypt_string(self, plaintext):
@@ -391,7 +391,7 @@ class HutfileCfg:
         # TODO - validation
         # get vals from the hutfile
         self.name = hutfile['name'].lower()
-        # self.author = 'stackhut'  # hutfile['author'].lower()
+        self.author = hutfile['author']
         self.version = 'latest'
         # self.email = hutfile['contact']
         self.description = hutfile['description']
@@ -406,7 +406,10 @@ class HutfileCfg:
         self.docker_cmds = hutfile.get('docker_cmds', [])
         self.baseos = hutfile['baseos']
         self.stack = hutfile['stack']
-        self.from_image = "{}-{}".format(self.baseos, self.stack)
+
+    @property
+    def from_image(self):
+        return "{}-{}".format(self.baseos, self.stack)
 
     def tag(self, usercfg):
         """Returns the tag for the image"""

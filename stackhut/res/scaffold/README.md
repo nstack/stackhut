@@ -1,4 +1,4 @@
-# {{ scaffold.service_name | capitalize }} Service
+# {{ scaffold.name | capitalize }} Service
 
 _TODO_ - describe service
 

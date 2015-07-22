@@ -14,7 +14,7 @@ class DefaultService {
     }
 }
 
-// export the services
+// export the services here
 module.exports = {
     Default : new DefaultService()
 }

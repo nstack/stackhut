@@ -35,7 +35,7 @@ class DockerEnv:
         self.no_cache = None
 
         if sys.platform == 'linux':
-            self.client = docker.Client()
+            self.client = docker.Client(version='auto')
         else:
             self.client = docker.Client(version='auto', **kwargs_from_env(assert_hostname=False))
 
@@ -356,6 +356,7 @@ class Service(DockerEnv):
         return max_mtime >= build_date
 
     def build_push(self, force, *args):
+        """Builds a user service, if changed, and pushes  to repo if requested"""
         super().build_push(*args)
 
         tag = self.hutcfg.tag(self.usercfg)

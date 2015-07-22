@@ -1,5 +1,8 @@
 # Name for the service - we recommend using snake-case
-name: {{ scaffold.service_name }}
+name: {{ scaffold.name }}
+
+# Service author - must be a valid StackHut user
+author: {{ scaffold.author }}
 
 # description of the service
 description: Awesome service in {{ scaffold.stack.name }}

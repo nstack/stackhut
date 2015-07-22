@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-{{ scaffold.name }} service
+{{ scaffold.name | capitalize }} Service
 """
 import stackhut
 

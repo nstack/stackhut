@@ -62,20 +62,20 @@ class InitCmd(UserCmd):
 
     def run(self):
         super().run()
-        # if 'username' in self.usercfg and len(self.usercfg['username']) > 0:
-        #     # self.author = (self.usercfg['username'].split('@')[0]).capitalize()
-        #     pass
-        # else:
-        #     log.error("Please login first")
-        #     return 1
+
+        if self.usercfg.logged_in:
+            self.author = self.usercfg['username']
+        else:
+            log.error("Please login first")
+            return 1
 
         if os.path.exists('.git'):
             log.error('Found existing git repo, not initialising')
             return 1
 
         if is_stack_supported(self.baseos, self.stack):
-            self.service_name = os.path.basename(os.getcwd())
-            log.info("Creating service {}".format(self.service_name))
+            self.name = os.path.basename(os.getcwd())
+            log.info("Creating service {}/{}:latest".format(self.author, self.name))
             # copy the scaffold into the service
             copy_tree(utils.get_res_path('scaffold'), '.')
 
@@ -102,8 +102,8 @@ class InitCmd(UserCmd):
                 sh.git.branch("stackhut")
 
         else:
-            log.info("Sorry the combination of {} and {} is not supported".format(self.baseos,
-                                                                                  self.stack))
+            log.error("Sorry, the combination of {} and {} is currently unsupported".format(self.baseos,
+                                                                                            self.stack))
             return 1
 
 
@@ -341,7 +341,7 @@ class DeployCmd(HutCmd, UserCmd):
         tag = self.hutcfg.tag(self.usercfg)
 
         data = {
-            'dockerImage': tag,
+            'service': tag,
             'githubUrl': self.hutcfg.github_url,
             'exampleRequest': test_request,
             'description': self.hutcfg.description,
@@ -398,6 +398,8 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
         req_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'ro'
         res_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
+        verbose_mode = '-v' if self.args.verbose else ''
+
         out = sh.docker.run('-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
                             '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
                             '--entrypoint=/usr/bin/stackhut', tag, '-v', 'runcontainer', '--uid', uid_gid,
