@@ -330,7 +330,9 @@ class Service:
 
     @property
     def image_exists(self):
-        return (True if len(get_docker().images(self.hutcfg.repo)) > 0 else False)
+        repo_images = get_docker().images(self.hutcfg.repo)
+        service_image = [x for x in repo_images if self.hutcfg.service in x['RepoTags']]
+        return True if len(service_image) > 0 else False
 
     def _files_mtime(self):
         """Recurse over all files referenced by project and find max mtime"""
@@ -343,7 +345,7 @@ class Service:
             """find max mtime of a single file in dir recurseively"""
             for (dirpath, dirnames, fnames) in os.walk(dirname):
                 log.debug("Walking dir {}".format(dirname))
-                yield max_mtime(dirpath, fnames)
+                return max_mtime(dirpath, fnames)
 
         stack = stacks[self.hutcfg.stack]
         default_files = [stack.entrypoint, stack.package_file, 'api.idl', 'Hutfile']

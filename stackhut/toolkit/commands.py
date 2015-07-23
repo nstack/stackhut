@@ -30,12 +30,113 @@ from stackhut.common.primitives import Service, bases, stacks, is_stack_supporte
 from stackhut import __version__
 
 
-# Base command implementing common func
 class UserCmd(BaseCmd):
-    """Admin commands require the userconfig file"""
+    """User commands require the userconfig file"""
     def __init__(self, args):
         super().__init__(args)
         self.usercfg = utils.UserCfg()
+
+
+class LoginCmd(UserCmd):
+    name = 'login'
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(LoginCmd, LoginCmd).parse_cmds(subparser, LoginCmd.name,
+                                                         "login to stackhut", LoginCmd)
+
+    def __init__(self, args):
+        super().__init__(args)
+
+    def run(self):
+        super().run()
+
+        # get docker username
+        # NOTE - this is so hacky - why does cli return username but REST API doesn't
+        try:
+            stdout = sh.docker.info()
+            docker_user_list = [x for x in stdout if x.startswith('Username')]
+            if len(docker_user_list) == 1:
+                docker_username = docker_user_list[0].split(':')[1].strip()
+                log.debug("Docker user is '{}', note this may be different to your StackHut login".format(docker_username))
+            else:
+                log.error("Please run 'docker login' first")
+                return 1
+        except sh.ErrorReturnCode as e:
+            log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
+            return 1
+
+        username = input("Username: ")
+        # email = input("Email: ")
+        password = getpass.getpass("Password: ")
+
+        # connect securely to Stackhut service to get hash
+        r = utils.stackhut_api_call('login', dict(userName=username, password=password))
+
+        if r['success']:
+            self.usercfg['docker_username'] = docker_username
+            self.usercfg['username'] = username
+            self.usercfg['hash'] = r['hash']
+            self.usercfg['email'] = r['email']
+            self.usercfg.save()
+            log.info("User {} logged in successfully".format(username))
+            return 0
+        else:
+            print("Incorrect username or password, please try again")
+            return 1
+
+
+class LogoutCmd(UserCmd):
+    name = 'logout'
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(LogoutCmd, LogoutCmd).parse_cmds(subparser, LogoutCmd.name,
+                                                           "logout to stackhut", LogoutCmd)
+
+    def __init__(self, args):
+        super().__init__(args)
+
+    def run(self):
+        super().run()
+        # connect to Stackhut service to get hash?
+        print("Logged out {}".format(self.usercfg.get('email', '')))
+        self.usercfg.wipe()
+        self.usercfg.save()
+
+
+class InfoCmd(UserCmd):
+    name = 'info'
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(InfoCmd, InfoCmd).parse_cmds(subparser, InfoCmd.name,
+                                                       "Stackhut Infomation", InfoCmd)
+
+    def __init__(self, args):
+        super().__init__(args)
+
+    def run(self):
+        super().run()
+
+        # log sys info
+        log.info("StackHut version {}".format(__version__))
+
+        docker = get_docker(_exit=False)
+        if docker:
+            log.info("Docker version {}".format(docker.version().get('Version')))
+        else:
+            log.info("Docker not installed")
+
+        if self.usercfg.logged_in:
+            log.info("User logged in")
+
+            for x in self.usercfg.basic_vals:
+                log.info("{}: {}".format(x.capitalize(), self.usercfg[x]))
+        else:
+            log.info("User not logged in")
+
+        return 0
 
 
 class InitCmd(UserCmd):
@@ -64,8 +165,8 @@ class InitCmd(UserCmd):
         super().run()
         self.usercfg.ensure_logged_in()
 
-        if os.path.exists('.git'):
-            log.error('Found existing git repo, not initialising')
+        if os.path.exists('.git') or os.path.exists('Hutfile'):
+            log.error('Found existing project, cancelling')
             return 1
 
         if is_stack_supported(self.baseos, self.stack):
@@ -132,109 +233,6 @@ class StackBuildCmd(UserCmd):
             for b in bases.values()
             for s in stacks.values()]
         log.info("All base OS and Stack images built and deployed")
-
-# Base command implementing common func
-class LoginCmd(UserCmd):
-    name = 'login'
-
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(LoginCmd, LoginCmd).parse_cmds(subparser, LoginCmd.name,
-                                                         "login to stackhut", LoginCmd)
-
-    def __init__(self, args):
-        super().__init__(args)
-
-    def run(self):
-        super().run()
-
-        # get docker username
-        # NOTE - this is so hacky - why does cli return username but REST API doesn't
-        try:
-            stdout = sh.docker.info()
-            docker_user_list = [x for x in stdout if x.startswith('Username')]
-            if len(docker_user_list) == 1:
-                docker_username = docker_user_list[0].split(':')[1].strip()
-                log.debug("Docker user is '{}', note this may be different to your StackHut login".format(docker_username))
-            else:
-                log.error("Please run 'docker login' first")
-                return 1
-        except sh.ErrorReturnCode as e:
-            log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
-            return 1
-
-        username = input("Username: ")
-        # email = input("Email: ")
-        password = getpass.getpass("Password: ")
-
-        # connect securely to Stackhut service to get hash
-        r = utils.stackhut_api_call('login', dict(userName=username, password=password))
-
-        if r['success']:
-            self.usercfg['docker_username'] = docker_username
-            self.usercfg['username'] = username
-            self.usercfg['hash'] = r['hash']
-            self.usercfg['email'] = r['email']
-            self.usercfg.save()
-            log.info("User {} logged in successfully".format(username))
-            return 0
-        else:
-            print("Incorrect username or password, please try again")
-            return 1
-
-
-# Base command implementing common func
-class LogoutCmd(UserCmd):
-    name = 'logout'
-
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(LogoutCmd, LogoutCmd).parse_cmds(subparser, LogoutCmd.name,
-                                                           "logout to stackhut", LogoutCmd)
-
-    def __init__(self, args):
-        super().__init__(args)
-
-    def run(self):
-        super().run()
-        # connect to Stackhut service to get hash?
-        print("Logged out {}".format(self.usercfg.get('email', '')))
-        self.usercfg.wipe()
-        self.usercfg.save()
-
-# Base command implementing common func
-class InfoCmd(UserCmd):
-    name = 'info'
-
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(InfoCmd, InfoCmd).parse_cmds(subparser, InfoCmd.name,
-                                                       "Stackhut Infomation", InfoCmd)
-
-    def __init__(self, args):
-        super().__init__(args)
-
-    def run(self):
-        super().run()
-
-        # log sys info
-        log.info("StackHut version {}".format(__version__))
-
-        docker = get_docker(_exit=False)
-        if docker:
-            log.info("Docker version {}".format(docker.version().get('Version')))
-        else:
-            log.info("Docker not installed")
-
-        if self.usercfg.logged_in:
-            log.info("User logged in")
-
-            for x in self.usercfg.basic_vals:
-                log.info("{}: {}".format(x.capitalize(), self.usercfg[x]))
-        else:
-            log.info("User not logged in")
-
-        return 0
 
 
 class HutBuildCmd(HutCmd, UserCmd):
