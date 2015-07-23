@@ -377,6 +377,8 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         host_req_file = os.path.abspath(self.reqfile)
 
         host_store_dir = os.path.abspath(utils.LocalStore.local_store)
+        os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
+
         uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
 
         log.info("Running service with {} in container - log below...".format(self.reqfile))

@@ -39,17 +39,17 @@ def get_docker(_exit=True):
         else:
             docker_client = docker_py.Client(version='auto', **kwargs_from_env(assert_hostname=False))
         return docker_client
-    except DockerException as e:
+    except Exception as e:
         log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
         if _exit:
             sys.exit(1)
         else:
             return None
 
-class DockerEnv:
-    def __init__(self):
-        self.push = None
-        self.no_cache = None
+class DockerBuild:
+    def __init__(self, push=False, no_cache=False):
+        self.push = push
+        self.no_cache = no_cache
         self.docker = get_docker()
 
     def gen_dockerfile(self, template_name, template_params, dockerfile='Dockerfile'):
@@ -71,11 +71,8 @@ class DockerEnv:
             self.docker.push(tag)
             # sh.docker('push', tag, _in='Y')
 
-    def build_push(self, push, no_cache):
-        self.push = push
-        self.no_cache = no_cache
-
     def stack_build_push(self, template_name, template_params, outdir, image_name):
+        """Called by StackHut builders to build BaseOS and Stack images"""
         image_dir = os.path.join(outdir, image_name)
         os.mkdir(image_dir) if not os.path.exists(image_dir) else None
 
@@ -92,7 +89,7 @@ class DockerEnv:
 
 
 # Base OS's that we support
-class BaseOS(DockerEnv):
+class BaseOS:
     name = None
 
     def __init__(self):
@@ -103,10 +100,10 @@ class BaseOS(DockerEnv):
         return "Base OS image using {}".format(self.name.capitalize())
 
     def build_push(self, outdir, *args):
-        super().build_push(*args)
         log.info("Building image for base {}".format(self.name))
         image_name = self.name
-        super().stack_build_push('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name)
+        builder = DockerBuild(*args)
+        builder.stack_build_push('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name)
 
 
 class Fedora(BaseOS):
@@ -161,7 +158,7 @@ class Alpine(BaseOS):
 
 
 # Language stacks that we support
-class Stack(DockerEnv):
+class Stack:
     name = None
     entrypoint = None
     stack_pkgs = None
@@ -178,7 +175,6 @@ class Stack(DockerEnv):
         return "Support for language stack {}".format(self.name.capitalize())
 
     def build_push(self, baseos, outdir, *args):
-        super().build_push(*args)
         log.info("Building image for base {} with stack {}".format(baseos.name, self.name))
         image_name = "{}-{}".format(baseos.name, self.name)
         baseos_stack_cmds_pkgs = get_baseos_stack_pkgs(baseos, self)
@@ -188,9 +184,10 @@ class Stack(DockerEnv):
             stack_cmds = os_cmds + pkg_cmds
 
             # only render the template if apy supported config
-            super().stack_build_push('Dockerfile-stack.txt',
-                                     dict(baseos=baseos, stack=self, stack_cmds=stack_cmds),
-                                     outdir, image_name)
+            builder = DockerBuild(*args)
+            builder.stack_build_push('Dockerfile-stack.txt',
+                                         dict(baseos=baseos, stack=self, stack_cmds=stack_cmds),
+                                         outdir, image_name)
 
     def install_service_pkgs(self):
         """Anything needed to run the service"""
@@ -316,7 +313,7 @@ def is_stack_supported(base, stack):
     else:
         return False
 
-class Service(DockerEnv):
+class Service:
     """Main primitive representing a StackHut service"""
     def __init__(self, hutcfg, usercfg):
         super().__init__()
@@ -333,7 +330,7 @@ class Service(DockerEnv):
 
     @property
     def image_exists(self):
-        return (True if len(self.docker.images(self.hutcfg.repo)) > 0 else False)
+        return (True if len(get_docker().images(self.hutcfg.repo)) > 0 else False)
 
     def _files_mtime(self):
         """Recurse over all files referenced by project and find max mtime"""
@@ -364,7 +361,7 @@ class Service(DockerEnv):
 
         repo = self.hutcfg.repo
 
-        image_info = self.docker.inspect_image(repo)
+        image_info = get_docker().inspect_image(repo)
         image_build_string = image_info['Created']
 
         log.debug("Image {} last built at {}".format(repo, image_build_string))
@@ -375,8 +372,7 @@ class Service(DockerEnv):
 
     def build_push(self, force, *args):
         """Builds a user service, if changed, and pushes  to repo if requested"""
-        super().build_push(*args)
-
+        builder = DockerBuild(*args)
         service_name = self.hutcfg.service
 
         if force or not self.image_exists or self.image_stale():
@@ -384,14 +380,14 @@ class Service(DockerEnv):
             # setup
             gen_barrister_contract()
             dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
-            self.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-            self.build_dockerfile(service_name, dockerfile)
+            builder.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
+            builder.build_dockerfile(service_name, dockerfile)
 
             log.info("{} build complete".format(self.hutcfg.name))
         else:
             log.info("Build not necessary, run with '--force' to override")
 
-        self.push_image(service_name)
+        builder.push_image(service_name)
 
 
 # Helper functions
