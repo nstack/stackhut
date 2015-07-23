@@ -56,10 +56,7 @@ setup(
     author_email='mandeep@stackhut.com',
     url='https://github.com/stackhut/stackhut-tool',
     # download_url = 'https://github.com/stackhut/stackhut-tool/tarball/0.1.0'
-    packages=[
-        'stackhut', 'stackhut.runner', 'stackhut.toolkit',
-        'stackhut.common', 'stackhut.common.barrister', 'stackhut.common.barrister.cythonplex3',
-    ],
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests", ""]),
     # package_dir={'stackhut-tool':
     #              'stackhut-tool'},
     include_package_data=True,

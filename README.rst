@@ -11,8 +11,9 @@ StackHut Command Tool
 
 `stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. Runs on Python 3.4.
 
+* Homepage: <https://www.stackhut.com>
 * Free software: Apache license
-* Documentation: https://stackhut.readthedocs.org.
+* Documentation: <https://stackhut.readthedocs.org>.
 
 Features
 --------
