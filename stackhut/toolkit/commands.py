@@ -77,7 +77,7 @@ class LoginCmd(UserCmd):
             self.usercfg['docker_username'] = docker_username
             self.usercfg['username'] = username
             self.usercfg['hash'] = r['hash']
-            self.usercfg['email'] = r['email']
+            # self.usercfg['email'] = r['email']
             self.usercfg.save()
             log.info("User {} logged in successfully".format(username))
             return 0
