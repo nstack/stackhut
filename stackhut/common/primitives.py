@@ -30,21 +30,23 @@ from .barrister import generate_contract
 
 template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates')))
 
-docker = None
+docker_client = None
 
 def get_docker(_exit=True):
-    try:
-        if sys.platform == 'linux':
-            docker_client = docker_py.Client(version='auto')
-        else:
-            docker_client = docker_py.Client(version='auto', **kwargs_from_env(assert_hostname=False))
-        return docker_client
-    except Exception as e:
-        log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
-        if _exit:
-            sys.exit(1)
-        else:
-            return None
+    global docker_client
+
+    if docker_client is None:
+        try:
+            if sys.platform == 'linux':
+                docker_client = docker_py.Client(version='auto')
+            else:
+                docker_client = docker_py.Client(version='auto', **kwargs_from_env(assert_hostname=False))
+        except Exception as e:
+            log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
+            if _exit:
+                sys.exit(1)
+
+    return docker_client
 
 class DockerBuild:
     def __init__(self, push=False, no_cache=False):

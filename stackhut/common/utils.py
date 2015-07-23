@@ -57,7 +57,7 @@ except sh.CommandNotFound as e:
 def setup_logging():
     log = logging.getLogger('stackhut')
     log.propagate = False
-    logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s] %(message)s', '%H:%M:%S')
+    logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', '%H:%M:%S')
     # file output
     fileHandler = logging.FileHandler(LOGFILE, mode='w')
     fileHandler.setFormatter(logFormatter)

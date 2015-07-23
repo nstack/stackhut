@@ -71,7 +71,7 @@ class LoginCmd(UserCmd):
         password = getpass.getpass("Password: ")
 
         # connect securely to Stackhut service to get hash
-        r = utils.stackhut_api_call('login', dict(userName=username, password=password))
+        r = utils.stackhut_api_call('login', dict(username=username, password=password))
 
         if r['success']:
             self.usercfg['docker_username'] = docker_username
@@ -103,6 +103,7 @@ class LogoutCmd(UserCmd):
         print("Logged out {}".format(self.usercfg.get('email', '')))
         self.usercfg.wipe()
         self.usercfg.save()
+        return 0
 
 
 class InfoCmd(UserCmd):
@@ -136,6 +137,38 @@ class InfoCmd(UserCmd):
         else:
             log.info("User not logged in")
 
+        return 0
+
+
+class StackBuildCmd(UserCmd):
+    """Build StackHut service using docker"""
+    name = 'stackbuild'
+    visible = False
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(StackBuildCmd, StackBuildCmd).parse_cmds(subparser, StackBuildCmd.name,
+                                                                   '',
+                                                                   StackBuildCmd)
+        subparser.add_argument("--outdir", '-o', default='stacks',
+                               help="Directory to save stacks to")
+        subparser.add_argument("--push", '-p', action='store_true', help="Push image to public after")
+        subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.outdir = args.outdir
+        if not os.path.exists(self.outdir):
+            os.mkdir(self.outdir)
+
+    def run(self):
+        super().run()
+        # build bases and stacks
+        [b.build_push(self.outdir, self.args.push, self.args.no_cache) for b in bases.values()]
+        [s.build_push(b, self.outdir, self.args.push, self.args.no_cache)
+         for b in bases.values()
+         for s in stacks.values()]
+        log.info("All base OS and Stack images built and deployed")
         return 0
 
 
@@ -197,42 +230,10 @@ class InitCmd(UserCmd):
                 sh.git.add(".")
                 sh.git.commit(m="Initial commit")
                 sh.git.branch("stackhut")
-
         else:
-            log.error("Sorry, the combination of {} and {} is currently unsupported".format(self.baseos,
-                                                                                            self.stack))
+            log.error("Sorry, the combination of {} and {} is currently unsupported".format(self.baseos, self.stack))
             return 1
-
-
-class StackBuildCmd(UserCmd):
-    """Build StackHut service using docker"""
-    name = 'stackbuild'
-    visible = False
-
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(StackBuildCmd, StackBuildCmd).parse_cmds(subparser, StackBuildCmd.name,
-                                                                   '',
-                                                                   StackBuildCmd)
-        subparser.add_argument("--outdir", '-o', default='stacks',
-                               help="Directory to save stacks to")
-        subparser.add_argument("--push", '-p', action='store_true', help="Push image to public after")
-        subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
-
-    def __init__(self, args):
-        super().__init__(args)
-        self.outdir = args.outdir
-        if not os.path.exists(self.outdir):
-            os.mkdir(self.outdir)
-
-    def run(self):
-        super().run()
-        # build bases and stacks
-        [b.build_push(self.outdir, self.args.push, self.args.no_cache) for b in bases.values()]
-        [s.build_push(b, self.outdir, self.args.push, self.args.no_cache)
-            for b in bases.values()
-            for s in stacks.values()]
-        log.info("All base OS and Stack images built and deployed")
+        return 0
 
 
 class HutBuildCmd(HutCmd, UserCmd):
@@ -257,9 +258,61 @@ class HutBuildCmd(HutCmd, UserCmd):
         # Docker builder
         service = Service(self.hutcfg, self.usercfg)
         service.build_push(self.force, False, self.no_cache)
+        return 0
 
 
-# Base command implementing common func
+class ToolkitRunCmd(HutCmd, UserCmd):
+    """"Concrete Run Command within a container"""
+    name = 'run'
+
+    @staticmethod
+    def parse_cmds(subparser):
+        subparser = super(ToolkitRunCmd, ToolkitRunCmd).parse_cmds(subparser,
+                                                                   ToolkitRunCmd.name,
+                                                                   "Run StackHut service in a container",
+                                                                   ToolkitRunCmd)
+        subparser.add_argument("reqfile", nargs='?', default='test_request.json',
+                               help="Test request file to use")
+        subparser.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.reqfile = args.reqfile
+        self.force = args.force
+
+    def run(self):
+        tag = self.hutcfg.service
+
+        # Docker builder (if needed)
+        service = Service(self.hutcfg, self.usercfg)
+        service.build_push(self.force, False, False)
+
+        host_req_file = os.path.abspath(self.reqfile)
+
+        host_store_dir = os.path.abspath(utils.LocalStore.local_store)
+        os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
+
+        uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
+
+        log.info("Running service with {} in container - log below...".format(self.reqfile))
+        # call docker to run the same command but in the container
+        # use data vols for req and run_output
+
+        # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
+        req_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'ro'
+        res_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
+        verbose_mode = '-v' if self.args.verbose else None
+
+        args = ['-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
+                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
+                '--entrypoint=/usr/bin/stackhut', tag, verbose_mode, 'runcontainer', '--uid', uid_gid]
+        args = [x for x in args if x is not None]
+
+        out = sh.docker.run(args, _out=lambda x: print(x, end=''))
+        log.info("...finished service in container")
+        return 0
+
+
 class DeployCmd(HutCmd, UserCmd):
     name = 'deploy'
 
@@ -314,7 +367,6 @@ class DeployCmd(HutCmd, UserCmd):
 
     def run(self):
         super().run()
-
         self.usercfg.ensure_logged_in()
 
         if self.usercfg['username'] != self.hutcfg.author:
@@ -344,67 +396,16 @@ class DeployCmd(HutCmd, UserCmd):
         log.info("Deploying image '{}' to StackHut".format(tag))
         r = utils.stackhut_api_user_call('add', data, self.usercfg)
         log.info("Image {} has been {}".format(tag, r['message']))
-
-
-class ToolkitRunCmd(HutCmd, UserCmd):
-    """"Concrete Run Command within a container"""
-    name = 'run'
-
-    @staticmethod
-    def parse_cmds(subparser):
-        subparser = super(ToolkitRunCmd, ToolkitRunCmd).parse_cmds(subparser,
-                                                                   ToolkitRunCmd.name,
-                                                                   "Run StackHut service in a container",
-                                                                   ToolkitRunCmd)
-        subparser.add_argument("reqfile", nargs='?', default='test_request.json',
-                               help="Test request file to use")
-        subparser.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
-
-    def __init__(self, args):
-        super().__init__(args)
-        self.reqfile = args.reqfile
-        self.force = args.force
-
-    def run(self):
-        tag = self.hutcfg.service
-
-        # Docker builder (if needed)
-        service = Service(self.hutcfg, self.usercfg)
-        service.build_push(self.force, False, False)
-
-        host_req_file = os.path.abspath(self.reqfile)
-
-        host_store_dir = os.path.abspath(utils.LocalStore.local_store)
-        os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
-
-        uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
-
-        log.info("Running service with {} in container - log below...".format(self.reqfile))
-        # call docker to run the same command but in the container
-        # use data vols for req and run_output
-
-        # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
-        req_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'ro'
-        res_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
-        verbose_mode = '-v' if self.args.verbose else None
-
-        args = ['-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
-                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
-                '--entrypoint=/usr/bin/stackhut', tag, verbose_mode, 'runcontainer', '--uid', uid_gid]
-        args = [x for x in args if x is not None]
-
-        out = sh.docker.run(args, _out=lambda x: print(x, end=''))
-        log.info("...finished service in container")
+        return 0
 
 
 # StackHut primary toolkit commands
 # debug, push, pull, test, etc.
 COMMANDS = [
     # visible
-    InitCmd,
     LoginCmd, LogoutCmd, InfoCmd,
-    HutBuildCmd, DeployCmd,
-    ToolkitRunCmd,
+    InitCmd,
+    HutBuildCmd, ToolkitRunCmd, DeployCmd,
     # hidden
     StackBuildCmd,
 ]
