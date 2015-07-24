@@ -59,8 +59,9 @@ def main():
     try:
         retval = subfunc.run()
     except Exception as e:
-        if len(e.args) > 0:
+        if utils.DEBUG:
             log.debug(e.args)
+            raise e
         return 1
 
     # all done
