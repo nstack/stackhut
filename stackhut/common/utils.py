@@ -225,8 +225,8 @@ class CloudStore(IOStore):
 
     def get_request(self):
         """Get the request JSON"""
-        log.debug("Waiting on queue for service - {}".format(self.service))
-        x = self.redis.blpop(self.service, 0)[1].decode('utf-8')
+        log.debug("Waiting on queue for service - {}".format(self.service_fullname))
+        x = self.redis.blpop(self.service_fullname, 0)[1].decode('utf-8')
         # shutdown control listener
         self.control.stop()
         log.debug("Received message {}".format(x))
