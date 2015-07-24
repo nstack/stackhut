@@ -50,7 +50,6 @@ class LoginCmd(UserCmd):
 
     def run(self):
         super().run()
-
         # get docker username
         # NOTE - this is so hacky - why does cli return username but REST API doesn't
         try:
@@ -61,10 +60,10 @@ class LoginCmd(UserCmd):
                 log.debug("Docker user is '{}', note this may be different to your StackHut login".format(docker_username))
             else:
                 log.error("Please run 'docker login' first")
-                return 1
+                raise RuntimeError()
         except sh.ErrorReturnCode as e:
             log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
-            return 1
+            raise OSError()
 
         username = input("Username: ")
         # email = input("Email: ")
@@ -80,11 +79,11 @@ class LoginCmd(UserCmd):
             # self.usercfg['email'] = r['email']
             self.usercfg.save()
             log.info("User {} logged in successfully".format(username))
-            return 0
         else:
             print("Incorrect username or password, please try again")
-            return 1
+            raise RuntimeError()
 
+        return 0
 
 class LogoutCmd(UserCmd):
     name = 'logout'
@@ -203,7 +202,7 @@ class InitCmd(UserCmd):
 
         if os.path.exists('.git') or os.path.exists('Hutfile'):
             log.error('Found existing project, cancelling')
-            return 1
+            raise RuntimeError()
 
         if is_stack_supported(self.baseos, self.stack):
             self.name = os.path.basename(os.getcwd())
@@ -237,7 +236,7 @@ class InitCmd(UserCmd):
                 sh.git.branch("stackhut")
         else:
             log.error("Sorry, the combination of {} and {} is currently unsupported".format(self.baseos, self.stack))
-            return 1
+            raise ValueError()
         return 0
 
 

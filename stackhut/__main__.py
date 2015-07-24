@@ -55,7 +55,13 @@ def main():
 
     # dispatch to correct subfunction - i.e. build, compile, run, etc.
     subfunc = args.func(args)
-    retval = subfunc.run()
+
+    try:
+        retval = subfunc.run()
+    except Exception as e:
+        if len(e.args) > 0:
+            log.debug(e.args)
+        return 1
 
     # all done
     return retval

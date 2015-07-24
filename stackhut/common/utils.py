@@ -370,14 +370,14 @@ class UserCfg(dict):
     def assert_logged_in(self):
         if not self.logged_in:
             log.error("Please login first - run 'stackhut login'")
-            sys.exit(1)
+            raise AssertionError()
 
     def assert_user_is_author(self, hutcfg):
         if self.username != hutcfg.author:
             log.error("StackHut username ({}) not equal to service author ({})\n"
                       "Please login as a different user or edit the Hutfile as required"
                       .format(self.username, hutcfg.author))
-            sys.exit(1)
+            raise AssertionError()
 
     @property
     def username(self):

@@ -44,7 +44,7 @@ def get_docker(_exit=True):
         except Exception as e:
             log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
             if _exit:
-                sys.exit(1)
+                raise OSError()
 
     return docker_client
 
