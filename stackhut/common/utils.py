@@ -70,16 +70,9 @@ def setup_logging():
 
 log = setup_logging()
 
-def set_log_level(args_level):
+def set_log_level(verbose_mode):
     global log
-    # setup the logger
-    # loglevel = logging.WARN
-    loglevel = logging.INFO
-    if args_level == 1:
-        loglevel = logging.DEBUG
-    elif args_level >= 2:
-        loglevel = logging.DEBUG
-    log.setLevel(loglevel)
+    log.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
 
 # Setup app paths
 # src_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))

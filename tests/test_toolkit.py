@@ -21,7 +21,7 @@ import argparse
 import json
 
 # utils.DEBUG = 'localhost:8080' # None # args.debug
-utils.set_log_level(2)
+utils.set_log_level(True)
 orig_usercfg = utils.UserCfg()
 
 def create_args(d):

@@ -32,8 +32,7 @@ def main():
                         action="version", version="%(prog)s {}".format(__version__))
     #    parser.add_argument("--hutfile", help="Path to user-defined hutfile (default: %(default)s)",
     #                        default=utils.HUTFILE, type=argparse.FileType('r', encoding='utf-8'))
-    parser.add_argument('-v', dest='verbose', help="Verbosity level, add multiple times to increase",
-                        action='count', default=0)
+    parser.add_argument('-v', dest='verbose', help="Verbose mode", action='store_true')
     parser.add_argument('-d', dest='debug', help=argparse.SUPPRESS)
 
     # build the subparsers
@@ -59,7 +58,7 @@ def main():
     try:
         retval = subfunc.run()
     except Exception as e:
-        if utils.DEBUG:
+        if args.verbose:
             log.debug(e.args)
             raise e
         return 1
