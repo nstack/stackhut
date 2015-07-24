@@ -38,7 +38,7 @@ Password    StackHut password
 
 .. We hope this will keep things simple and help you get up a running quickly without having to create another login.
 
-Currently we also ask that you create a `Docker Hub <hub.docker.com>`_ account if you don't already have one - this is used to store your StackHut builds and images for deployment on the platform. You can again use your GitHub authentication with DockerHub and we recommend using the same username for ease of use.
+Currently we also ask that you create a `Docker Hub <hub.docker.com>`_ account if you don't already have one - this is used to store your StackHut builds and images for deployment on the platform. You can again use your GitHub authentication with DockerHub and we recommend using the same username across all if possible for ease of use.
 
 Ok, now that's all done let's log in to StackHut from the Toolkit, type
 
@@ -46,7 +46,7 @@ Ok, now that's all done let's log in to StackHut from the Toolkit, type
 
     $ stackhut login
     >> Username: mands
-    >> Passowrd: *****
+    >> Password: *****
     >> User mands logged in successfully
 
 and enter your username and password as created earlier. This will securely connect to StackHut and validate your login.
@@ -69,9 +69,9 @@ We start by initialising a StackHut project, let's call this one ``demo-python``
     $ mkdir demo-python
     $ cd demo-python
     # run stackhut init to initialise the project
-    $ stackhut init fedora python
+    $ stackhut init alpine python
 
-The ``stackhut init`` command takes two parameters, the base operating system, in this case Fedora, and the language stack to use, here Python (Python 3). In return it creates a working skeleton project for you to quickly get going with, including an initial Git commit.
+The ``stackhut init`` command takes two parameters, the base operating system, in this case `Alpine Linux <http://alpinelinux.org/>`_ (a minimal Linux distribution ideal for use with containers), and the language stack to use, here Python (short for Python 3). In return it creates a working skeleton project for you to quickly get going with, including an initial Git commit.
 This contains all the files a StackHut service needs, already configured using sensible defaults for the chosen system,
 
 .. code-block:: bash
@@ -160,16 +160,28 @@ As seen, the service is a plain old Python class with a function for each entryp
 
 
 
-Test
-----
+Build, Run, and Test
+--------------------
 
-Now we're done coding, and because we're all responsible developers let's test before we deploy. 
-By default there is a file called ``test_request.json`` that simulates an HTTP request to our service. This files specifies specifies the ``serviceName``, the ``method``, and ``parameters`` already configured for the ``add`` endpoint 
+Now we're done coding, and because we're all responsible developers let's build, run, and test our service before we deploy. 
+
+
+We can build our service, this means packaging up all the code, dependencies, and anything else into a container image that can be deployed into the cloud,
+
+.. code-block:: bash
+
+    $ stackhut build
+
+If this completes sucessfully your code can be deployed to the cloud - however it would be great to test if it runs correctly beforehand.
+
+.. note:: The build command is called indirectly by the ``run`` and ``deploy`` commands and is smart enough to run only if any files within the project directory have changed. However you can force a build by running ``stackhut build --force``.
+
+By default there is a file called ``test_request.json`` that represents a HTTP request to our service. This file specifies the ``service``, the ``method``, and ``parameters`` already configured for the ``add`` endpoint,
 
 .. code-block:: json
 
     {
-        "serviceName": "demo-python",
+        "service": "mands/demo-python",
         "req": {
             "method": "add",
             "params": [2, 2]
@@ -182,9 +194,10 @@ Let's run our service using this file as-is to test our ``add`` function,
 
 .. code-block:: bash
 
-    $ stackhut -v run test_request.json
+    $ stackhut run test_request.json
 
-The output from calling this service method can be found in the ``run_results`` directory - let's look at the request output, ``response.json``,
+This builds the image and simulates the request against your code in the service container, using the ``test_request.json`` file from the host project directory. 
+The output from calling this service method can be found in the ``run_results`` directory on the host - let's look at the request output in ``response.json``,
 
 .. code-block:: json
 
@@ -194,13 +207,14 @@ The output from calling this service method can be found in the ``run_results`` 
         "result": 4
     }
 
+.. note :: Running an image requires Docker to be installed and configured correctly. If you get errors try running `docker info`, and if you're on OSX remember to run `boot2docker up` first.
 
-We can modify the ``test_request.json`` as follows to test our multiply function, and run it again,
+We can modify the ``test_request.json`` as follows to test our ``multiply`` function, and run it again,
 
 .. code-block:: json
 
     {
-        "serviceName": "demo-python",
+        "service": "mands/demo-python",
         "req": {
             "method": "multiply",
             "params": [3, 2]
@@ -209,7 +223,7 @@ We can modify the ``test_request.json`` as follows to test our multiply function
 
 .. code-block:: bash
 
-    stackhut -v run test_request.json
+    stackhut run test_request.json
 
 .. code-block:: json
 
@@ -219,26 +233,14 @@ We can modify the ``test_request.json`` as follows to test our multiply function
         "result": 6
     }
 
-Great, so things are all working, right? Well, by default the ``stackhut run`` command runs the service using your main OS and any dependencies you have installed. 
-However, to be fully test your setup you may wish to locally build the service container and run your code within it. That way you'll be running the exact same code, in the same container, as will be on the server.
+Great, so we've built and tested a container with your code, and it's all working against the stack and dependencies specified in the ``Hutfile``. You can be sure that it'll be running the exact same code, in the same container, when it's deployed on the server.
 
-You can achieve this by first building the image,
-
-.. code-block:: bash
-
-    $ stackhut build
-
-and then running it using the ``-c`` flag,
+However sometimes the delay when rebuilding the image and run the service inside the container can get in the way of rapid development. To help with this is the ``runhost`` command, this runs the service using your main OS and any dependencies you have installed. 
+Let's try this using the same test sample, 
 
 .. code-block:: bash
 
-    $ stackhut run -c test_request.json
-
-.. note :: You must manually rebuild the image to ensure the latest changes are present before using `stackhut run -c` - this is because building can be time-comsuming and often you may wish to run tests without first performing this step.
-
-.. note :: Running an image requires Docker to be installed and configured correctly. If you get errors try running `docker info` and if you're on OSX remember to run `boot2docker up` first.
-
-This runs the service request in the container, using the ``test_request.json`` file from the host project directory, and similarly writes the output to the ``run_results`` directory on the host. Looking at ``run_results/output.json``,
+    $ stackhut runhost test_request.json
 
 .. code-block:: json
 
@@ -248,7 +250,9 @@ This runs the service request in the container, using the ``test_request.json`` 
         "result": 6
     }
 
-Great, so we've built and tested a container with your code, and it's all working against the stack and dependencies specified in the ``Hutfile``. We're now ready to deploy and host your service on the StackHut platform.
+Fantastic - we get the same result using ``runhost``, using dependencies installed on your main OS and things are much quicker.
+
+Having ran our tests we're now ready to deploy and host the service on the StackHut live platform.
 
 Deploy
 ------
@@ -260,12 +264,12 @@ This couldn't be simpler,
     $ stackhut deploy
 
 This packages and builds your service, and then deploys it to StackHut along with metadata such that it may be searched, viewed, and importantly, used, on the platform. 
-As soon as this completes, your API is live on `https://api.stackhut.com/run` and can be browsed from our `repository of existing APIs <https://www.stackhut.com/#/services>_`.
+As soon as this completes, your API is live on `https://api.stackhut.com/run` and can be browsed from our `repository of existing APIs <https://www.stackhut.com/#/services>`_.
  
 Use
 ---
 
-We can view the API from the `website <https://www.stackhut.com/#/services/demo-python>_`, browse the documentation, and for instance, call the ``multiply`` function.
+We can view the API from `its repository homepage <https://www.stackhut.com/#/services/demo-python>`_, browse the documentation, and for instance, call the ``multiply`` function.
 The service is live and ready to receive requests right now in the browser or from anywhere else via HTTP. 
 
 Further documentation on how to call and make use of a StackHut from your code can be found in :ref:`tutorial_use`.

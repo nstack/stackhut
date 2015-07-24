@@ -43,7 +43,7 @@ In the above request, we call the method ``helloName`` from the StackHut service
 ``Params`` is a JSON list that can contain any JSON types, i.e. floats, strings, lists and objects. The types expected by the method are defined by the service and are shown on API section of the `services page <https://stackhut.com/#/example-python>`_. The types of the request are checked and an error will be returned if they do not match.
 The ``id`` element is optional and will be added automatically if not present.
 
-We can perform this call by simply sending a HTTP POST request, with content-type ``application/json`` to ``https://api.stackhut.com/run``. Let's save the above example as ``test_request.json`` and demonstrate this using the fantastic tool ```http`` <https://github.com/jkbrzt/httpie>`_::
+We can perform this call by simply sending a HTTP POST request, with content-type ``application/json`` to ``https://api.stackhut.com/run``. Let's save the above example as ``test_request.json`` and demonstrate this using the fantastic tool `httpie <https://github.com/jkbrzt/httpie>`_::
 
     http POST https://api.stackhut.com/run < ./test_request.json 
 
