@@ -227,7 +227,7 @@ class RunCloudCmd(RunCmd):
 
     def __init__(self, args):
         super().__init__(args)
-        self.store = CloudStore(self.hutcfg.service)
+        self.store = CloudStore(self.hutcfg.service_fullname)
 
 
 # StackHut primary run commands

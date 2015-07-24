@@ -146,7 +146,7 @@ class ControlListener(threading.Thread):
         super().__init__(*args, **kwargs)
         self.store = store
         self.pubsub = store.redis.pubsub()
-        self.pubsub.subscribe(['{}-control'.format(store.service)])
+        self.pubsub.subscribe(['{}-control'.format(store.service_fullname)])
         self.can_quit = True
         self.cv = threading.Condition()
 
@@ -201,8 +201,8 @@ class CloudStore(IOStore):
         del os.environ[k]
         return v
 
-    def __init__(self, service):
-        self.service = service
+    def __init__(self, service_fullname):
+        self.service_fullname = service_fullname
 
         # open connection to AWS
         aws_id = self._get_env('AWS_ID')
@@ -422,20 +422,14 @@ class HutfileCfg:
         return "{}-{}".format(self.baseos, self.stack)
 
     @property
-    def service(self):
+    def service_fullname(self):
         """Returns the StackHut service name for the image"""
         return "{}/{}:{}".format(self.author, self.name, self.version)
-
-    @property
-    def repo(self):
-        """Returns the StackHut repo name for the image"""
-        return "{}/{}".format(self.author, self.name)
 
     def docker_service(self, usercfg):
         """Returns the DockerHub name for the image"""
         return "{}/{}:{}".format(self.usercfg.docker_username, self.name, self.version)
 
-    @property
     def docker_repo(self, usercfg):
         """Returns the DockerHub repo for the image"""
         return "{}/{}:{}".format(self.usercfg.docker_username, self.name)

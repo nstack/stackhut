@@ -1,6 +1,6 @@
-FROM stackhut/{{ service.from_image }}:latest
-MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}>
-LABEL description="{{ service.hutcfg.description }}"
+FROM stackhut//{{ service.hutcfg.from_image }}:latest
+{# MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}> #}
+{# LABEL description="{{ service.hutcfg.description }}" #}
 
 {% if service.hutcfg.os_deps %}
 # install OS packages needed for service

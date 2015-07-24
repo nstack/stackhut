@@ -1,6 +1,6 @@
-FROM {{ service.usercfg.username }}/{{ service.from_image }}:latest
-MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}>
-LABEL description="{{ service.hutcfg.description }}"
+FROM {{ service.usercfg.username }}/{{ service.hutcfg.from_image }}:latest
+{# MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}> #}
+{# LABEL description="{{ service.hutcfg.description }}" #}
 
 # OK - now setup stackhut runner
 # following toolkit.commands never cached
@@ -16,5 +16,3 @@ RUN echo "Starting..." && \ # cache bust - {{ service.build_date }}
     gunzip ./stackhut-latest.linux-x86_64.tar.gz && \
     tar -xvf ./stackhut-latest.linux-x86_64.tar -C / && \
     echo "...done" && exit
-
-

@@ -288,7 +288,6 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         self.force = args.force
 
     def run(self):
-        service_str = self.hutcfg.service
         self.usercfg.assert_user_is_author(self.hutcfg)
 
         # Docker builder (if needed)
@@ -313,7 +312,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
         args = ['-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
-                '--entrypoint=/usr/bin/stackhut', service_str, verbose_mode, 'runcontainer', '--uid', uid_gid]
+                '--entrypoint=/usr/bin/stackhut', service.docker_fullname, verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
         out = sh.docker.run(args, _out=lambda x: print(x, end=''))
@@ -378,19 +377,19 @@ class DeployCmd(HutCmd, UserCmd):
         self.usercfg.assert_logged_in()
         self.usercfg.assert_user_is_author(self.hutcfg)
 
+        service = Service(self.hutcfg, self.usercfg)
+
         # call build+push first using Docker builder
         if not self.no_build:
-            service = Service(self.hutcfg, self.usercfg)
             service.build_push(self.force, True, False)
 
         # build up the deploy message body
         test_request = json.loads(self._read_file('test_request.json'))
         readme = self._read_file('README.md')
-        service = self.hutcfg.service
 
         data = {
-            'service': service, # StackHut Service,
-            'docker_service': self.hutcfg.docker_service(self.usercfg), # Docker service name
+            'service': service.fullname,  # StackHut Service,
+            'docker_service': self.hutcfg.docker_service(self.usercfg),  # Docker service name
             'github_url': self.hutcfg.github_url,
             'example_request': test_request,
             'description': self.hutcfg.description,
@@ -398,9 +397,9 @@ class DeployCmd(HutCmd, UserCmd):
             'schema': self.create_methods()
         }
 
-        log.info("Deploying image '{}' to StackHut".format(service))
+        log.info("Deploying image '{}' to StackHut".format(service.fullname))
         r = utils.stackhut_api_user_call('add', data, self.usercfg)
-        log.info("Service {} has been {}".format(service, r['message']))
+        log.info("Service {} has been {}".format(service.fullname, r['message']))
         return 0
 
 

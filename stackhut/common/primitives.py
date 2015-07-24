@@ -319,12 +319,14 @@ class Service:
     """Main primitive representing a StackHut service"""
     def __init__(self, hutcfg, usercfg):
         super().__init__()
-
         self.hutcfg = hutcfg
         self.usercfg = usercfg
         self.baseos = bases[hutcfg.baseos]
         self.stack = stacks[hutcfg.stack]
-        self.from_image = "{}-{}".format(self.baseos.name, self.stack.name)
+
+        self.fullname = hutcfg.service_fullname
+        self.docker_fullname = hutcfg.docker_fullname
+        self.docker_repo = hutcfg.docker_repo(usercfg)
 
     @property
     def build_date(self):
@@ -332,9 +334,10 @@ class Service:
 
     @property
     def image_exists(self):
-        repo_images = get_docker().images(self.hutcfg.repo)
-        service_image = [x for x in repo_images if self.hutcfg.service in x['RepoTags']]
-        return True if len(service_image) > 0 else False
+        repo_images = get_docker().images(self.docker_repo)
+        service_images = [x for x in repo_images if self.docker_fullname in x['RepoTags']]
+        assert len(service_images) < 2, "{} versions of {} found in Docker".format(self.docker_fullname)
+        return True if len(service_images) > 0 else False
 
     def _files_mtime(self):
         """Recurse over all files referenced by project and find max mtime"""
@@ -363,12 +366,10 @@ class Service:
         """Runs the build only if a file has changed"""
         max_mtime = self._files_mtime()
 
-        repo = self.hutcfg.repo
-
-        image_info = get_docker().inspect_image(repo)
+        image_info = get_docker().inspect_image(self.docker_fullname)
         image_build_string = image_info['Created']
 
-        log.debug("Image {} last built at {}".format(repo, image_build_string))
+        log.debug("Service {} last built at {}".format(self.fullname, image_build_string))
         build_date = arrow.get(image_build_string).datetime.timestamp()
         log.debug("Files max mtime is {}, image build date is {}".format(max_mtime, build_date))
 
@@ -377,7 +378,6 @@ class Service:
     def build_push(self, force, *args):
         """Builds a user service, if changed, and pushes  to repo if requested"""
         builder = DockerBuild(*args)
-        service_name = self.hutcfg.service
 
         if force or not self.image_exists or self.image_stale():
             log.debug("Image not found or stale - building...")
@@ -385,13 +385,13 @@ class Service:
             gen_barrister_contract()
             dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
             builder.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-            builder.build_dockerfile(service_name, dockerfile)
+            builder.build_dockerfile(self.docker_fullname, dockerfile)
 
-            log.info("{} build complete".format(self.hutcfg.name))
+            log.info("{} build complete".format(self.fullname))
         else:
             log.info("Build not necessary, run with '--force' to override")
 
-        builder.push_image(service_name)
+        builder.push_image(self.docker_fullname)
 
 
 # Helper functions
