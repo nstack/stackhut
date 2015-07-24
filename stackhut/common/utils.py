@@ -106,6 +106,8 @@ def get_req_dir(req_id):
 def get_req_file(req_id, fname):
     return os.path.join(STACKHUT_DIR, req_id, fname)
 
+def create_stackhut_dir():
+    os.mkdir(STACKHUT_DIR) if not os.path.exists(STACKHUT_DIR) else None
 
 ####################################################################################################
 # Error handling
@@ -467,6 +469,8 @@ class HutCmd(BaseCmd):
         super().__init__(args)
         # import the hutfile
         self.hutcfg = HutfileCfg()
+        # create stackhut dir if not present
+        create_stackhut_dir()
 
 
 ###################################################################################################

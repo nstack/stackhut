@@ -225,9 +225,6 @@ class InitCmd(UserCmd):
             # add the package file if present?
             open(self.stack.package_file, 'w').close()
 
-            # add the .stackhut dir
-            os.mkdir('.stackhut')
-
             # git commit
             if not self.args.no_git:
                 sh.git.init()
