@@ -164,7 +164,7 @@ class StackBuildCmd(UserCmd):
     def run(self):
         super().run()
 
-        assert(self.usercfg.username == 'stackhut', "Must be logged in as StackHut user to build & deploy these")
+        assert self.usercfg.username == 'stackhut', "Must be logged in as StackHut user to build & deploy these"
 
         # build bases and stacks
         [b.build_push(self.outdir, self.args.push, self.args.no_cache) for b in bases.values()]
@@ -388,7 +388,7 @@ class DeployCmd(HutCmd, UserCmd):
 
         data = {
             'service': service.fullname,  # StackHut Service,
-            'docker_service': self.hutcfg.docker_service(self.usercfg),  # Docker service name
+            'docker_service': self.hutcfg.docker_fullname(self.usercfg),  # Docker service name
             'github_url': self.hutcfg.github_url,
             'example_request': test_request,
             'description': self.hutcfg.description,

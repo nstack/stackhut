@@ -325,7 +325,7 @@ class Service:
         self.stack = stacks[hutcfg.stack]
 
         self.fullname = hutcfg.service_fullname
-        self.docker_fullname = hutcfg.docker_fullname
+        self.docker_fullname = hutcfg.docker_fullname(usercfg)
         self.docker_repo = hutcfg.docker_repo(usercfg)
 
     @property

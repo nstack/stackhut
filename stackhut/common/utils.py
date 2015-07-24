@@ -426,13 +426,13 @@ class HutfileCfg:
         """Returns the StackHut service name for the image"""
         return "{}/{}:{}".format(self.author, self.name, self.version)
 
-    def docker_service(self, usercfg):
+    def docker_fullname(self, usercfg):
         """Returns the DockerHub name for the image"""
-        return "{}/{}:{}".format(self.usercfg.docker_username, self.name, self.version)
+        return "{}/{}:{}".format(usercfg.docker_username, self.name, self.version)
 
     def docker_repo(self, usercfg):
         """Returns the DockerHub repo for the image"""
-        return "{}/{}:{}".format(self.usercfg.docker_username, self.name)
+        return self.docker_fullname(usercfg).split(':')[0]
 
 
 

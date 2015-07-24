@@ -1,4 +1,4 @@
-FROM stackhut//{{ service.hutcfg.from_image }}:latest
+FROM stackhut/{{ service.hutcfg.from_image }}:latest
 {# MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}> #}
 {# LABEL description="{{ service.hutcfg.description }}" #}
 

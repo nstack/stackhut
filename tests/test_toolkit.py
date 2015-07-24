@@ -22,6 +22,7 @@ import json
 
 # utils.DEBUG = 'localhost:8080' # None # args.debug
 utils.set_log_level(2)
+orig_usercfg = utils.UserCfg()
 
 def create_args(d):
     args = argparse.Namespace()
@@ -34,8 +35,7 @@ class TestToolkit1User(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if os.path.exists(utils.CFGFILE):
-            shutil.copy(utils.CFGFILE, cls.backup_file)
+        pass
 
     def test_version(self):
         print("Toolkit version {}".format(stackhut.__version__))
@@ -67,14 +67,16 @@ class TestToolkit1User(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.exists(cls.backup_file):
-            shutil.copy(cls.backup_file, utils.CFGFILE)
+        orig_usercfg.save()
 
 
+# @unittest.skipUnless(usercfg.username == 'stackhut', "Only test 'stackbuild' with 'stackhut' user")
 class TestToolkit2StackBuild(unittest.TestCase):
-
     def setUp(self):
         self.docker = get_docker()
+        new_usercfg = utils.UserCfg()
+        new_usercfg['username'] = 'stackhut'
+        new_usercfg.save()
 
     def check_image(self, image_name, dirs):
         """check docker build dir and docker image exists"""
@@ -97,6 +99,7 @@ class TestToolkit2StackBuild(unittest.TestCase):
          for s in stacks.values()]
 
     def tearDown(self):
+        orig_usercfg.save()
         os.chdir('..')
         shutil.rmtree('test-stackbuild', ignore_errors=False)
 
