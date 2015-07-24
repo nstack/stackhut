@@ -374,7 +374,6 @@ class DeployCmd(HutCmd, UserCmd):
 
     def run(self):
         super().run()
-        self.usercfg.assert_logged_in()
         self.usercfg.assert_user_is_author(self.hutcfg)
 
         service = Service(self.hutcfg, self.usercfg)
