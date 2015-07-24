@@ -174,7 +174,7 @@ We can build our service, this means packaging up all the code, dependencies, an
 
 If this completes sucessfully your code can be deployed to the cloud - however it would be great to test if it runs correctly beforehand.
 
-.. note:: The build command is called indirectly by the ``run`` and ``deploy`` commands and is smart enough to run only if any files within the project directory have changed. However you can force a build by running ``stackhut build --force``.
+.. note:: The build command is called indirectly by the ``run`` and ``deploy`` commands and is smart enough to run only if any files within the project directory have changed. However you can force a build with ``stackhut build --force``.
 
 By default there is a file called ``test_request.json`` that represents a HTTP request to our service. This file specifies the ``service``, the ``method``, and ``parameters`` already configured for the ``add`` endpoint,
 
@@ -207,7 +207,7 @@ The output from calling this service method can be found in the ``run_results`` 
         "result": 4
     }
 
-.. note :: Running an image requires Docker to be installed and configured correctly. If you get errors try running `docker info`, and if you're on OSX remember to run `boot2docker up` first.
+.. note :: Running an image requires Docker to be installed and configured correctly. If you get errors try running ``docker info``, and if you're on OSX remember to run ``boot2docker up`` first.
 
 We can modify the ``test_request.json`` as follows to test our ``multiply`` function, and run it again,
 
