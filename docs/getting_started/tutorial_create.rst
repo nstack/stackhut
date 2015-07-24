@@ -44,14 +44,14 @@ Ok, now that's all done let's log in to StackHut from the Toolkit, type
 
 .. code-block:: bash
 
-    $ stackhut login
+    [mands@laptop ~]$ stackhut login
     >> Username: mands
     >> Password: *****
     >> User mands logged in successfully
 
 and enter your username and password as created earlier. This will securely connect to StackHut and validate your login.
 
-.. note:: The 'stackhut login' command may fail and ask that you run 'docker login' first using your Docker Hub credentials.  This is so that StackHut will use the correct Docker Hub account to store images.
+.. note:: The ``stackhut login`` command may fail and ask that you run ``docker login`` first using your Docker Hub credentials.  This is so that StackHut will use the correct Docker Hub account to store images.
 
 To logout just run ``stackhut logout``.
 
@@ -66,17 +66,17 @@ We start by initialising a StackHut project, let's call this one ``demo-python``
 .. code-block:: bash
 
     # create and cd into the project directory
-    $ mkdir demo-python
-    $ cd demo-python
+    [mands@laptop ~]$ mkdir demo-python
+    [mands@laptop ~]$ cd demo-python
     # run stackhut init to initialise the project
-    $ stackhut init alpine python
+    [mands@laptop demo-python]$ stackhut init alpine python
 
 The ``stackhut init`` command takes two parameters, the base operating system, in this case `Alpine Linux <http://alpinelinux.org/>`_ (a minimal Linux distribution ideal for use with containers), and the language stack to use, here Python (short for Python 3). In return it creates a working skeleton project for you to quickly get going with, including an initial Git commit.
 This contains all the files a StackHut service needs, already configured using sensible defaults for the chosen system,
 
 .. code-block:: bash
 
-    $ ls
+    [mands@laptop demo-python]$ ls
     api.idl  app.py  Hutfile  README.md  requirements.txt  test_request.json
 
 There are several files here - and we'll cover the important ones in the following sections - they are all discussed further in :ref:`usage_project_hutfile`.
@@ -170,7 +170,7 @@ We can build our service, this means packaging up all the code, dependencies, an
 
 .. code-block:: bash
 
-    $ stackhut build
+    [mands@laptop demo-python]$ stackhut build
 
 If this completes sucessfully your code can be deployed to the cloud - however it would be great to test if it runs correctly beforehand.
 
@@ -194,7 +194,7 @@ Let's run our service using this file as-is to test our ``add`` function,
 
 .. code-block:: bash
 
-    $ stackhut run test_request.json
+    [mands@laptop demo-python]$ stackhut run test_request.json
 
 This builds the image and simulates the request against your code in the service container, using the ``test_request.json`` file from the host project directory. 
 The output from calling this service method can be found in the ``run_results`` directory on the host - let's look at the request output in ``response.json``,
@@ -223,7 +223,7 @@ We can modify the ``test_request.json`` as follows to test our ``multiply`` func
 
 .. code-block:: bash
 
-    stackhut run test_request.json
+    [mands@laptop demo-python]$ stackhut run test_request.json
 
 .. code-block:: json
 
@@ -240,7 +240,8 @@ Let's try this using the same test sample,
 
 .. code-block:: bash
 
-    $ stackhut runhost test_request.json
+    [mands@laptop demo-python]$ stackhut runhost test_request.json
+
 
 .. code-block:: json
 
@@ -261,7 +262,7 @@ This couldn't be simpler,
 
 .. code-block:: bash
 
-    $ stackhut deploy
+    [mands@laptop demo-python]$ stackhut deploy
 
 This packages and builds your service, and then deploys it to StackHut along with metadata such that it may be searched, viewed, and importantly, used, on the platform. 
 As soon as this completes, your API is live on `https://api.stackhut.com/run` and can be browsed from our `repository of existing APIs <https://www.stackhut.com/#/services>`_.
