@@ -207,7 +207,8 @@ class InitCmd(UserCmd):
             self.author = self.usercfg['username']
             log.info("Creating service {}/{}".format(self.author, self.name))
             # copy the scaffold into the service
-            copy_tree(utils.get_res_path('scaffold'), '.')
+            scaffold_dir = utils.get_res_path('scaffold')
+            copy_tree(scaffold_dir, '.')
 
             # rename scaffold file to entrypoint and remove others
             os.rename(self.stack.scaffold_name, self.stack.entrypoint)
@@ -215,8 +216,9 @@ class InitCmd(UserCmd):
 
             # run the templates
             template_env = Environment(loader=FileSystemLoader('.'))
+            scaffold_files = os.listdir(scaffold_dir)
             [self.render_file(template_env, f, dict(scaffold=self))
-                for f in os.listdir('.') if os.path.isfile(f)]
+             for f in scaffold_files if os.path.exists(f) and os.path.isfile(f)]
 
             # add the package file if present?
             open(self.stack.package_file, 'w').close()
