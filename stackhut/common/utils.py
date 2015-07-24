@@ -367,16 +367,26 @@ class UserCfg(dict):
     def logged_in(self):
         return 'username' in self
 
-    def ensure_logged_in(self):
+    def assert_logged_in(self):
         if not self.logged_in:
             log.error("Please login first - run 'stackhut login'")
             sys.exit(1)
-        else:
-            pass
+
+    def assert_user_is_author(self, hutcfg):
+        if self.username != hutcfg.author:
+            log.error("StackHut username ({}) not equal to service author ({})\n"
+                      "Please login as a different user or edit the Hutfile as required"
+                      .format(self.username, hutcfg.author))
+            sys.exit(1)
+
+    @property
+    def username(self):
+        self.assert_logged_in()
+        return self['username']
 
     @property
     def docker_username(self):
-        self.ensure_logged_in()
+        self.assert_logged_in()
         log.debug("Using docker username '{}'".format(self['docker_username']))
         return self['docker_username']
 
@@ -392,6 +402,7 @@ class HutfileCfg:
         self.name = hutfile['name'].lower()
         self.author = hutfile['author']
         self.version = 'latest'
+
         # self.email = hutfile['contact']
         self.description = hutfile['description']
         self.github_url = hutfile.get('github_url', None)
@@ -412,13 +423,24 @@ class HutfileCfg:
 
     @property
     def service(self):
-        """Returns the service for the image"""
+        """Returns the StackHut service name for the image"""
         return "{}/{}:{}".format(self.author, self.name, self.version)
 
     @property
     def repo(self):
-        """Returns the repo name for the image"""
+        """Returns the StackHut repo name for the image"""
         return "{}/{}".format(self.author, self.name)
+
+    def docker_service(self, usercfg):
+        """Returns the DockerHub name for the image"""
+        return "{}/{}:{}".format(self.usercfg.docker_username, self.name, self.version)
+
+    @property
+    def docker_repo(self, usercfg):
+        """Returns the DockerHub repo for the image"""
+        return "{}/{}:{}".format(self.usercfg.docker_username, self.name)
+
+
 
 ###################################################################################################
 # StackHut Commands Handling
@@ -481,6 +503,6 @@ def stackhut_api_call(endpoint, msg, secure=True):
         r.raise_for_status()
 
 def stackhut_api_user_call(endpoint, data, usercfg):
-    auth = dict(username=usercfg['username'], hash=usercfg['hash'])
+    auth = dict(username=usercfg.username, hash=usercfg['hash'])
     message = dict(auth=auth, data=data)
     return stackhut_api_call(endpoint, message)

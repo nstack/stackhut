@@ -163,6 +163,9 @@ class StackBuildCmd(UserCmd):
 
     def run(self):
         super().run()
+
+        assert(self.usercfg.username == 'stackhut', "Must be logged in as StackHut user to build & deploy these")
+
         # build bases and stacks
         [b.build_push(self.outdir, self.args.push, self.args.no_cache) for b in bases.values()]
         [s.build_push(b, self.outdir, self.args.push, self.args.no_cache)
@@ -196,7 +199,7 @@ class InitCmd(UserCmd):
 
     def run(self):
         super().run()
-        self.usercfg.ensure_logged_in()
+        self.usercfg.assert_logged_in()
 
         if os.path.exists('.git') or os.path.exists('Hutfile'):
             log.error('Found existing project, cancelling')
@@ -204,7 +207,7 @@ class InitCmd(UserCmd):
 
         if is_stack_supported(self.baseos, self.stack):
             self.name = os.path.basename(os.getcwd())
-            self.author = self.usercfg['username']
+            self.author = self.usercfg.username
             log.info("Creating service {}/{}".format(self.author, self.name))
             # copy the scaffold into the service
             scaffold_dir = utils.get_res_path('scaffold')
@@ -257,6 +260,8 @@ class HutBuildCmd(HutCmd, UserCmd):
     # TODO - run clean cmd first
     def run(self):
         super().run()
+        self.usercfg.assert_user_is_author(self.hutcfg)
+
         # Docker builder
         service = Service(self.hutcfg, self.usercfg)
         service.build_push(self.force, False, self.no_cache)
@@ -283,7 +288,8 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         self.force = args.force
 
     def run(self):
-        tag = self.hutcfg.service
+        service_str = self.hutcfg.service
+        self.usercfg.assert_user_is_author(self.hutcfg)
 
         # Docker builder (if needed)
         service = Service(self.hutcfg, self.usercfg)
@@ -307,7 +313,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
         args = ['-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
-                '--entrypoint=/usr/bin/stackhut', tag, verbose_mode, 'runcontainer', '--uid', uid_gid]
+                '--entrypoint=/usr/bin/stackhut', service_str, verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
         out = sh.docker.run(args, _out=lambda x: print(x, end=''))
@@ -369,12 +375,8 @@ class DeployCmd(HutCmd, UserCmd):
 
     def run(self):
         super().run()
-        self.usercfg.ensure_logged_in()
-
-        if self.usercfg['username'] != self.hutcfg.author:
-            log.error("StackHut username ({}) not equal to service author ({})".format(self.usercfg['username'],
-                                                                                       self.hutcfg.author))
-            return 1
+        self.usercfg.assert_logged_in()
+        self.usercfg.assert_user_is_author(self.hutcfg)
 
         # call build+push first using Docker builder
         if not self.no_build:
@@ -384,10 +386,11 @@ class DeployCmd(HutCmd, UserCmd):
         # build up the deploy message body
         test_request = json.loads(self._read_file('test_request.json'))
         readme = self._read_file('README.md')
-        tag = self.hutcfg.service
+        service = self.hutcfg.service
 
         data = {
-            'service': tag,
+            'service': service, # StackHut Service,
+            'docker_service': self.hutcfg.docker_service(self.usercfg), # Docker service name
             'github_url': self.hutcfg.github_url,
             'example_request': test_request,
             'description': self.hutcfg.description,
@@ -395,9 +398,9 @@ class DeployCmd(HutCmd, UserCmd):
             'schema': self.create_methods()
         }
 
-        log.info("Deploying image '{}' to StackHut".format(tag))
+        log.info("Deploying image '{}' to StackHut".format(service))
         r = utils.stackhut_api_user_call('add', data, self.usercfg)
-        log.info("Image {} has been {}".format(tag, r['message']))
+        log.info("Service {} has been {}".format(service, r['message']))
         return 0
 
 
