@@ -265,7 +265,7 @@ This couldn't be simpler,
     [mands@laptop demo-python]$ stackhut deploy
 
 This packages and builds your service, and then deploys it to StackHut along with metadata such that it may be searched, viewed, and importantly, used, on the platform. 
-As soon as this completes, your API is live on `https://api.stackhut.com/run` and can be browsed from our `repository of existing APIs <https://www.stackhut.com/#/services>`_.
+As soon as this completes, your API is live on `https://api.stackhut.com/run` and can be browsed from the `repository of existing APIs <https://www.stackhut.com/#/services>`_.
  
 Use
 ---
