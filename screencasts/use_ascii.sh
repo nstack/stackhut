@@ -19,7 +19,7 @@ http POST https://api.stackhut.com/run @./test_request.json
 
 # the JSON-RPC response contains the return value in the 'result' field
 # let's pipe into 'jq' (http://stedolan.github.io/jq/)
-http POST https://api.stackhut.com/run @./test_request.json | jq ."result"
+http POST https://api.stackhut.com/run @./test_request.json | jq '.result'
 
 # so it turns out that 2 plus 2 does equals 4, great!
 # and if we send invalid data...
@@ -28,7 +28,7 @@ http POST https://api.stackhut.com/run @./test_request.json
 
 # the JSON-RPC response now has an 'error' field
 # the system caught the mistake and you can deal with it programmatically
-http POST https://api.stackhut.com/run @./test_request.json | jq ."error"."code"
+http POST https://api.stackhut.com/run @./test_request.json | jq '.error.code'
 
 # we hope this shows how you can call any StackHut service from your code
 # it's as easy as making a JSON POST request
