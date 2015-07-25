@@ -1,47 +1,36 @@
-# This screencast shows how to access a StackHut service from within your application, whether it is written in Python, JS, Ruby...
-# ...or even the shell!. 
+# this screencast shows using a StackHut service from your application
+# whether in Python, JS, Ruby ... or even the shell! 
+# you can find many services at https://stackhut.com/#/services
+# we will be using the service 'mands/demo-python', created in http://docs.stackhut.com/getting_started/tutorial_create.html
 
-# You can find all kinds of services at https://stackhut.com/#/services
-
-# We will be using the service mands/demo-python, this was created in the corresponding screencast.
-
-# Let's view the documentation
+# let's first view the documentation
 open http://stackhut.com/#/u/mands/demo-python
 
-# It has two methods, add and multiply. We can call these cloud services via `JSON-RPC <http://www.jsonrpc.org/>`_ transported over a HTTP(S) POST request.
-
-# Thankfully JSON-RPC is a very simple protocol and this is much simpler than it sounds!
-# Let's write a bit of JSON to call the method 'add' from mands/demo-python with a two parameters. 
-
+# it has two methods, 'add' and 'multiply'. We can call these via JSON-RPC over a HTTP POST request
+# thankfully JSON-RPC is very simple!
+# let's write some JSON to call 'add' from 'mands/demo-python' with two parameters
 mkdir demo
 cd demo
 nano test_request.json
 
-# We can perform this call by simply sending a HTTP POST request, with content-type ``application/json`` to ``https://api.stackhut.com/run``. 
-
-# To do this we can use using the 'http' tool - https://github.com/jkbrzt/httpie
-
+# we can call this simply by making a HTTP POST request to https://api.stackhut.com/run
+# let's use the 'http' tool (https://github.com/jkbrzt/httpie)
 http POST https://api.stackhut.com/run @./test_request.json 
 
-# The response object is the JSON-RPC response, containing the return value in the 'result' field
+# the JSON-RPC response contains the return value in the 'result' field
+# let's pipe into 'jq' (http://stedolan.github.io/jq/)
+http POST https://api.stackhut.com/run @./test_request.json | jq ."result"
 
-# Let's pipe this JSON into jq (http://stedolan.github.io/jq/) and play with the data
-
-http POST https://api.stackhut.com/run @./test_request.json > jq 
-
-# So it turns out that 2 + 2 = 4, great!
-
-# And what happens if we send some invalid data,
-
+# so it turns out that 2 plus 2 does equals 4, great!
+# and if we send invalid data...
 nano test_request.json
-
 http POST https://api.stackhut.com/run @./test_request.json 
 
-# As before we receive a JSON-RPC response object, but now has an 'error' field
-# So the system caught the mistake and you can deal with it programmatically 
+# the JSON-RPC response now has an 'error' field
+# the system caught the mistake and you can deal with it programmatically
+http POST https://api.stackhut.com/run @./test_request.json | jq ."error"."code"
 
-http POST https://api.stackhut.com/run @./test_request.json > jq message
+# we hope this shows how you can call any StackHut service from your code
+# it's as easy as making a JSON POST request
+# thanks for your time - we can't wait to see how you make use of it... 
 
-# We hope this shows how you can call any StackHut service from your code
-# It's as easy as making a JSON POST request
-# Thanks for your time - we can't wait to see how you make use of it... 

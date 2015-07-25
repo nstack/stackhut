@@ -1,18 +1,15 @@
-# StackHut allows you to rapidly deploy your code as an API in the cloud.
-# This tutorial briefly describes how you can develop, test and deploy a simple service on StackHut within a few minutes. 
+# StackHut allows you to rapidly deploy your code as an API in the cloud
+# this screencast shows creating and deploying a simple service on StackHut
 
-# Make sure we have stackhut installed
-
+# first make sure we have stackhut installed
+pip3 install --user stackhut
 stackhut -V
 
-# Register/Login to Docker (used to store your StackHut images for deployment)
-
+# login/register with Docker (to store your StackHut services)
 docker login
 
-# Login to StackHut, create an account at <www.stackhut.com> via GitHub
-
+# login to StackHut, create an account at https://www.stackhut.com first
 stackhut login
-
 stackhut info
 
 # let's create a Python project using Alpine Linux
@@ -23,62 +20,59 @@ stackhut init alpine python
 # and we're good to go, the project is set up, with a Git repo too - aren't we nice...
 ls
 
-# The ``Hutfile`` is a YAML config file regarding our stack and dependencies
-pygmetize -l yaml ./Hutfile
+# the ``Hutfile`` is a YAML config file regarding our stack and dependencies
+alias ccat pygmetize
+ccat -l yaml ./Hutfile
 
-# There's also a README.md to describe your service
-pygmetize -g README.md
+# there's also a README.md to describe your service
+cat README.md
 
-# api.idl describes our service interface, these entrypoints will be accessible over HTTP. 
-# It uses a Java-like syntax to describe the service interface using JSON types - more info at http://barrister.bitmechanic.com/docs.html
-# Let's take a look
-pygmetize -l java api.idl
+# api.idl describes our service interface, these entrypoints will be accessible over HTTP
+# it uses a Java-like syntax to describe the service interface using JSON types (http://barrister.bitmechanic.com/docs.html)
+# let's take a look
+ccat -l java api.idl
 
-# We are exposing a single function, add, that takes two ints, and returns an int. 
-# Now let's add a new function, ``multiply``, and write the corresponding signature - all pretty straightforward,
+# we are exposing a single function, add, that takes two ints, and returns an int
+# now let's write the signature for a new function, 'multiply' 
 nano api.idl
 # yes - nano ftw!
 
-# Having defined our interface we may write our code
-# The app code lives in app.py (or app.js for JS, and so on)
-pygmetize -g app.py
+# now we may write our code
+# this lives in app.py (or app.js for JS, and so on)
+ccat app.py
 
-# The service is a plain old Python class with a function for each entrypoint. add has already been implemented
-# Now let's write multiply
-
+# the service is a plain old Python class with a function for each entrypoint
+# 'add' has already been implemented, let's write 'multiply'
 nano app.py
 
-# Now we're done coding, so let's build, run, and test our service before we deploy
-# We can build our service, i.e. packaging up everything into a container image to deploy in the cloud
-
+# we're done coding, and can now build, run, and test our service before we deploy
+# let's build our service, i.e. packaging up everything into a container image
 stackhut build
 
-# Great, now let's test if it runs correctly beforehand deploying
-# The file test_request.json represents a HTTP request to our service. 
+# great, let's test it runs correctly before deploying
+# the file 'test_request.json' models a HTTP request to our service 
+# this is a JSON-RPC object that describes the service, method, and parameters
+ccat ./test_request.json
 
-pygmetize ./test_request.json
-
-# This is a JSON-RPC object that specifies the service, method, and parameters configured for the add endpoint
-
-# Let's run our service using this file to test our add function,
+# let's run our service with this file to test our 'add' function
 stackhut run test_request.json
 
-# So that all worked, and we can view the JSON-RPC reposonse in /run_result/response.json
-pygmentize ./run_result/response.json
+# that worked, and we can view the JSON-RPC reposonse in ./run_result/response.json
+ccat ./run_result/response.json
 
-# Let's modify test_request.json to test our multiply function and run it again,
+# let's modify 'test_request.json' to test our multiply function
 nano ./test_request.json
 stackhut run test_request.json
-pygmentize ./run_result/response.json
+ccat ./run_result/response.json
 
-# Fantastic, this all worked also. We're now ready to deploy and host the service live on StackHut.
+git commit -am "Working service"
 
-# This couldn't be simpler,
+# fantastic, everything is working
+# we're now ready to deploy and host the service live on StackHut
+# this couldn't be simpler
 stackhut deploy
 
-This packages and builds your service, and then deploys it to StackHut along with metadata such that it may be searched, viewed, and importantly, used, on the platform. 
-As soon as this completes,
-# Great, so your API is live on https://api.stackhut.com/run and can be browsed from <https://www.stackhut.com/#/services>
-# The service is ready to receive requests from anywhere via HTTP - check the coreesponding screencast demostrating how to use a service
+# great, your API is live on https://api.stackhut.com/run and can be browsed from https://www.stackhut.com/#/services
+# it can receive requests from anywhere via HTTP, as shown in http://docs.stackhut.com/getting_started/tutorial_use.html
 # Thanks for your time - we can't wait to see what you build... 
 
