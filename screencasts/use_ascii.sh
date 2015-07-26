@@ -1,19 +1,20 @@
 # this screencast shows using a StackHut service from your application
 # whether in Python, JS, Ruby ... or even the shell! 
 # you can find many services at https://stackhut.com/#/services
-# we will be using the service 'mands/demo-python', created in http://docs.stackhut.com/getting_started/tutorial_create.html
+# we will be using the service 'mands/demo-python'
+# created in http://docs.stackhut.com/getting_started/tutorial_create.html
 
 # let's first view the documentation
 open http://stackhut.com/#/u/mands/demo-python
 
-# it has two methods, 'add' and 'multiply'. We can call these via JSON-RPC over a HTTP POST request
+# it has 2 methods, 'add' and 'multiply'. We can call these via a JSON-RPC HTTP request
 # thankfully JSON-RPC is very simple!
-# let's write some JSON to call 'add' from 'mands/demo-python' with two parameters
+# let's write some JSON to call 'add' from 'mands/demo-python' with 2 parameters
 mkdir demo
 cd demo
 nano test_request.json
 
-# we can call this simply by making a HTTP POST request to https://api.stackhut.com/run
+# we can call this simply through a HTTP POST request to https://api.stackhut.com/run
 # let's use the 'http' tool (https://github.com/jkbrzt/httpie)
 http POST https://api.stackhut.com/run @./test_request.json 
 

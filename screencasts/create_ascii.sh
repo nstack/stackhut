@@ -49,8 +49,8 @@ nano app.py
 # let's build our service, i.e. packaging up everything into a container image
 stackhut build
 
-# great, let's test it runs correctly before deploying
-# the file 'test_request.json' models a HTTP request to our service 
+# great...but let's test our service before deploying
+# the file 'test_request.json' models a HTTP request to the API
 # this is a JSON-RPC object that describes the service, method, and parameters
 ccat ./test_request.json
 
