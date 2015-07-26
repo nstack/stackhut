@@ -218,7 +218,7 @@ class InitCmd(UserCmd):
 
             # run the templates
             template_env = Environment(loader=FileSystemLoader('.'))
-            scaffold_files = os.listdir(scaffold_dir)
+            scaffold_files = os.listdir(scaffold_dir) + [self.stack.entrypoint]
             [self.render_file(template_env, f, dict(scaffold=self))
              for f in scaffold_files if os.path.exists(f) and os.path.isfile(f)]
 

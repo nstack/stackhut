@@ -4,6 +4,9 @@ name: {{ scaffold.name }}
 # Service author - must be a valid StackHut user
 author: {{ scaffold.author }}
 
+# uncomment if your service is hosted on GitHub
+# github_url: www.github.com/...
+
 # description of the service
 description: Awesome service in {{ scaffold.stack.name }}
 
