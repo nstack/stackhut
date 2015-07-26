@@ -6,5 +6,6 @@ Miscellaneous
 
 .. toctree::
    
-   faq
+   credits
+   .. faq
 

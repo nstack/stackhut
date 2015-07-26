@@ -5,18 +5,28 @@ Platform Installation
 
 StackHut is comprised of 2 major parts - the hosting platform full of live APIs that you can call from your code, and the development platform with which to create and deploy your own APIs.
 
-To use a StackHut service from within your own code you just need to make a JSON-RPC HTTP request - as described in :ref:`tutorial_create`.
+This page describes installing the command-line StackHut Toolkit so you can rapidly develop, test, and deploy your services rapidly from your computer to StackHut.
 
-This page describes installing the command-line StackHut Toolkit so you can rapidly develop, test, and deploy your services rapidly from your computer to the StackHut platform.
-Having installed the Toolkit you can go through the walk-through in :ref:`tutorial_create`.
+Quick Instructions
+------------------
 
-The StackHut Toolkit is written in Python 3 and requires a few dependencies to get going.
+Requirements
+^^^^^^^^^^^^
 
-General Requirements
---------------------
+* `Python 3.4 <http://www.python.org>`_
+* `Docker <http://www.docker.com>`_
 
-* Python 3.4
-* Docker
+Install Steps
+^^^^^^^^^^^^^
+
+#. Install above requirements
+#. Install StackHut - ``sudo pip3 install stackhut``
+#. There is no Step 3 - but try out the walkthrough in :ref:`tutorial_create`
+
+.. Having installed the Toolkit you can go through the walk-through in :ref:`tutorial_create`.
+
+.. The StackHut Toolkit is written in Python 3 and requires a few dependencies to get going.
+
 
 Linux Install Instructions
 --------------------------

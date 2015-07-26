@@ -3,12 +3,15 @@
 Using a Service
 ===============
 
-Please read the tutorial for basic information on how to access a service via JSON-RPC.
+Please read :ref:`tutorial_use` for basic information on how to access a service via JSON-RPC.
 
 Access a service directly
 -------------------------
 
 **TODO** 
+
+See :ref:`tutorial_use` for basic info.
+
 
 .. Login into StackHut
 .. -------------------
