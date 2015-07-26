@@ -1,7 +1,7 @@
 .. _usage_project:
 
-StackHut Project Description
-============================
+StackHut Project Overview
+=========================
 
 Introduction
 ------------
@@ -100,7 +100,7 @@ nodejs      `NodeJS <http://nodejs.org/>`_
 
 .. note:: Currently we only support one language stack per service (although you could use this to call anothor language you've bundled into the image)
 
-.. note:: If your chosen language stack has a package manager, e.g. pip for Python or npm for Node, you can fill out the packages file, e.g. ``requirements.txt`` or ``package.json`` respectivly and they'll be installed within your image.
+.. note:: If your chosen language stack has a package manager, e.g. ``pip``, ``npm``, etc., you can fill out the package file, e.g. ``requirements.txt``, ``package.json``, etc., and it will be installed automatically within your image.
 
 ``files``
 ^^^^^^^^^
@@ -118,7 +118,7 @@ See <www.github.com/StackHut/image-process> for an example.
 
 A list of OS packages you wish to bundle with your service, i.e. those installable via ``yum``, or ``apt-get``, depending on your ``baseos``. You may need to check with your choosing base OS repository to find the names of the packages and their versions.
 
-.. note:: you can also install lanauge specific packages using the language package manager as described in :ref:`_usage_project_hutfile_stack`.
+.. note:: you can also install language specific packages using your language package manager as described in :ref:`_usage_project_hutfile_stack`.
 
 See <www.github.com/StackHut/pdf-tools> for an example.
 
