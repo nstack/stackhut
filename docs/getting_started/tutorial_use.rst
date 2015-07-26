@@ -3,8 +3,7 @@
 Tutorial - Using a Service
 ==========================
 
-In this tutorial presents a quick overview of how to access a StackHut service from within your application, whether it is written in Python, client/server-side JS, Ruby, .NET, and more. 
-.. The best way to start is to watch the following screen-cast that take us through setting up a simple, Python-based StackHut service.
+In this tutorial presents a quick overview of how to access a StackHut service from within your application, whether it is written in Python, client/server-side JS, Ruby, .NET, and more. The best way to start is to watch the following screen-cast that walks you through using a StackHut service from the command-line.
 
 .. raw:: html
 
