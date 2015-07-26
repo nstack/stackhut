@@ -6,12 +6,9 @@ Tutorial - Using a Service
 In this tutorial presents a quick overview of how to access a StackHut service from within your application, whether it is written in Python, client/server-side JS, Ruby, .NET, and more. 
 .. The best way to start is to watch the following screen-cast that take us through setting up a simple, Python-based StackHut service.
 
-.. .. raw:: html
+.. raw:: html
 
-..    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/Y8vBQCgA944" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
-..    </div>
-
+    <script type="text/javascript" src="https://asciinema.org/a/23990.js" id="asciicast-23990" async></script>
 
 Selecting a service
 -------------------

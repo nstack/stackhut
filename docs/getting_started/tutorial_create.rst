@@ -5,14 +5,11 @@ Tutorial - Creating a Service
 
 StackHut allows you to rapidly deploy your code as an API in the cloud. Your code is wrapped up and runs inside a container whose functions you can call over HTTP. 
 
-This tutorial briefly describes how you can develop, test and deploy a simple service on StackHut within a few minutes. Fristly just check you've installed the dependencies as described in :ref:`installation`. We also recommend watching the following, short, companion video that walks you through setting up a Python-based service.
+This tutorial briefly describes how you can develop, test and deploy a simple service on StackHut within a few minutes. Fristly just check you've installed the dependencies as described in :ref:`installation`. We also recommend watching the following, short, companion screencast that walks you through setting up a Python-based service.
 
 .. raw:: html
 
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/Y8vBQCgA944" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
-    </div>
-
+    <script type="text/javascript" src="https://asciinema.org/a/23991.js" id="asciicast-23991" async></script>
 
 Further information on creating a service can be found in :ref:`usage_cli` and :ref:`usage_project`.
 
