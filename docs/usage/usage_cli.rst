@@ -13,9 +13,19 @@ It provides a range of commands used to interact with your code and the StackHut
 Getting Started
 ^^^^^^^^^^^^^^^
 
-First off, install the Toolkit and requirements following the instructions in :ref:`installation`. 
+First off, install the Toolkit and requirements by following the instructions in :ref:`installation`. 
 
-Quick Install - ``sudo pip3 install stackhut`` (to upgrade - ``sudo pip3 install --upgrade stackhut``)
+**Quick Install**
+
+.. code:: bash
+
+    sudo pip3 install stackhut
+    
+**Upgrade**
+
+.. code:: bash
+
+    sudo pip3 install --upgrade stackhut
 
 .. note:: Things move pretty quickly on the Toolkit so if you find an error try upgrading first to see if it's been fixed. Thanks!
 
