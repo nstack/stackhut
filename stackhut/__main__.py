@@ -28,7 +28,7 @@ def main():
     # Parse the cmd args
     parser = argparse.ArgumentParser(description="StackHut Toolkit",
                                      epilog="Have fun :)")
-    parser.add_argument('-V', help='StackHut Toolkit Version',
+    parser.add_argument('-V', '--version', help='StackHut Toolkit Version',
                         action="version", version="%(prog)s {}".format(__version__))
     #    parser.add_argument("--hutfile", help="Path to user-defined hutfile (default: %(default)s)",
     #                        default=utils.HUTFILE, type=argparse.FileType('r', encoding='utf-8'))

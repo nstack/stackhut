@@ -208,22 +208,20 @@ class InitCmd(UserCmd):
             self.name = os.path.basename(os.getcwd())
             self.author = self.usercfg.username
             log.info("Creating service {}/{}".format(self.author, self.name))
-            # copy the scaffold into the service
-            scaffold_dir = utils.get_res_path('scaffold')
-            copy_tree(scaffold_dir, '.')
 
-            # rename scaffold file to entrypoint and remove others
-            os.rename(self.stack.scaffold_name, self.stack.entrypoint)
-            [os.remove(f) for f in os.listdir(".") if f.startswith("scaffold-")]
+            # copy the scaffolds into the service
+            def copy_scaffold(name):
+                dir_path = utils.get_res_path(os.path.join('scaffold', name))
+                copy_tree(dir_path, '.')
+                return os.listdir(dir_path)
+
+            common_files = copy_scaffold('common')
+            stack_files = copy_scaffold(self.stack.name)
 
             # run the templates
             template_env = Environment(loader=FileSystemLoader('.'))
-            scaffold_files = os.listdir(scaffold_dir) + [self.stack.entrypoint]
             [self.render_file(template_env, f, dict(scaffold=self))
-             for f in scaffold_files if os.path.exists(f) and os.path.isfile(f)]
-
-            # add the package file if present?
-            open(self.stack.package_file, 'w').close()
+             for f in (common_files + stack_files) if os.path.exists(f) and os.path.isfile(f)]
 
             # git commit
             if not self.args.no_git:

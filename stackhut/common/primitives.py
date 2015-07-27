@@ -167,7 +167,6 @@ class Stack:
     package_file = None
     shim_files = None
     shim_cmd = None
-    scaffold_name = None
 
     def __init__(self):
         super().__init__()
@@ -207,10 +206,10 @@ class Stack:
         shim_dir = os.path.join(utils.get_res_path('shims'), self.name)
         copy_tree(shim_dir, utils.ROOT_DIR)
 
-    def link_shim(self):
-        shim_dir = os.path.join(utils.get_res_path('shims'), self.name)
-        for f in self.shim_files:
-            os.symlink(os.path.join(shim_dir, f), f)
+    # def link_shim(self):
+    #     shim_dir = os.path.join(utils.get_res_path('shims'), self.name)
+    #     for f in self.shim_files:
+    #         os.symlink(os.path.join(shim_dir, f), f)
 
     def del_shim(self):
         for f in self.shim_files:
@@ -225,8 +224,6 @@ class Python(Stack):
 
     shim_files = ['runner.py', 'stackhut.py']
     shim_cmd = ['/usr/bin/env', 'python3', 'runner.py']
-
-    scaffold_name = 'scaffold-python.py'
 
     def install_stack_pkgs(self):
         return 'pip3 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_pkgs))
@@ -243,8 +240,6 @@ class Python2(Stack):
     shim_files = ['runner.py', 'stackhut.py']
     shim_cmd = ['/usr/bin/env', 'python2', 'runner.py']
 
-    scaffold_name = 'scaffold-python2.py'
-
     def install_stack_pkgs(self):
         return 'pip2 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_pkgs))
 
@@ -254,13 +249,11 @@ class Python2(Stack):
 class NodeJS(Stack):
     name = 'nodejs'
     entrypoint = 'app.js'
-    stack_pkgs = ['sync-request']
+    stack_pkgs = ['request']
     package_file = 'package.json'
 
     shim_files = ['runner.js', 'stackhut.js']
-    shim_cmd = ['/usr/bin/env', 'iojs', '--harmony', 'runner.js']
-
-    scaffold_name = 'scaffold-nodejs.js'
+    shim_cmd = ['/usr/bin/env', 'node', '--harmony', 'runner.js']
 
     def install_stack_pkgs(self):
         return 'npm install {}'.format(str.join(' ', self.stack_pkgs))

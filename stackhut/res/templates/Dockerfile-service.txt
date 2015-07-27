@@ -33,8 +33,8 @@ RUN {{ service.stack.install_service_pkgs() }} # cache bust - {{ service.build_d
 # TODO - move into Docker-runtime.txt, inject stackhut cmd in on server?
 # following toolkit.commands never cached
 
-# setup the entrypoint (using -vv for now)
-ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-vv", "run"]
+# setup the entrypoint (using -v for now)
+# ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-v", "run"]
 
 # install stackhut app
 RUN pip3 install --no-cache-dir --compile stackhut  # cache bust - {{ service.build_date }}
