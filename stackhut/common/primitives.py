@@ -33,6 +33,7 @@ template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates
 docker_client = None
 
 def get_docker(_exit=True):
+    import ssl
     global docker_client
 
     if docker_client is None:
@@ -41,9 +42,18 @@ def get_docker(_exit=True):
                 docker_client = docker_py.Client(version='auto')
             else:
                 # using boot2docker
-                kw = kwargs_from_env(assert_hostname=False)
-                kw['tls'].verify = True
-                docker_client = docker_py.Client(version='auto', **kw)
+                # try normal first
+                try:
+                    kw = kwargs_from_env(assert_hostname=False)
+                    docker_client = docker_py.Client(version='auto', **kw)
+                except ssl.SSLError as e:
+                    # shit - some weird boot2docker, python, docker-py, requests, and ssl error
+                    # https://github.com/docker/docker-py/issues/465
+                    log.debug(e)
+                    log.warn("Cannot connect securely to Docker, trying insecurely")
+                    kw = kwargs_from_env(assert_hostname=False)
+                    kw['tls'].verify = None
+                    docker_client = docker_py.Client(version='auto', **kw)
         except Exception as e:
             log.error("Could not connect to Docker - try running 'docker info' first")
             if sys.platform != 'linux':
