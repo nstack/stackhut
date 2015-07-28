@@ -81,7 +81,14 @@ class DockerBuild:
         cmds = ['-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
         log.debug("Calling docker with cmds - {}".format(cmds))
         log.info("Starting build, this may take some time, please wait...")
-        sh.docker.build(*cmds)
+
+        try:
+            sh.docker.build(*cmds, _out=lambda x: log.debug(x.strip()))
+        except sh.ErrorReturnCode as e:
+            log.error("Couldn't complete build")
+            log.error("Build error - {}".format(e.stderr.decode('utf-8')))
+            log.error("Build Traceback - \n{}".format(e.stdout.decode('utf-8')))
+            raise RuntimeError("Docker Build failed") from None
 
     def push_image(self, tag):
         if self.push:
@@ -179,7 +186,7 @@ class Alpine(BaseOS):
 class Stack:
     name = None
     entrypoint = None
-    stack_pkgs = None
+    stack_packages = None
     package_file = None
     shim_files = None
     shim_cmd = None
@@ -206,17 +213,17 @@ class Stack:
                                          dict(baseos=baseos, stack=self, stack_cmds=stack_cmds),
                                          outdir, image_name)
 
-    def install_service_pkgs(self):
+    def install_service_packages(self):
         """Anything needed to run the service"""
         return ''
 
-    def install_stack_pkgs(self):
+    def install_stack_packages(self):
         """Anything needed to run the stack"""
         return ''
 
     @property
-    def check_install_service_pkgs(self):
-        return os.path.exists(self.package_file)
+    def service_package_files(self):
+        return self.package_file if os.path.exists(self.package_file) else None
 
     def copy_shim(self):
         shim_dir = os.path.join(utils.get_res_path('shims'), self.name)
@@ -235,46 +242,46 @@ class Stack:
 class Python(Stack):
     name = 'python'
     entrypoint = 'app.py'
-    stack_pkgs = ['requests', 'sh']
+    stack_packages = ['requests', 'sh']
     package_file = 'requirements.txt'
 
     shim_files = ['runner.py', 'stackhut.py']
     shim_cmd = ['/usr/bin/env', 'python3', 'runner.py']
 
-    def install_stack_pkgs(self):
-        return 'pip3 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_pkgs))
+    def install_stack_packages(self):
+        return 'pip3 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_packages))
 
-    def install_service_pkgs(self):
+    def install_service_packages(self):
         return 'pip3 install --no-cache-dir --compile -r {}'.format(self.package_file)
 
 class Python2(Stack):
     name = 'python2'
     entrypoint = 'app.py'
-    stack_pkgs = ['requests', 'sh']
+    stack_packages = ['requests', 'sh']
     package_file = 'requirements.txt'
 
     shim_files = ['runner.py', 'stackhut.py']
     shim_cmd = ['/usr/bin/env', 'python2', 'runner.py']
 
-    def install_stack_pkgs(self):
-        return 'pip2 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_pkgs))
+    def install_stack_packages(self):
+        return 'pip2 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_packages))
 
-    def install_service_pkgs(self):
+    def install_service_packages(self):
         return 'pip2 install --no-cache-dir --compile -r {}'.format(self.package_file)
 
 class NodeJS(Stack):
     name = 'nodejs'
     entrypoint = 'app.js'
-    stack_pkgs = ['request']
+    stack_packages = ['request']
     package_file = 'package.json'
 
     shim_files = ['runner.js', 'stackhut.js']
     shim_cmd = ['/usr/bin/env', 'node', '--harmony', 'runner.js']
 
-    def install_stack_pkgs(self):
-        return 'npm install {}'.format(str.join(' ', self.stack_pkgs))
+    def install_stack_packages(self):
+        return 'npm install {}'.format(str.join(' ', self.stack_packages))
 
-    def install_service_pkgs(self):
+    def install_service_packages(self):
         return 'npm install; exit 0'
 
 # Our BaseOS / Stack Dispatchers (e.g. pattern matching)

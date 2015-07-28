@@ -58,11 +58,14 @@ def main():
     try:
         retval = subfunc.run()
     except Exception as e:
+        if len(e.args) > 0:
+            [log.error(x) for x in e.args]
+
         if args.verbose:
-            log.debug(e.args)
             raise e
         else:
-            log.error("Internal error - run in verbose mode for more information")
+            log.fatal("Exiting - run in verbose mode for more information")
+
         return 1
 
     # all done

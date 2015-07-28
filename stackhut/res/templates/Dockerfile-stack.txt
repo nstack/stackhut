@@ -11,7 +11,7 @@ RUN echo "Starting..." && \
     echo "...done" && exit
 {% endif %}
 
-{% if stack.stack_pkgs %}
+{% if stack.stack_packages %}
 # install lang packages needed for stack
-RUN {{ stack.install_stack_pkgs() }}
+RUN {{ stack.install_stack_packages() }}
 {% endif %}

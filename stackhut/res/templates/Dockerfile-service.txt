@@ -13,15 +13,17 @@ RUN echo "Starting..." && \
 
 # setup the env and copy all files and dirs across
 WORKDIR /workdir
-COPY Hutfile {{ service.stack.entrypoint }} {{ service.stack.install_service_file }} {{ service.hutcfg.files|join(' ') }} ./
+COPY Hutfile {{ service.stack.entrypoint }} {{ service.stack.service_package_files }} {{ service.hutcfg.files|join(' ') }} ./
 COPY .stackhut ./.stackhut
 {% for d in service.hutcfg.dirs -%}
 COPY {{ d }} ./{{ d }}
 {% endfor -%}
 
-{% if service.stack.check_install_service_pkgs %}
+# cache bust - {{ service.build_date }}
+
+{% if service.stack.service_package_files %}
 # install lang packages needed for stack
-RUN {{ service.stack.install_service_pkgs() }} # cache bust - {{ service.build_date }}
+RUN {{ service.stack.install_service_packages() }}
 {% endif %}
 
 # any other Docker toolkit.commands

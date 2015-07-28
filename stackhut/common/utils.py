@@ -41,6 +41,7 @@ S3_BUCKET = 'stackhut-payloads'
 ROOT_DIR = os.getcwd()
 DEBUG = None
 IN_CONTAINER = os.path.exists('/workdir')
+VERBOSE=False
 
 # OS Types - for docker flags
 OS_TYPE = None
@@ -72,6 +73,8 @@ log = setup_logging()
 
 def set_log_level(verbose_mode):
     global log
+    global VERBOSE
+    VERBOSE = verbose_mode
     log.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
 
 # Setup app paths
