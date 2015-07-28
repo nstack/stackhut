@@ -64,7 +64,7 @@ def main():
         if args.verbose:
             raise e
         else:
-            log.fatal("Exiting - run in verbose mode for more information")
+            log.error("Exiting - run in verbose mode for more information")
 
         return 1
 

@@ -1,6 +1,6 @@
 FROM stackhut/{{ service.hutcfg.from_image }}:latest
-{# MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}> #}
-{# LABEL description="{{ service.hutcfg.description }}" #}
+{# MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}> -#}
+{# LABEL description="{{ service.hutcfg.description }}" -#}
 
 {% if service.hutcfg.os_deps %}
 # install OS packages needed for service
@@ -11,32 +11,34 @@ RUN echo "Starting..." && \
     echo "...done" && exit
 {% endif %}
 
-# setup the env and copy all files and dirs across
 WORKDIR /workdir
-COPY Hutfile {{ service.stack.entrypoint }} {{ service.stack.service_package_files }} {{ service.hutcfg.files|join(' ') }} ./
-COPY .stackhut ./.stackhut
-{% for d in service.hutcfg.dirs -%}
-COPY {{ d }} ./{{ d }}
-{% endfor -%}
 
-# cache bust - {{ service.build_date }}
+# install stackhut app
+RUN pip3 install --no-cache-dir --compile stackhut
 
 {% if service.stack.service_package_files %}
 # install lang packages needed for stack
+COPY {{ service.stack.service_package_files }} ./
 RUN {{ service.stack.install_service_packages() }}
 {% endif %}
+
+# copy all source files and dirs across
+COPY Hutfile .api.json {{ service.stack.entrypoint }} {{ service.hutcfg.files|join(' ') }} ./
+{# # COPY .stackhut ./.stackhut -#}
+{% for d in service.hutcfg.dirs -%}
+COPY {{ d }} ./{{ d }}
+{% endfor -%}
 
 # any other Docker toolkit.commands
 {% for cmd in service.hutcfg.docker_cmds -%}
 {{ cmd }}
 {% endfor -%}
 
-# OK - now setup stackhut runner
-# TODO - move into Docker-runtime.txt, inject stackhut cmd in on server?
-# following toolkit.commands never cached
+{## cache bust - {{ service.build_date }}#}
 
+{# TODO - move into Docker-runtime.txt, inject stackhut cmd in on server? -#}
+
+{#
 # setup the entrypoint (using -v for now)
-# ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-v", "run"]
-
-# install stackhut app
-RUN pip3 install --no-cache-dir --compile stackhut  # cache bust - {{ service.build_date }}
+ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-v", "run"]
+#}
