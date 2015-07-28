@@ -1,7 +1,7 @@
 .. _usage_your_code:
 
-Using a Service
-===============
+Using Services
+==============
 
 Please read :ref:`tutorial_use` for basic information on how to access a service via JSON-RPC.
 

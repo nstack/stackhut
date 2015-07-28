@@ -1,7 +1,7 @@
 .. _usage_project:
 
-StackHut Project Overview
-=========================
+Project Structure
+=================
 
 Introduction
 ------------
@@ -12,7 +12,7 @@ In this section we describe the files created when you initialise a StackHut pro
 Hutfile
 -------
 
-The Hutfile is a YAML file that describes the configuration of your StackHut service. It has several required fields that describe the project and let you control the packaging of your service.
+The ``Hutfile`` is a YAML file that describes the configuration of your StackHut service. It has several required fields that describe the project and let you control the packaging of your service.
 
 Here's a sample,
 
@@ -109,7 +109,7 @@ nodejs      `NodeJS <http://nodejs.org/>`_
 
 A list of files and directories within the project directory to include and bundle alongside the image. Useful for specifying resource files and binaries, for instance.
 
-See <www.github.com/StackHut/image-process> for an example.
+See `<http://www.github.com/StackHut/image-process>`_ for an example.
 
 ``os_deps``
 ^^^^^^^^^^^
@@ -118,9 +118,9 @@ See <www.github.com/StackHut/image-process> for an example.
 
 A list of OS packages you wish to bundle with your service, i.e. those installable via ``yum``, or ``apt-get``, depending on your ``baseos``. You may need to check with your choosing base OS repository to find the names of the packages and their versions.
 
-.. note:: you can also install language specific packages using your language package manager as described in :ref:`_usage_project_hutfile_stack`.
+.. note:: you can also install language specific packages using your language package manager as described in the :ref:`usage_project_hutfile_stack` subsection above.
 
-See <www.github.com/StackHut/pdf-tools> for an example.
+See `<http://www.github.com/StackHut/pdf-tools>`_ for an example.
 
 
 ``docker_cmds``
@@ -130,12 +130,16 @@ See <www.github.com/StackHut/pdf-tools> for an example.
 
 If the default workflow is not flexible enough, you can specify any additional scripting commands as a list within this section. They will be run when building your container and follow the `Dockerfile builder specification <https://docs.docker.com/reference/builder/>`_.
 
-See <www.github.com/StackHut/browser> for an example.
+See `<http://www.github.com/StackHut/browser>`_ for an example.
 
 Interface Definition (``api.idl``)
-------------------------------
+----------------------------------
 
 **TODO**
+
+See :ref:`tutorial_create`.
+
+This is based on the `Barrister RPC project <http://barrister.bitmechanic.com/>`_, the format of which is described in the `project documentation <http://barrister.bitmechanic.com/docs.html>`_.
 
 
 App Code

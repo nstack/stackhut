@@ -1,7 +1,7 @@
 .. _usage_cli:
 
-StackHut Toolkit
-================
+The StackHut Toolkit
+====================
 
 
 .. Introduction
@@ -13,7 +13,7 @@ It provides a range of commands used to interact with your code and the StackHut
 Getting Started
 ^^^^^^^^^^^^^^^
 
-First off, install the Toolkit and requirements by following the instructions in :ref:`installation`. 
+Firstly, install the Toolkit and requirements by following the instructions in :ref:`installation`. 
 
 **Quick Install**
 
