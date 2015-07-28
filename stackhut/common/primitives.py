@@ -40,11 +40,14 @@ def get_docker(_exit=True):
             if sys.platform == 'linux':
                 docker_client = docker_py.Client(version='auto')
             else:
-                docker_client = docker_py.Client(version='auto', **kwargs_from_env(assert_hostname=False))
+                # using boot2docker
+                kw = kwargs_from_env(assert_hostname=False)
+                kw['tls'].verify = True
+                docker_client = docker_py.Client(version='auto', **kw)
         except Exception as e:
             log.error("Could not connect to Docker - try running 'docker info' first")
             if sys.platform != 'linux':
-                log.error("and if you are on OSX/Windows make sure you've run 'boot2docker up' first and have added the ENV VARs it suggests")
+                log.error("Make sure you've run 'boot2docker up' also and have added the ENV VARs it suggests")
             if _exit:
                 raise e
                 # raise OSError()
