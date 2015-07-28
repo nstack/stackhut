@@ -83,11 +83,15 @@ class DockerBuild:
         log.info("Starting build, this may take some time, please wait...")
 
         try:
-            sh.docker.build(*cmds, _out=lambda x: log.debug(x.strip()))
+            if utils.VERBOSE:
+                sh.docker.build(*cmds, _out=lambda x: log.debug(x.strip()))
+            else:
+                sh.docker.build(*cmds)
         except sh.ErrorReturnCode as e:
             log.error("Couldn't complete build")
-            log.error("Build error - {}".format(e.stderr.decode('utf-8')))
-            log.error("Build Traceback - \n{}".format(e.stdout.decode('utf-8')))
+            log.error("Build error - {}".format(e.stderr.decode('utf-8').strip()))
+            if not utils.VERBOSE:
+                log.error("Build Traceback - \n{}".format(e.stdout.decode('utf-8').strip()))
             raise RuntimeError("Docker Build failed") from None
 
     def push_image(self, tag):
