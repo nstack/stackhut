@@ -20,7 +20,7 @@ API
 download_file
 ^^^^^^^^^^^^^
 
-.. code:: python
+.. code-block:: python
 
     stackhut.download_file(url, fname)
 
@@ -32,7 +32,7 @@ Returns the filename of the downloaded file.
 put_file
 ^^^^^^^^
 
-.. code:: python
+.. code-block:: python
 
     stackhut.put_file(fname, make_public)
 
@@ -45,7 +45,7 @@ Returns the URL of the uploaded file.
 run_command
 ^^^^^^^^^^^
 
-.. code:: python
+.. code-block:: python
 
     stackhut.run_command(cmd, stdin)
 
@@ -80,7 +80,7 @@ NodeJS / ES6
 The Node story is more complex as StackHut is primarily a request->response system exhibited through functions as entrypoints. This conflicts with the callback-based model of Node at present.
 
 However things are looking much better with both ES6 and ES7 on the horizon.
-StackHut's Node support is based on the latest NodeJS with support for ES6, and promises in particular (`read this <http://www.html5rocks.com/en/tutorials/es6/promises/>`_ for a good intro)
+StackHut's Node support is based on the latest NodeJS with support for ES6, and promises in particular (`this <http://www.html5rocks.com/en/tutorials/es6/promises/>`_ is a good intro).
 
 The StackHut runtime is promise-based on Node, with each call returning a promise than resolves on completion.
 
@@ -91,7 +91,7 @@ This gives you two choices when implementing a service function depending on if 
 
 Write your function as normal and simply wrap the result in a Promise.resolve().
 
-.. code:: javascript
+.. code-block:: js
 
     add(x, y) {
         let res = x + y;
@@ -102,7 +102,7 @@ Write your function as normal and simply wrap the result in a Promise.resolve().
 
 Wrap your service block in a single promise that is returned to the system. Within this block write your normal code and call with ``resolve`` or ``reject`` as required on completion. This method interacts nicely with new promise-based and legacy callback-based async code.
 
-.. code:: javascript
+.. code-block:: js
 
     asyncAdd(x, y) {
         return new Promise(function(resolve, reject) {
