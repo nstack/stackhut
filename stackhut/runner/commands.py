@@ -20,7 +20,7 @@ from stackhut.common import barrister
 from stackhut.common import utils
 from stackhut.common.utils import log, CloudStore, LocalStore, HutCmd
 from . import shim_server
-from stackhut.common.primitives import gen_barrister_contract, stacks
+from stackhut.common.primitives import Service, stacks
 
 # Module Consts
 REQ_FIFO = 'req.json'
@@ -183,7 +183,7 @@ class RunHostCmd(RunCmd):
         self.store = LocalStore(args.reqfile)
 
     def run(self):
-        gen_barrister_contract()
+        Service.gen_barrister_contract()
         super().run()
         self.store.cleanup()
 

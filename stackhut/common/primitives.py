@@ -391,7 +391,7 @@ class Service:
         if force or not self.image_exists or self.image_stale():
             log.debug("Image not found or stale - building...")
             # setup
-            gen_barrister_contract()
+            self.gen_barrister_contract()
             dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
             builder.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
             builder.build_dockerfile(self.docker_fullname, dockerfile)
@@ -402,8 +402,6 @@ class Service:
 
         builder.push_image(self.docker_fullname)
 
-
-# Helper functions
-# TODO - we should move these into a dep-style system - maybe use Makefile in interrim
-def gen_barrister_contract():
-    generate_contract('api.idl', utils.CONTRACTFILE)
+    @staticmethod
+    def gen_barrister_contract():
+        generate_contract('api.idl', utils.CONTRACTFILE)

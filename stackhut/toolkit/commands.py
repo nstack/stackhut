@@ -376,6 +376,9 @@ class DeployCmd(HutCmd, UserCmd):
         if not self.no_build:
             service.build_push(self.force, True, False)
 
+        # run the contract regardless
+        service.gen_barrister_contract()
+
         # build up the deploy message body
         test_request = json.loads(self._read_file('test_request.json'))
         readme = self._read_file('README.md')
