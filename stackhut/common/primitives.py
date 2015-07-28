@@ -42,9 +42,12 @@ def get_docker(_exit=True):
             else:
                 docker_client = docker_py.Client(version='auto', **kwargs_from_env(assert_hostname=False))
         except Exception as e:
-            log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
+            log.error("Could not connect to Docker - try running 'docker info' first")
+            if sys.platform != 'linux':
+                log.error("and if you are on OSX/Windows make sure you've run 'boot2docker up' first and have added the ENV VARs it suggests")
             if _exit:
-                raise OSError()
+                raise e
+                # raise OSError()
 
     return docker_client
 
@@ -199,8 +202,8 @@ class Stack:
         return ''
 
     @property
-    def install_service_file(self):
-        return self.package_file if os.path.exists(self.package_file) else ''
+    def check_install_service_pkgs(self):
+        return os.path.exists(self.package_file)
 
     def copy_shim(self):
         shim_dir = os.path.join(utils.get_res_path('shims'), self.name)

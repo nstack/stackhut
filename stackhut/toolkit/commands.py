@@ -122,7 +122,7 @@ class InfoCmd(UserCmd):
         # log sys info
         log.info("StackHut version {}".format(__version__))
 
-        docker = get_docker(_exit=False)
+        docker = get_docker(_exit=True)
         if docker:
             log.info("Docker version {}".format(docker.version().get('Version')))
         else:

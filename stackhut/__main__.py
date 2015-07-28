@@ -61,6 +61,8 @@ def main():
         if args.verbose:
             log.debug(e.args)
             raise e
+        else:
+            log.error("Internal error - run in verbose mode for more information")
         return 1
 
     # all done

@@ -19,7 +19,7 @@ COPY .stackhut ./.stackhut
 COPY {{ d }} ./{{ d }}
 {% endfor -%}
 
-{% if service.stack.install_service_file %}
+{% if service.stack.check_install_service_pkgs %}
 # install lang packages needed for stack
 RUN {{ service.stack.install_service_pkgs() }} # cache bust - {{ service.build_date }}
 {% endif %}
