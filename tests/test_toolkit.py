@@ -70,7 +70,8 @@ class TestToolkit1User(unittest.TestCase):
         orig_usercfg.save()
 
 
-# @unittest.skipUnless(usercfg.username == 'stackhut', "Only test 'stackbuild' with 'stackhut' user")
+# @unittest.skipUnless(orig_usercfg.username == 'stackhut', "Only test 'stackbuild' with 'stackhut' user")
+@unittest.skip('ddisabled for now')
 class TestToolkit2StackBuild(unittest.TestCase):
     def setUp(self):
         self.docker = get_docker()
