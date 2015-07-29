@@ -23,6 +23,7 @@ import docker as docker_py
 from docker.utils import kwargs_from_env
 from docker.errors import DockerException
 import arrow
+import json
 
 from . import utils
 from .utils import log
@@ -97,8 +98,19 @@ class DockerBuild:
     def push_image(self, tag):
         if self.push:
             log.info("Uploading image {} - this may take a while...".format(tag))
-            self.docker.push(tag)
+            r = self.docker.push(tag, stream=True)
+            r_summary = [json.loads(x.decode('utf-8')) for x in r][-1]
+
+            if 'error' in r_summary:
+                log.error(r_summary['error'])
+                log.error(r_summary['errorDetail'])
+                raise RuntimeError("Error pushing to Docker Hub, check your connection and auth details")
+            else:
+                log.debug(r_summary['status'])
+                # log.error("Error pushing to Docker Hub - {}".format(r_summary['error']))
+
             # sh.docker('push', tag, _in='Y')
+
 
     def stack_build_push(self, template_name, template_params, outdir, image_name):
         """Called by StackHut builders to build BaseOS and Stack images"""
