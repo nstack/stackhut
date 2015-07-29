@@ -50,9 +50,9 @@ OSX Install Instructions
 
   * We have tested StackHut using `Boot2docker <http://boot2docker.io/>`_ and recommend this method
   
-* Install Python 3
-
-  * Install either direct from the `Python Website <https://www.python.org/downloads/mac-osx/>`_ or via `Brew <http://brew.sh/>`_ 
+* Install Python 3 using `Brew <http://brew.sh/>`_
+  
+  * ``brew install python3``
 
 * Install StackHut CLI
 
