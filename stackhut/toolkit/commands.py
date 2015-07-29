@@ -243,12 +243,12 @@ class HutBuildCmd(HutCmd, UserCmd):
     def parse_cmds(subparser):
         subparser = super(HutBuildCmd, HutBuildCmd).parse_cmds(subparser, HutBuildCmd.name,
                                                                "Build a StackHut service", HutBuildCmd)
-        subparser.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
+        subparser.add_argument("--full", '-l', action='store_true', help="Run a full build")
         subparser.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
 
     def __init__(self, args):
         super().__init__(args)
-        self.no_cache = self.args.no_cache if 'no_cache' in self.args else False
+        self.no_cache = self.args.full if 'full' in self.args else False
         self.force = self.args.force if 'force' in self.args else False
 
     # TODO - run clean cmd first

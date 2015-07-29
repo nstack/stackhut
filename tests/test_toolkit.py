@@ -137,7 +137,7 @@ class TestToolkit3Service(unittest.TestCase):
         [self.assertTrue(os.path.exists(f)) for f in files]
 
     def test_2_build(self):
-        args = create_args(dict(no_cache=False, force=True))
+        args = create_args(dict(full=True, force=True))
         cmd = commands.HutBuildCmd(args)
         self.assertEqual(0, cmd.run())
 

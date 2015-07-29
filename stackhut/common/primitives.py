@@ -46,15 +46,15 @@ def get_docker(_exit=True):
                 try:
                     kw = kwargs_from_env(assert_hostname=False)
                     docker_client = docker_py.Client(version='auto', **kw)
-                except ssl.SSLError as e:
+                except docker_py.errors.DockerException as e:
                     # shit - some weird boot2docker, python, docker-py, requests, and ssl error
                     # https://github.com/docker/docker-py/issues/465
                     log.debug(e)
                     log.warn("Cannot connect securely to Docker, trying insecurely")
                     kw = kwargs_from_env(assert_hostname=False)
-                    kw['tls'].verify = None
+                    kw['tls'].verify = False
                     docker_client = docker_py.Client(version='auto', **kw)
-        except Exception as e:
+        except docker_py.errors.DockerException as e:
             log.error("Could not connect to Docker - try running 'docker info' first")
             if sys.platform != 'linux':
                 log.error("Make sure you've run 'boot2docker up' also and have added the ENV VARs it suggests")
