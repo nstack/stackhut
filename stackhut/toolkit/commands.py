@@ -25,7 +25,7 @@ from jinja2 import Environment, FileSystemLoader
 from distutils.dir_util import copy_tree
 
 from stackhut.common import utils
-from stackhut.common.utils import log, BaseCmd, HutCmd
+from stackhut.common.utils import log, BaseCmd, HutCmd, HutfileCfg
 from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, get_docker
 from stackhut import __version__
 
@@ -198,40 +198,44 @@ class InitCmd(UserCmd):
 
     def run(self):
         super().run()
+
+        # validation checks
         self.usercfg.assert_logged_in()
 
         if os.path.exists('.git') or os.path.exists('Hutfile'):
-            log.error('Found existing project, cancelling')
-            raise RuntimeError()
+            raise RuntimeError('Found existing project, cancelling')
 
-        if is_stack_supported(self.baseos, self.stack):
-            self.name = os.path.basename(os.getcwd())
-            self.author = self.usercfg.username
-            log.info("Creating service {}/{}".format(self.author, self.name))
+        if not is_stack_supported(self.baseos, self.stack):
+            raise ValueError("Sorry, the combination of {} and {} is currently unsupported".format(self.baseos, self.stack))
 
-            # copy the scaffolds into the service
-            def copy_scaffold(name):
-                dir_path = utils.get_res_path(os.path.join('scaffold', name))
-                copy_tree(dir_path, '.')
-                return os.listdir(dir_path)
+        # set and check service name
+        self.name = os.path.basename(os.getcwd())
+        HutfileCfg.assert_valid_name(self.name)
 
-            common_files = copy_scaffold('common')
-            stack_files = copy_scaffold(self.stack.name)
+        self.author = self.usercfg.username
+        log.info("Creating service {}/{}".format(self.author, self.name))
 
-            # run the templates
-            template_env = Environment(loader=FileSystemLoader('.'))
-            [self.render_file(template_env, f, dict(scaffold=self))
-             for f in (common_files + stack_files) if os.path.exists(f) and os.path.isfile(f)]
+        # copy the scaffolds into the service
+        def copy_scaffold(name):
+            dir_path = utils.get_res_path(os.path.join('scaffold', name))
+            copy_tree(dir_path, '.')
+            return os.listdir(dir_path)
 
-            # git commit
-            if not self.args.no_git:
-                sh.git.init()
-                sh.git.add(".")
-                sh.git.commit(m="Initial commit")
-                sh.git.branch("stackhut")
-        else:
-            log.error("Sorry, the combination of {} and {} is currently unsupported".format(self.baseos, self.stack))
-            raise ValueError()
+        common_files = copy_scaffold('common')
+        stack_files = copy_scaffold(self.stack.name)
+
+        # run the templates
+        template_env = Environment(loader=FileSystemLoader('.'))
+        [self.render_file(template_env, f, dict(scaffold=self))
+         for f in (common_files + stack_files) if os.path.exists(f) and os.path.isfile(f)]
+
+        # git commit
+        if not self.args.no_git:
+            sh.git.init()
+            sh.git.add(".")
+            sh.git.commit(m="Initial commit")
+            sh.git.branch("stackhut")
+
         return 0
 
 

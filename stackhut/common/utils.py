@@ -367,8 +367,7 @@ class UserCfg(dict):
 
     def assert_logged_in(self):
         if not self.logged_in:
-            log.error("Please login first - run 'stackhut login'")
-            raise AssertionError()
+            raise AssertionError("Please login first - run 'stackhut login'")
 
     def assert_user_is_author(self, hutcfg):
         if self.username != hutcfg.author:
@@ -389,6 +388,9 @@ class UserCfg(dict):
         return self['docker_username']
 
 class HutfileCfg:
+    import re
+    re_check_name = re.compile('^[a-z0-9-_]+$')
+
     """Hutfile configuration file handling"""
     def __init__(self):
         # import the hutfile
@@ -397,7 +399,8 @@ class HutfileCfg:
 
         # TODO - validation
         # get vals from the hutfile
-        self.name = hutfile['name'].lower()
+        self.name = hutfile['name']
+        self.assert_valid_name(self.name)
         self.author = hutfile['author']
         self.version = 'latest'
 
@@ -414,6 +417,11 @@ class HutfileCfg:
         self.docker_cmds = hutfile.get('docker_cmds', [])
         self.baseos = hutfile['baseos']
         self.stack = hutfile['stack']
+
+    @staticmethod
+    def assert_valid_name(name):
+        if HutfileCfg.re_check_name.match(name) is None:
+            raise AssertionError("'{}' is not a valid service name, must be [a-z0-9-_]".format(name))
 
     @property
     def from_image(self):

@@ -1,4 +1,4 @@
-# Name for the service - we recommend using snake-case
+# Name for the service - must consist of lower case letters, numbers, and dashes
 name: {{ scaffold.name }}
 
 # Service author - must be a valid StackHut user
