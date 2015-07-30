@@ -2,8 +2,6 @@
 // {{ scaffold.name }} service
 let stackhut = require('./stackhut');
 
-let stackhut = require('./stackhut')
-
 // create each service as either an ES6 class or an object of functions
 class DefaultService {
     constructor() {
@@ -19,8 +17,4 @@ class DefaultService {
 // export the services here
 module.exports = {
     Default : new DefaultService()
-<<<<<<< Updated upstream:stackhut/res/scaffold/nodejs/app.js
 };
-=======
-}
->>>>>>> Stashed changes:stackhut/res/scaffold/scaffold-nodejs.js
