@@ -332,8 +332,7 @@ class UserCfg(dict):
                 self.update(json.load(f))
             if self.get('config_version', 0) < self.config_version:
                 self.wipe()
-                log.error("Config file version mismatch, please login again")
-                sys.exit(1)
+                raise AssertionError("Config file version mismatch, please login again")
         else:
             # create with correct file permissions
             open(CFGFILE, 'w').close()
@@ -541,8 +540,9 @@ class KeenClient(threading.Thread):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.send_analytics = False
+        self.queue = Queue()
 
-    def setup(self, usercfg):
+    def start(self, usercfg):
         self.send_analytics = usercfg.send_analytics
         if self.send_analytics:
             self.client = keen.KeenClient(
@@ -552,8 +552,7 @@ class KeenClient(threading.Thread):
                           '8d2ea23b22fc9aae1387514da6d46cdbebec2d15c9167d401963ee8f96b00e06acf4e48')
             log.debug("User analytics enabled")
             self.analytics_ids = usercfg.analytics_ids
-            self.queue = Queue()
-            self.start()
+            super().start()
         else:
             log.debug("User analytics disabled")
 
@@ -575,6 +574,5 @@ class KeenClient(threading.Thread):
 
     def shutdown(self):
         self.queue.join()
-
 
 keen_client = KeenClient(daemon=True)

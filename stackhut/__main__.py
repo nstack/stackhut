@@ -19,7 +19,7 @@ import sys
 from stackhut import __version__
 from stackhut.common import utils
 from stackhut.common.utils import log, keen_client
-from stackhut.common.primitives import docker_version
+from stackhut.common.primitives import get_docker
 import stackhut.toolkit
 import stackhut.runner
 import time
@@ -54,10 +54,9 @@ def main():
     log.info("Starting up StackHut")
     log.debug(args)
 
-    # dispatch to correct subfunction - i.e. build, compile, run, etc.
-    subfunc = args.func(args)
-
     try:
+        # dispatch to correct cmd class - i.e. build, compile, run, etc.
+        subfunc = args.func(args)
         retval = subfunc.run()
     except Exception as e:
         import traceback
@@ -65,11 +64,16 @@ def main():
         if len(e.args) > 0:
             [log.error(x) for x in e.args]
 
+        try:
+            dv = get_docker(_exit=False).version().get('Version')
+        except:
+            dv = None
+
         keen_client.send('cli_exception',
                          dict(cmd=args.command,
                               exception=repr(e),
                               stackhut_version=stackhut.__version__,
-                              docker_version=docker_version(),
+                              docker_version=dv,
                               os=sys.platform,
                               python_version=sys.version,
                               traceback=traceback.format_exc()))

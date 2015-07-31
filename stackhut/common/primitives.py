@@ -34,7 +34,6 @@ template_env = Environment(loader=FileSystemLoader(utils.get_res_path('templates
 docker_client = None
 
 def get_docker(_exit=True):
-    import ssl
     global docker_client
 
     if docker_client is None:
@@ -43,8 +42,8 @@ def get_docker(_exit=True):
                 docker_client = docker_py.Client(version='auto')
             else:
                 # using boot2docker
-                # try normal first
                 try:
+                    # try secure first
                     kw = kwargs_from_env(assert_hostname=False)
                     docker_client = docker_py.Client(version='auto', **kw)
                 except docker_py.errors.DockerException as e:
@@ -58,16 +57,11 @@ def get_docker(_exit=True):
         except Exception as e:
             log.error("Could not connect to Docker - try running 'docker info' first")
             if sys.platform != 'linux':
-                log.error("Make sure you've run 'boot2docker up' also and have added the ENV VARs it suggests")
+                log.error("Make sure you've run 'boot2docker up' and have added the ENV VARs it suggests")
             if _exit:
                 raise e
 
     return docker_client
-
-def docker_version():
-    docker = get_docker()
-    return docker.version().get('Version') if docker else None
-
 
 class DockerBuild:
     def __init__(self, push=False, no_cache=False):

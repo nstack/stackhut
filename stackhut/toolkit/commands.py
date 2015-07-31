@@ -26,7 +26,7 @@ from distutils.dir_util import copy_tree
 
 from stackhut.common import utils
 from stackhut.common.utils import log, BaseCmd, HutCmd, HutfileCfg, keen_client
-from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, docker_version
+from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, get_docker
 from stackhut import __version__
 
 
@@ -35,7 +35,7 @@ class UserCmd(BaseCmd):
     def __init__(self, args):
         super().__init__(args)
         self.usercfg = utils.UserCfg()
-        keen_client.setup(self.usercfg)
+        keen_client.start(self.usercfg)
 
     def run(self):
         super().run()
@@ -133,11 +133,11 @@ class InfoCmd(UserCmd):
         # log sys info
         log.info("StackHut version {}".format(__version__))
 
-        dv = docker_version()
-        if dv:
-            log.info("Docker version {}".format(dv))
+        docker = get_docker(_exit=False)
+        if docker:
+            log.info("Docker version {}".format(docker.version().get('Version')))
         else:
-            log.info("Docker error or not installed")
+            log.info("Docker not installed or connection error")
 
         if self.usercfg.logged_in:
             log.info("User logged in")
