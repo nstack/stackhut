@@ -81,9 +81,9 @@ def main():
         if args.verbose:
             raise e
         else:
-            log.error("Exiting - run in verbose mode for more information")
-
+            log.info("Exiting (run in verbose mode for more information)")
         return 1
+
     finally:
         keen_client.shutdown()
 

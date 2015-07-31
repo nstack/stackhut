@@ -332,7 +332,7 @@ class UserCfg(dict):
                 self.update(json.load(f))
             if self.get('config_version', 0) < self.config_version:
                 self.wipe()
-                raise AssertionError("Config file version mismatch, please login again")
+                raise AssertionError("Config file version mismatch, please run 'stackhut login' again")
         else:
             # create with correct file permissions
             open(CFGFILE, 'w').close()
@@ -357,7 +357,7 @@ class UserCfg(dict):
             self['send_analytics'] = agree()
             self['m_id'] = str(uuid.uuid4())
             self.save()
-            log.info("Thanks, your response has been noted.")
+            log.info("Thanks, your choice has been saved.")
 
     def save(self):
         with open(CFGFILE, 'w') as f:
