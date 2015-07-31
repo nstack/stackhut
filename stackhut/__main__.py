@@ -19,6 +19,7 @@ import sys
 from stackhut import __version__
 from stackhut.common import utils
 from stackhut.common.utils import log, keen_client
+from stackhut.common.primitives import docker_version
 import stackhut.toolkit
 import stackhut.runner
 import time
@@ -67,7 +68,12 @@ def main():
         keen_client.send('cli_exception',
                          dict(cmd=args.command,
                               exception=repr(e),
-                              )) # traceback=traceback.format_exc(e)))
+                              stackhut_version=stackhut.__version__,
+                              docker_version=docker_version(),
+                              os=sys.platform,
+                              python_version=sys.version,
+                              traceback=traceback.format_exc()))
+
 
         if args.verbose:
             raise e

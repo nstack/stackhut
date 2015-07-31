@@ -564,7 +564,7 @@ class KeenClient(threading.Thread):
             try:
                 log.debug("Sending analytics msg to {}".format(endpoint))
                 log.debug("Analytics msg - {}".format(msg))
-                self.client.add_event(endpoint, msg)
+                # self.client.add_event(endpoint, msg)
             except:
                 log.debug("Failed sending analytics msg to '{}'".format(endpoint))
             self.queue.task_done()

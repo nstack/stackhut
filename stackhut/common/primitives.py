@@ -55,15 +55,19 @@ def get_docker(_exit=True):
                     kw = kwargs_from_env(assert_hostname=False)
                     kw['tls'].verify = False
                     docker_client = docker_py.Client(version='auto', **kw)
-        except docker_py.errors.DockerException as e:
+        except Exception as e:
             log.error("Could not connect to Docker - try running 'docker info' first")
             if sys.platform != 'linux':
                 log.error("Make sure you've run 'boot2docker up' also and have added the ENV VARs it suggests")
             if _exit:
                 raise e
-                # raise OSError()
 
     return docker_client
+
+def docker_version():
+    docker = get_docker()
+    return docker.version().get('Version') if docker else None
+
 
 class DockerBuild:
     def __init__(self, push=False, no_cache=False):
@@ -110,7 +114,6 @@ class DockerBuild:
                 # log.error("Error pushing to Docker Hub - {}".format(r_summary['error']))
 
             # sh.docker('push', tag, _in='Y')
-
 
     def stack_build_push(self, template_name, template_params, outdir, image_name):
         """Called by StackHut builders to build BaseOS and Stack images"""

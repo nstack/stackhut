@@ -26,7 +26,7 @@ from distutils.dir_util import copy_tree
 
 from stackhut.common import utils
 from stackhut.common.utils import log, BaseCmd, HutCmd, HutfileCfg, keen_client
-from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, get_docker
+from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, docker_version
 from stackhut import __version__
 
 
@@ -133,11 +133,11 @@ class InfoCmd(UserCmd):
         # log sys info
         log.info("StackHut version {}".format(__version__))
 
-        docker = get_docker(_exit=True)
-        if docker:
-            log.info("Docker version {}".format(docker.version().get('Version')))
+        dv = docker_version()
+        if dv:
+            log.info("Docker version {}".format(dv))
         else:
-            log.info("Docker not installed")
+            log.info("Docker error or not installed")
 
         if self.usercfg.logged_in:
             log.info("User logged in")
