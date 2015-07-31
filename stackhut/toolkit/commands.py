@@ -25,7 +25,7 @@ from jinja2 import Environment, FileSystemLoader
 from distutils.dir_util import copy_tree
 
 from stackhut.common import utils
-from stackhut.common.utils import log, BaseCmd, HutCmd, HutfileCfg
+from stackhut.common.utils import log, BaseCmd, HutCmd, HutfileCfg, keen_client
 from stackhut.common.primitives import Service, bases, stacks, is_stack_supported, get_docker
 from stackhut import __version__
 
@@ -35,7 +35,17 @@ class UserCmd(BaseCmd):
     def __init__(self, args):
         super().__init__(args)
         self.usercfg = utils.UserCfg()
+        keen_client.setup(self.usercfg)
 
+    def run(self):
+        super().run()
+        args = {k: v for (k, v)
+                in vars(self.args).items()
+                if k not in ['func', 'command']}
+
+        keen_client.send('cli_cmd',
+                         dict(cmd=self.name,
+                              args=args))
 
 class LoginCmd(UserCmd):
     name = 'login'
@@ -49,6 +59,7 @@ class LoginCmd(UserCmd):
         super().__init__(args)
 
     def run(self):
+        import hashlib
         super().run()
         # get docker username
         # NOTE - this is so hacky - why does cli return username but REST API doesn't
@@ -76,6 +87,7 @@ class LoginCmd(UserCmd):
             self.usercfg['docker_username'] = docker_username
             self.usercfg['username'] = username
             self.usercfg['hash'] = r['hash']
+            self.usercfg['u_id'] = hashlib.sha256(username.encode('utf-8')).hexdigest()
             # self.usercfg['email'] = r['email']
             self.usercfg.save()
             log.info("User {} logged in successfully".format(username))
@@ -101,7 +113,6 @@ class LogoutCmd(UserCmd):
         # connect to Stackhut service to get hash?
         print("Logged out {}".format(self.usercfg.get('email', '')))
         self.usercfg.wipe()
-        self.usercfg.save()
         return 0
 
 
@@ -131,8 +142,8 @@ class InfoCmd(UserCmd):
         if self.usercfg.logged_in:
             log.info("User logged in")
 
-            for x in self.usercfg.basic_vals:
-                log.info("{}: {}".format(x.capitalize(), self.usercfg[x]))
+            for x in self.usercfg.show_keys:
+                log.info("{}: {}".format(x, self.usercfg.get(x)))
         else:
             log.info("User not logged in")
 
@@ -286,6 +297,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         self.force = args.force
 
     def run(self):
+        super().run()
         self.usercfg.assert_user_is_author(self.hutcfg)
 
         # Docker builder (if needed)

@@ -26,6 +26,7 @@ import redis
 import yaml
 import json
 from . import barrister
+import uuid
 # import pyconfig
 
 ####################################################################################################
@@ -320,46 +321,56 @@ class UserCfg(dict):
     UserConfig configuration handling
     Wrapper class around dict that uses a json backing store
     """
+    show_keys = ['username', 'docker_username', 'send_analytics']
+    keep_keys = ['send_analytics', 'm_id']
+    config_version = 1
+
     def __init__(self):
         super().__init__()
-
         if os.path.exists(CFGFILE):
             with open(CFGFILE, 'r') as f:
                 self.update(json.load(f))
-                for v in self.encrypt_vals:
-                    if v in self:
-                        self[v] = self.xor_decrypt_string(self[v])
-
-    # Yes - this is shit crypto but just so we don't store plaintext on the fileystem
-    # hash sent via HTTPS to web regardless
-    key = 'stackhut_is_G_dawg'
-    encrypt_vals = ['hash']
-    basic_vals = ['username', 'docker_username']
-
-    def xor_crypt_string(self, plaintext):
-        ciphertext = ''.join(chr(ord(x) ^ ord(y)) for (x, y) in zip(plaintext, cycle(self.key)))
-        return (codecs.encode(ciphertext.encode('utf-8'), 'hex')).decode('utf-8')
-
-    def xor_decrypt_string(self, ciphertext):
-        ciphertext = (codecs.decode(ciphertext.encode('utf-8'), 'hex')).decode('utf-8')
-        return ''.join(chr(ord(x) ^ ord(y)) for (x, y) in zip(ciphertext, cycle(self.key)))
-
-    def save(self):
-        for v in self.encrypt_vals:
-            if v in self:
-                self[v] = self.xor_crypt_string(self[v])
-
-        # set cfg file permissions
-        if not os.path.exists(CFGFILE):
+            if self.get('config_version', 0) < self.config_version:
+                self.wipe()
+                log.error("Config file version mismatch, please login again")
+                sys.exit(1)
+        else:
+            # create with correct file permissions
             open(CFGFILE, 'w').close()
             os.chmod(CFGFILE, stat.S_IRUSR | stat.S_IWUSR)
+            self.wipe()
 
+        self.ask_analytics()
+
+    def ask_analytics(self):
+        def agree():
+            while True:
+                x = input("Agree to send analytics [Y/N]: ").capitalize()
+                if x.startswith('Y'):
+                    return True
+                if x.startswith('N'):
+                    return False
+
+        if self.get('send_analytics') is None:
+            log.info("Welcome to StackHut - thank you for installing the Toolkit")
+            log.info("To help us improve StackHut we'd like to some send hashed command usage and error data for analytics")
+            log.info("We'd really like it if you could help us with this, however if you'd like to opt out please enter 'N'")
+            self['send_analytics'] = agree()
+            self['m_id'] = str(uuid.uuid4())
+            self.save()
+            log.info("Thanks, your response has been noted.")
+
+    def save(self):
         with open(CFGFILE, 'w') as f:
             json.dump(self, f)
 
     def wipe(self):
         """blank out the cfg file"""
+        x = {k: self.get(k) for k in self.keep_keys}
         self.clear()
+        self.update(x)
+        self['config_version'] = self.config_version
+        self.save()
 
     @property
     def logged_in(self):
@@ -371,10 +382,9 @@ class UserCfg(dict):
 
     def assert_user_is_author(self, hutcfg):
         if self.username != hutcfg.author:
-            log.error("StackHut username ({}) not equal to service author ({})\n"
-                      "Please login as a different user or edit the Hutfile as required"
-                      .format(self.username, hutcfg.author))
-            raise AssertionError()
+            raise AssertionError("StackHut username ({}) not equal to service author ({})\n"
+                                 "Please login as a different user or edit the Hutfile as required"
+                                 .format(self.username, hutcfg.author))
 
     @property
     def username(self):
@@ -386,6 +396,19 @@ class UserCfg(dict):
         self.assert_logged_in()
         log.debug("Using docker username '{}'".format(self['docker_username']))
         return self['docker_username']
+
+    @property
+    def send_analytics(self):
+        return self['send_analytics']
+
+    @property
+    def analytics_ids(self):
+        # if ('send_analytics' not in self) or (self.logged_in and 'u_id' not in self):
+        #     raise AssertionError("Config file error - please delete {} and try again".format(CFGFILE))
+        if self.send_analytics:
+            return dict(m_id=self['m_id'], u_id=self.get('u_id'))
+        else:
+            return None
 
 class HutfileCfg:
     import re
@@ -508,3 +531,50 @@ def stackhut_api_user_call(endpoint, data, usercfg):
     auth = dict(username=usercfg.username, hash=usercfg['hash'])
     message = dict(auth=auth, data=data)
     return stackhut_api_call(endpoint, message)
+
+###################################################################################################
+# Keen analytlics
+import keen
+from queue import Queue
+
+class KeenClient(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.send_analytics = False
+
+    def setup(self, usercfg):
+        self.send_analytics = usercfg.send_analytics
+        if self.send_analytics:
+            self.client = keen.KeenClient(
+                project_id='559f866f96773d25d47419f6',
+                write_key='abd65ad8684753678eabab1f1c536b36a70704e6c4f10bcfe928c10ec859edb1d0366f3fad9b'
+                          '7794b0eeab9825a27346e0186e2e062f76079708b66ddfca7ecc82b8db23062f8cd2e4f6a961d'
+                          '8d2ea23b22fc9aae1387514da6d46cdbebec2d15c9167d401963ee8f96b00e06acf4e48')
+            log.debug("User analytics enabled")
+            self.analytics_ids = usercfg.analytics_ids
+            self.queue = Queue()
+            self.start()
+        else:
+            log.debug("User analytics disabled")
+
+    def run(self):
+        while True:
+            (endpoint, msg) = self.queue.get()
+            msg.update(self.analytics_ids)
+            try:
+                log.debug("Sending analytics msg to {}".format(endpoint))
+                log.debug("Analytics msg - {}".format(msg))
+                self.client.add_event(endpoint, msg)
+            except:
+                log.debug("Failed sending analytics msg to '{}'".format(endpoint))
+            self.queue.task_done()
+
+    def send(self, endpoint, msg):
+        if self.send_analytics:
+            self.queue.put((endpoint, msg))
+
+    def shutdown(self):
+        self.queue.join()
+
+
+keen_client = KeenClient(daemon=True)

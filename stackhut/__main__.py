@@ -18,9 +18,10 @@ import argparse
 import sys
 from stackhut import __version__
 from stackhut.common import utils
-from stackhut.common.utils import log
+from stackhut.common.utils import log, keen_client
 import stackhut.toolkit
 import stackhut.runner
+import time
 
 COMMANDS = stackhut.toolkit.COMMANDS + stackhut.runner.COMMANDS
 
@@ -58,8 +59,15 @@ def main():
     try:
         retval = subfunc.run()
     except Exception as e:
+        import traceback
+
         if len(e.args) > 0:
             [log.error(x) for x in e.args]
+
+        keen_client.send('cli_exception',
+                         dict(cmd=args.command,
+                              exception=repr(e),
+                              )) # traceback=traceback.format_exc(e)))
 
         if args.verbose:
             raise e
@@ -67,6 +75,8 @@ def main():
             log.error("Exiting - run in verbose mode for more information")
 
         return 1
+    finally:
+        keen_client.shutdown()
 
     # all done
     return retval
