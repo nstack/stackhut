@@ -573,6 +573,7 @@ class KeenClient(threading.Thread):
             self.queue.put((endpoint, msg))
 
     def shutdown(self):
-        self.queue.join()
+        if self.send_analytics:
+            self.queue.join()
 
 keen_client = KeenClient(daemon=True)
