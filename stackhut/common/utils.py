@@ -353,7 +353,7 @@ class UserCfg(dict):
 
         if self.get('send_analytics') is None:
             log.info("Welcome to StackHut - thank you for installing the Toolkit")
-            log.info("To help us improve StackHut we'd like to some send hashed command usage and error data for analytics")
+            log.info("To help us improve StackHut we'd like to send some usage and error data for analytics")
             log.info("We'd really like it if you could help us with this, however if you'd like to opt out please enter 'N'")
             self['send_analytics'] = agree()
             self['m_id'] = str(uuid.uuid4())

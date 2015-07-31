@@ -74,7 +74,6 @@ def main():
                               python_version=sys.version,
                               traceback=traceback.format_exc()))
 
-
         if args.verbose:
             raise e
         else:
