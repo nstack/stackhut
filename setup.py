@@ -30,6 +30,7 @@ requirements = [
     "json-rpc",
     "docker-py",
     "arrow",
+    "keen",
 ]
 
 # conditional requirements for py 2 or 3
