@@ -70,11 +70,10 @@ class LoginCmd(UserCmd):
                 docker_username = docker_user_list[0].split(':')[1].strip()
                 log.debug("Docker user is '{}', note this may be different to your StackHut login".format(docker_username))
             else:
-                log.error("Please run 'docker login' first")
-                raise RuntimeError()
+                raise RuntimeError("Please run 'docker login' first")
         except sh.ErrorReturnCode as e:
-            log.error("Could not connect to Docker - try running 'docker info', and if you are on OSX make sure you've run 'boot2docker up' first")
-            raise OSError()
+            raise OSError("Could not connect to Docker - try running 'docker info', "
+                          "and if you are on OSX make sure you've run 'boot2docker up' first")
 
         username = input("Username: ")
         # email = input("Email: ")
@@ -92,8 +91,7 @@ class LoginCmd(UserCmd):
             self.usercfg.save()
             log.info("User {} logged in successfully".format(username))
         else:
-            print("Incorrect username or password, please try again")
-            raise RuntimeError()
+            raise RuntimeError("Incorrect username or password, please try again")
 
         return 0
 
@@ -111,7 +109,7 @@ class LogoutCmd(UserCmd):
     def run(self):
         super().run()
         # connect to Stackhut service to get hash?
-        print("Logged out {}".format(self.usercfg.get('email', '')))
+        log.info("Logged out {}".format(self.usercfg.get('email', '')))
         self.usercfg.wipe()
         return 0
 

@@ -533,7 +533,6 @@ def stackhut_api_user_call(endpoint, data, usercfg):
 
 ###################################################################################################
 # Keen analytlics
-import keen
 from queue import Queue
 
 class KeenClient(threading.Thread):
