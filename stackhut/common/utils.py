@@ -507,7 +507,7 @@ def secure_url_prefix():
 def unsecure_url_prefix():
     return "http://{}/".format(DEBUG) if DEBUG is not None else "http://api.stackhut.com/"
 
-headers = {'content-type': 'application/json'}
+json_header = {'content-type': 'application/json'}
 
 import urllib.parse
 import requests
@@ -517,7 +517,7 @@ def stackhut_api_call(endpoint, msg, secure=True):
     log.debug(url_prefix)
     url = urllib.parse.urljoin(url_prefix, endpoint)
     log.debug("Calling Stackhut {} with \n\t{}".format(endpoint, json.dumps(msg)))
-    r = requests.post(url, data=json.dumps(msg), headers=headers)
+    r = requests.post(url, data=json.dumps(msg), headers=json_header)
 
     if r.status_code == requests.codes.ok:
         return r.json()
@@ -537,6 +537,13 @@ import keen
 from queue import Queue
 
 class KeenClient(threading.Thread):
+    project_id = '559f866f96773d25d47419f6'
+    write_key = 'abd65ad8684753678eabab1f1c536b36a70704e6c4f10bcfe928c10ec859edb1d0366f3fad9b7794b0' \
+                'eeab9825a27346e0186e2e062f76079708b66ddfca7ecc82b8db23062f8cd2e4f6a961d8d2ea23b22f' \
+                'c9aae1387514da6d46cdbebec2d15c9167d401963ee8f96b00e06acf4e48'
+    keen_url = "https://api.keen.io/3.0/projects/{project_id}/events/{{event_collection}}?" \
+               "api_key={write_key}".format(project_id=project_id, write_key=write_key)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.send_analytics = False
@@ -545,11 +552,6 @@ class KeenClient(threading.Thread):
     def start(self, usercfg):
         self.send_analytics = usercfg.send_analytics
         if self.send_analytics:
-            self.client = keen.KeenClient(
-                project_id='559f866f96773d25d47419f6',
-                write_key='abd65ad8684753678eabab1f1c536b36a70704e6c4f10bcfe928c10ec859edb1d0366f3fad9b'
-                          '7794b0eeab9825a27346e0186e2e062f76079708b66ddfca7ecc82b8db23062f8cd2e4f6a961d'
-                          '8d2ea23b22fc9aae1387514da6d46cdbebec2d15c9167d401963ee8f96b00e06acf4e48')
             log.debug("User analytics enabled")
             self.analytics_ids = usercfg.analytics_ids
             super().start()
@@ -563,9 +565,14 @@ class KeenClient(threading.Thread):
             try:
                 log.debug("Sending analytics msg to {}".format(endpoint))
                 log.debug("Analytics msg - {}".format(msg))
-                self.client.add_event(endpoint, msg)
+                url = self.keen_url.format(event_collection=endpoint)
+                r = requests.post(url, data=json.dumps(msg), headers=json_header)
+                if not (r.status_code == requests.codes.created and r.json().get('created')):
+                    log.debug("{} - {}".format(r.status_code, r.text()))
+                    raise IOError()
             except:
                 log.debug("Failed sending analytics msg to '{}'".format(endpoint))
+
             self.queue.task_done()
 
     def send(self, endpoint, msg):
