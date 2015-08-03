@@ -16,11 +16,7 @@ requirements = [
     "sh",
     "boto",
     "requests",
-    "jinja2",
     "PyYaml",
-    "multipledispatch",
-    "docker-py",
-    "arrow",
 ]
 
 # put package test requirements here
