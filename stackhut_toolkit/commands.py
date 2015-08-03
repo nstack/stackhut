@@ -11,38 +11,40 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# different classes for subcommands
+"""
+Toolkit subcommands
+"""
 import json
 import os
 import getpass
 import uuid
+from distutils.dir_util import copy_tree
 import sh
 from jinja2 import Environment, FileSystemLoader
-from distutils.dir_util import copy_tree
 
-from stackhut_common import utils
-from stackhut_common.utils import log, BaseCmd, HutCmd, HutfileCfg, keen_client
-from stackhut_common.primitives import Service, bases, stacks, is_stack_supported, get_docker
-from stackhut_toolkit import __version__
-
+from stackhut_common import storage
+from stackhut_common.utils import log, CONTRACTFILE
+from stackhut_common.commands import BaseCmd, HutCmd
+from stackhut_common.config import HutfileCfg, UserCfg
+from . import __version__
+import stackhut_toolkit.utils as t_utils
+from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
 
 class UserCmd(BaseCmd):
     """User commands require the userconfig file"""
     def __init__(self, args):
         super().__init__(args)
-        self.usercfg = utils.UserCfg()
-        keen_client.start(self.usercfg)
+        self.usercfg = UserCfg()
+        t_utils.keen_client.start(self.usercfg)
 
     def run(self):
         super().run()
+
         args = {k: v for (k, v)
                 in vars(self.args).items()
                 if k not in ['func', 'command']}
+        t_utils.keen_client.send('cli_cmd', dict(cmd=self.name, args=args))
 
-        keen_client.send('cli_cmd',
-                         dict(cmd=self.name,
-                              args=args))
 
 class LoginCmd(UserCmd):
     name = 'login'
@@ -73,7 +75,7 @@ class LoginCmd(UserCmd):
         password = getpass.getpass("Password: ")
 
         # connect securely to Stackhut service to get hash
-        r = utils.stackhut_api_call('login', dict(username=username, password=password))
+        r = t_utils.stackhut_api_call('login', dict(username=username, password=password))
 
         if r['success']:
             self.usercfg['docker_username'] = docker_username
@@ -87,6 +89,7 @@ class LoginCmd(UserCmd):
             raise RuntimeError("Incorrect username or password, please try again")
 
         return 0
+
 
 class LogoutCmd(UserCmd):
     name = 'logout'
@@ -207,7 +210,7 @@ class InitCmd(UserCmd):
 
         # copy the scaffolds into the service
         def copy_scaffold(name):
-            dir_path = utils.get_res_path(os.path.join('scaffold', name))
+            dir_path = t_utils.get_res_path(os.path.join('scaffold', name))
             copy_tree(dir_path, '.')
             return os.listdir(dir_path)
 
@@ -284,7 +287,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
         host_req_file = os.path.abspath(self.reqfile)
 
-        host_store_dir = os.path.abspath(utils.LocalStore.local_store)
+        host_store_dir = os.path.abspath(storage.LocalStore.local_store)
         os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
 
         uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
@@ -294,12 +297,12 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         # use data vols for req and run_output
 
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
-        req_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'ro'
-        res_flag = 'z' if utils.OS_TYPE == 'SELINUX' else 'rw'
+        req_flag = 'z' if OS_TYPE == 'SELINUX' else 'ro'
+        res_flag = 'z' if OS_TYPE == 'SELINUX' else 'rw'
         verbose_mode = '-v' if self.args.verbose else None
 
         args = ['-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
-                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, utils.LocalStore.local_store, res_flag),
+                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, storage.LocalStore.local_store, res_flag),
                 '--entrypoint=/usr/bin/stackhut', service.docker_fullname, verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
@@ -323,7 +326,7 @@ class DeployCmd(HutCmd, UserCmd):
         self.force = args.force
 
     def create_methods(self):
-        with open(utils.CONTRACTFILE, 'r') as f:
+        with open(CONTRACTFILE, 'r') as f:
             contract = json.load(f)
 
         # remove the common.barrister element
@@ -387,7 +390,7 @@ class DeployCmd(HutCmd, UserCmd):
         }
 
         log.info("Deploying image '{}' to StackHut".format(service.fullname))
-        r = utils.stackhut_api_user_call('add', data, self.usercfg)
+        r = t_utils.stackhut_api_user_call('add', data, self.usercfg)
         log.info("Service {} has been {}".format(service.fullname, r['message']))
         return 0
 

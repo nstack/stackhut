@@ -14,9 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import sys
-from stackhut_common.utils import keen_client, CmdRunner
-from stackhut_common.primitives import get_docker
+
+from stackhut_common.commands import CmdRunner
 from . import __version__, COMMANDS
+from .utils import keen_client
+from .builder import get_docker
 
 class ToolkitRunner(CmdRunner):
     def custom_error(self, e):
@@ -45,5 +47,4 @@ def main():
     runner.register_commands(COMMANDS)
     # start
     retval = runner.start()
-
     return retval
