@@ -1,0 +1,18 @@
+FROM {{ service.usercfg.username }}/{{ service.hutcfg.from_image }}:latest
+{# MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}> #}
+{# LABEL description="{{ service.hutcfg.description }}" #}
+
+# OK - now setup stackhut runner
+# following toolkit.commands never cached
+
+# setup the entrypoint (using -vv for now)
+ENTRYPOINT ["/usr/bin/stackhut", "-vv", "run"]
+
+# install stackhut app
+RUN pip3 install --no-cache-dir --compile stackhut  # cache bust - {{ service.build_date }}
+
+RUN echo "Starting..." && \ # cache bust - {{ service.build_date }}
+    wget http://s3-eu-west-1.amazonaws.com/stackhut-releases/stackhut-latest.linux-x86_64.tar.gz && \
+    gunzip ./stackhut-latest.linux-x86_64.tar.gz && \
+    tar -xvf ./stackhut-latest.linux-x86_64.tar -C / && \
+    echo "...done" && exit

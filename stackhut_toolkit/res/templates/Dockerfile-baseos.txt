@@ -1,0 +1,10 @@
+FROM {{ baseos.name|lower }}:latest
+MAINTAINER "StackHut" <stackhut@stackhut.com>
+LABEL description="{{ baseos.description }}"
+
+# update the distro and commit
+RUN echo "Starting..." && \
+    {% for cmd in baseos.setup_cmds() -%}
+    {{ cmd }} && \
+    {% endfor -%}
+    echo "...done" && exit 0

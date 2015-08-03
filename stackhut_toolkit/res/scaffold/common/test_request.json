@@ -1,0 +1,7 @@
+{
+    "service": "{{ scaffold.author}}/{{ scaffold.name }}",
+    "req": {
+        "method": "add",
+        "params": [1, 2]
+    }
+}

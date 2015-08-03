@@ -1,0 +1,59 @@
+FROM stackhut/{{ service.hutcfg.from_image }}:latest
+{# MAINTAINER "{{ service.usercfg.email }}" <{{ service.usercfg.username }}> -#}
+{# LABEL description="{{ service.hutcfg.description }}" -#}
+
+{% if service.hutcfg.os_deps %}
+# install OS packages needed for service
+RUN echo "Starting..." && \
+    {% for cmd in service.baseos.install_os_pkg(service.hutcfg.os_deps) -%}
+    {{ cmd }} && \
+    {% endfor -%}
+    echo "...done" && exit
+{% endif %}
+
+WORKDIR /workdir
+
+{% if service.dev %}
+# install stackhut app from github master
+RUN echo "Starting..." && \
+    cd / && \
+    wget -q https://github.com/StackHut/stackhut-tool/archive/master.zip && \
+    unzip -q master.zip && \
+    cd stackhut-tool-master && \
+    pip3 -q install --no-cache --compile wheel && \
+    python3 setup.py -q bdist_wheel && \
+    pip3 install ./dist/stackhut*.whl && \
+    cd / && \
+    rm -rf stackhut-tool-master master.zip && \
+    echo "...done" && exit
+{% else %}
+# install stackhut app
+RUN pip3 install --no-cache-dir --compile stackhut
+{% endif %}
+
+{% if service.stack.service_package_files %}
+# install lang packages needed for stack
+COPY {{ service.stack.service_package_files }} ./
+RUN {{ service.stack.install_service_packages() }}
+{% endif %}
+
+# copy all source files and dirs across
+COPY Hutfile .api.json {{ service.stack.entrypoint }} {{ service.hutcfg.files|join(' ') }} ./
+{# # COPY .stackhut ./.stackhut -#}
+{% for d in service.hutcfg.dirs -%}
+COPY {{ d }} ./{{ d }}
+{% endfor -%}
+
+# any other Docker toolkit.commands
+{% for cmd in service.hutcfg.docker_cmds -%}
+{{ cmd }}
+{% endfor -%}
+
+{## cache bust - {{ service.build_date }}#}
+
+{# TODO - move into Docker-runtime.txt, inject stackhut cmd in on server? -#}
+
+{#
+# setup the entrypoint (using -v for now)
+ENTRYPOINT ["/usr/bin/python3", "/usr/bin/stackhut", "-v", "run"]
+#}

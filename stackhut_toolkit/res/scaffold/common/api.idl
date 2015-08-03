@@ -1,0 +1,4 @@
+interface Default {
+    // add 2 integers and return the result
+    add(x int, y int) int
+}
