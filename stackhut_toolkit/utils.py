@@ -23,7 +23,7 @@ from stackhut_common.utils import log, DEBUG
 
 # Setup app paths
 sys_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
-res_dir = os.path.normpath(os.path.join(sys_dir, '../res'))
+res_dir = os.path.normpath(os.path.join(sys_dir, './res'))
 
 def get_res_path(res_name):
     return os.path.join(res_dir, res_name)
