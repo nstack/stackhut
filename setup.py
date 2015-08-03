@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys
-
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from distutils.core import setup
 import os
+from setuptools import setup, find_packages
 
 def read(*paths):
     """Build a file path from *paths* and return the contents."""
@@ -17,12 +13,10 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 # put package test requirements here
 requirements = [
-#    "wheel",
     "sh",
     "boto",
     "requests",
     "jinja2",
-#    "pyconfig",
     "PyYaml",
     "multipledispatch",
     "docker-py",
@@ -31,9 +25,7 @@ requirements = [
 ]
 
 # put package test requirements here
-test_requirements = [
-
-]
+test_requirements = []
 
 setup(
     name='stackhut',
@@ -44,12 +36,10 @@ setup(
                       read('AUTHORS.rst')),
     license='Apache',
     author="StackHut",
-    author_email='toolkit@stackhut.com',
+    author_email='stackhut@stackhut.com',
     url='https://github.com/stackhut/stackhut-toolkit',
     # download_url = 'https://github.com/stackhut/stackhut-tool/tarball/0.1.0'
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests", ""]),
-    # package_dir={'stackhut-tool':
-    #              'stackhut-tool'},
     include_package_data=True,
     entry_points={
         'console_scripts': [
@@ -60,7 +50,6 @@ setup(
     zip_safe=False,
     test_suite='tests',
     tests_require=test_requirements,
-
     keywords='stackhut',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
