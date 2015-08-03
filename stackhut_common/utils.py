@@ -12,22 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from boto.s3.connection import Key, S3Connection
 import sys
 import abc
 import os
 import stat
 import threading
+import json
 import shutil
-from itertools import cycle
-import codecs
+import uuid
+import argparse
+
 import sh
 import redis
 import yaml
-import json
+from boto.s3.connection import Key, S3Connection
 from . import barrister
-import uuid
-# import pyconfig
+
 
 ####################################################################################################
 # App Config
@@ -54,6 +54,74 @@ try:
         OS_TYPE = 'UNKNOWN'
 except sh.CommandNotFound as e:
     OS_TYPE = 'UNKNOWN'
+
+class CmdRunner:
+    def __init__(self, title, version):
+        self.title = title
+        self.args = None
+        # Parse the cmd args
+        self.parser = argparse.ArgumentParser(description=title)
+        self.parser.add_argument('-V', '--version', help="{} Version".format(title),
+                                 action="version", version="%(prog)s {}".format(version))
+        self.parser.add_argument('-v', dest='verbose', help="Verbose mode", action='store_true')
+        self.parser.add_argument('-d', dest='debug', help=argparse.SUPPRESS)
+
+    def register_commands(self, cmds):
+        metavar = '{{{}}}'.format(str.join(',', [cmd.name for cmd in cmds if cmd.visible]))
+        subparsers = self.parser.add_subparsers(title="{} Commands".format(self.title), dest='command', metavar=metavar)
+
+        for cmd in cmds:
+            if cmd.visible:
+                sp = subparsers.add_parser(cmd.name, help=cmd.description, description=cmd.description)
+            else:
+                sp = subparsers.add_parser(cmd.name)
+
+            sp.set_defaults(func=cmd)
+            cmd.register(sp)
+
+    def custom_error(self, e):
+        pass
+
+    def custom_shutdown(self):
+        pass
+
+    def start(self):
+        # parse the args
+        self.args = self.parser.parse_args()
+        if self.args.command is None:
+            self.parser.print_help()
+            self.parser.exit(0, "No command given\n")
+
+        # General App Setup
+        global DEBUG
+        DEBUG = self.args.debug
+        set_log_level(self.args.verbose)
+        log.info("Starting {}".format(self.title))
+
+        try:
+            # dispatch to correct cmd class - i.e. build, compile, run, etc.
+            subfunc = self.args.func(self.args)
+            retval = subfunc.run()
+        except Exception as e:
+
+            if len(e.args) > 0:
+                [log.error(x) for x in e.args]
+
+            self.custom_error(e)
+
+            if self.args.verbose:
+                raise e
+            else:
+                log.info("Exiting (run in verbose mode for more information)")
+            return 1
+
+        finally:
+            self.custom_shutdown()
+
+        # all done
+        return retval
+
+
 
 # Logging
 def setup_logging():
