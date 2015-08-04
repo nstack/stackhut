@@ -16,6 +16,7 @@ import sys
 from . import barrister
 import abc
 import os
+from colorlog import ColoredFormatter
 
 ####################################################################################################
 # App Config
@@ -37,7 +38,24 @@ def setup_logging(verbose_mode):
     global log
     VERBOSE = verbose_mode
     log.propagate = False
-    logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', '%H:%M:%S')
+    #logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', '%H:%M:%S')
+
+    logFormatter = ColoredFormatter(
+        # "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+        '%(blue)s%(asctime)s%(reset)s [%(log_color)s%(levelname)-5s%(reset)s] %(message)s',
+        datefmt='%H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+
     # file output
     # fileHandler = logging.FileHandler(LOGFILE, mode='w')
     # fileHandler.setFormatter(logFormatter)
