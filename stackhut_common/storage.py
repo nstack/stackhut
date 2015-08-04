@@ -18,6 +18,7 @@ import abc
 import os
 import shutil
 import sh
+from stackhut_common.utils import log
 
 STACKHUT_DIR = '.stackhut'
 

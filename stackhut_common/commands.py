@@ -114,4 +114,4 @@ class HutCmd(BaseCmd):
         # import the hutfile
         self.hutcfg = HutfileCfg()
         # create stackhut dir if not present
-        os.mkdir(utils.STACKHUT_DIR) if not os.path.exists(utils.STACKHUT_DIR) else None
+        # os.mkdir(utils.STACKHUT_DIR) if not os.path.exists(utils.STACKHUT_DIR) else None
