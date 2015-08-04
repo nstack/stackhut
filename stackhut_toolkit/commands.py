@@ -23,10 +23,11 @@ import sh
 from jinja2 import Environment, FileSystemLoader
 
 from stackhut_common.utils import log, CONTRACTFILE
-from stackhut_toolkit.utils import *
 from stackhut_common.commands import BaseCmd, HutCmd
 from stackhut_common.config import HutfileCfg, UserCfg
+from stackhut_common.storage import LocalStore
 from . import __version__
+from .utils import *
 from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
 
 class UserCmd(BaseCmd):
@@ -240,7 +241,7 @@ class HutBuildCmd(HutCmd, UserCmd):
     def register(sp):
         sp.add_argument("--full", '-l', action='store_true', help="Run a full build")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
-        sp.add_argument("--dev", '-v', action='store_true', help="Instll dev version of StackHut Runner")
+        sp.add_argument("--dev", '-v', action='store_true', help="Install dev version of StackHut Runner")
 
     def __init__(self, args):
         super().__init__(args)
@@ -300,14 +301,14 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         req_flag = 'z' if OS_TYPE == 'SELINUX' else 'ro'
         res_flag = 'z' if OS_TYPE == 'SELINUX' else 'rw'
         verbose_mode = '-v' if self.args.verbose else None
-
         args = ['-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalStore.local_store, res_flag),
-                '--entrypoint=/usr/bin/stackhut', service.docker_fullname, verbose_mode, 'runcontainer', '--uid', uid_gid]
+                '--entrypoint=/usr/bin/stackhut-runner', service.docker_fullname, verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
         out = sh.docker.run(args, _out=lambda x: print(x, end=''))
         log.info("**** END SERVICE LOG ****")
+        log.info("Run completed successfully")
         return 0
 
 

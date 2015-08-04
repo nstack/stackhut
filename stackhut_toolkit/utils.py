@@ -21,7 +21,7 @@ import requests
 from stackhut_common.utils import log, DEBUG
 
 # names to export
-__all__ = ['stackhut_api_call', 'stackhut_api_user_call', 'keen_client', 'LocalStore' ,'get_res_path']
+__all__ = ['stackhut_api_call', 'stackhut_api_user_call', 'keen_client', 'get_res_path']
 
 # Setup app paths
 sys_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
@@ -112,5 +112,3 @@ class KeenClient(threading.Thread):
             self.queue.join()
 
 keen_client = KeenClient(daemon=True)
-
-

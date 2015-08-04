@@ -22,6 +22,7 @@ import json
 from distutils.dir_util import copy_tree
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
+import shutil
 import sh
 import arrow
 import docker as docker_py
@@ -274,6 +275,7 @@ class Stack:
     #         os.symlink(os.path.join(shim_dir, f), f)
 
     def del_shim(self):
+        # log.debug(sh.ls('-lrta'))
         for f in self.shim_files:
             os.remove(os.path.join(utils.ROOT_DIR, f))
 
@@ -442,10 +444,12 @@ class Service:
             self.gen_barrister_contract()
             self.stack.copy_shim()
 
-            builder.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-            builder.build_dockerfile(self.docker_fullname, dockerfile)
+            try:
+                builder.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
+                builder.build_dockerfile(self.docker_fullname, dockerfile)
+            finally:
+                self.stack.del_shim()
 
-            self.stack.del_shim()
             log.info("{} build complete".format(self.fullname))
         else:
             log.info("Build not necessary, run with '--force' to override")
