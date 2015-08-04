@@ -13,22 +13,19 @@
 # limitations under the License.
 import logging
 import sys
-from . import barrister
-import abc
 import os
 from colorlog import ColoredFormatter
+from . import barrister
 
 ####################################################################################################
 # App Config
 # global constants
-STACKHUT_DIR = '.stackhut'
-CONTRACTFILE = os.path.join('.api.json')
+CONTRACTFILE = '.api.json'
 IDLFILE = 'api.idl'
 DEBUG = None
 IN_CONTAINER = os.path.exists('/workdir')
 VERBOSE = False
 ROOT_DIR = os.getcwd()
-S3_BUCKET = 'stackhut-payloads'
 
 # Logging
 # LOGFILE = '.stackhut.log'
@@ -95,35 +92,4 @@ class NonZeroExitError(barrister.RpcException):
         msg = 'Service sub-command returned a non-zero exit'
         data = dict(exitcode=exitcode, stderr=stderr)
         super(NonZeroExitError, self).__init__(code, msg, data)
-
-
-###################################################################################################
-# StackHut IO Handling on local and cloud backends
-
-def get_req_dir(req_id):
-    return os.path.join(STACKHUT_DIR, req_id)
-
-def get_req_file(req_id, fname):
-    return os.path.join(STACKHUT_DIR, req_id, fname)
-
-class IOStore:
-    """A base wrapper wrapper around common IO task state"""
-    @abc.abstractmethod
-    def get_request(self):
-        pass
-
-    @abc.abstractmethod
-    def put_response(self, s):
-        pass
-
-    def get_file(self, name):
-        raise NotImplementedError("IOStore.get_file called")
-
-    @abc.abstractmethod
-    def put_file(self, fname, req_id='', make_public=False):
-        pass
-
-    def set_task_id(self, task_id):
-        log.debug("Task id is {}".format(task_id))
-        self.task_id = task_id
 

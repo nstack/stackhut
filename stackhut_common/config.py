@@ -143,6 +143,8 @@ class HutfileCfg:
         self.files = [f for f in files if os.path.isfile(f)]
         self.dirs = [d for d in files if os.path.isdir(d)]
 
+        self.persistent = hutfile.get('persistent', False)
+
         self.os_deps = hutfile.get('os_deps', [])
         self.docker_cmds = hutfile.get('docker_cmds', [])
         self.baseos = hutfile['baseos']
