@@ -17,6 +17,7 @@ requirements = [
     "boto",
     "requests",
     "PyYaml",
+    "colorlog"
 ]
 
 # put package test requirements here
