@@ -30,6 +30,15 @@ def get_req_file(req_id, fname):
 
 class IOStore:
     """A base wrapper wrapper around common IO task state"""
+    def __init__(self):
+        os.mkdir(STACKHUT_DIR) if not os.path.exists(STACKHUT_DIR) else None
+
+    def new_request_path(self, req_id):
+        # create a private working dir
+        req_path = os.path.join(STACKHUT_DIR, req_id)
+        os.mkdir(req_path) if not os.path.exists(req_path) else None
+        return req_path
+
     @abc.abstractmethod
     def get_request(self):
         pass
@@ -57,6 +66,7 @@ class LocalStore(IOStore):
         return "{}/{}".format(self.local_store, name)
 
     def __init__(self, request_file, uid_gid=None):
+        super().__init__()
         self.uid_gid = uid_gid
         # delete and recreate local_store
         shutil.rmtree(self.local_store, ignore_errors=True)
