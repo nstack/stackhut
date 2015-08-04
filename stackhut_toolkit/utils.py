@@ -16,11 +16,9 @@ import sys
 import os
 import json
 from queue import Queue
-import shutil
 import urllib.parse
 import requests
-import sh
-from stackhut_common.utils import log, DEBUG, IOStore, get_req_file
+from stackhut_common.utils import log, DEBUG
 
 # names to export
 __all__ = ['stackhut_api_call', 'stackhut_api_user_call', 'keen_client', 'LocalStore' ,'get_res_path']
@@ -115,52 +113,4 @@ class KeenClient(threading.Thread):
 
 keen_client = KeenClient(daemon=True)
 
-
-class LocalStore(IOStore):
-    """Mock storage system for local testing"""
-    local_store = "run_result"
-
-    def _get_path(self, name):
-        return "{}/{}".format(self.local_store, name)
-
-    def __init__(self, request_file, uid_gid=None):
-        self.uid_gid = uid_gid
-        # delete and recreate local_store
-        shutil.rmtree(self.local_store, ignore_errors=True)
-        if not os.path.exists(self.local_store):
-            os.mkdir(self.local_store)
-
-        # copy any files that should be there into the dir
-        shutil.copy(request_file, self.local_store)
-        self.request_file = self._get_path(request_file)
-
-    def cleanup(self):
-        # change the results owner
-        if self.uid_gid is not None:
-            sh.chown('-R', self.uid_gid, self.local_store)
-
-    def get_request(self):
-        with open(self.request_file, "r") as f:
-            x = f.read()
-        return x
-
-    def put_response(self, s):
-        with open(self._get_path('response.json'), "w") as f:
-            f.write(s)
-
-    # def get_file(self, name):
-    #     pass
-
-    def put_file(self, fname, req_id='', make_public=True):
-        """Put file into a subdir keyed by req_id in local store"""
-        if req_id == '':
-            req_fname = fname
-        else:
-            req_fname = get_req_file(req_id, fname)
-
-        local_store_dir = self._get_path(req_id)
-
-        os.mkdir(local_store_dir) if not os.path.exists(local_store_dir) else None
-        shutil.copy(req_fname, local_store_dir)
-        return os.path.join(local_store_dir, fname)
 

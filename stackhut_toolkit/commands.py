@@ -291,7 +291,8 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
         uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
 
-        log.info("Running service with {} in container - log below...".format(self.reqfile))
+        log.info("Running service with {} in container".format(self.reqfile))
+        log.info("**** START SERVICE LOG ****")
         # call docker to run the same command but in the container
         # use data vols for req and run_output
 
@@ -306,7 +307,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         args = [x for x in args if x is not None]
 
         out = sh.docker.run(args, _out=lambda x: print(x, end=''))
-        log.info("...finished service in container")
+        log.info("**** END SERVICE LOG ****")
         return 0
 
 

@@ -249,8 +249,8 @@ class Stack:
             # only render the template if apy supported config
             builder = DockerBuild(*args)
             builder.stack_build_push('Dockerfile-stack.txt',
-                                         dict(baseos=baseos, stack=self, stack_cmds=stack_cmds),
-                                         outdir, image_name)
+                                     dict(baseos=baseos, stack=self, stack_cmds=stack_cmds),
+                                     outdir, image_name)
 
     def install_service_packages(self):
         """Anything needed to run the service"""
@@ -356,19 +356,15 @@ def get_baseos_stack_pkgs(base_os, stack):
 
 @dispatch(object, object)
 def get_baseos_stack_pkgs(base_os, stack):
-    log.debug("Os / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
+    log.debug("OS / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
     return None
-    # raise NotImplementedError()
 
 bases = dict([(b.name, b) for b in [Alpine(), Fedora()]])
 stacks = dict([(s.name, s) for s in [Python(), NodeJS(), Python2()]])
 
 def is_stack_supported(base, stack):
     """Return true if the baseos & stack combination is supported"""
-    if get_baseos_stack_pkgs(base, stack) is not None:
-        return True
-    else:
-        return False
+    return False if get_baseos_stack_pkgs(base, stack) is None else True
 
 ###############################################################################
 class Service:
@@ -433,19 +429,23 @@ class Service:
         return max_mtime >= build_date
 
     def build_push(self, force=False, dev=False, push=False, no_cache=False):
-        """Builds a user service, if changed, and pushes  to repo if requested
+        """
+        Builds a user service, if changed, and pushes  to repo if requested
         """
         builder = DockerBuild(push, no_cache)
         self.dev = dev
+        dockerfile = '.Dockerfile'
 
         if force or not self.image_exists or self.image_stale():
             log.debug("Image not found or stale - building...")
-            # setup
+            # run barrister and copy shim
             self.gen_barrister_contract()
-            dockerfile = os.path.join(utils.STACKHUT_DIR, 'Dockerfile')
+            self.stack.copy_shim()
+
             builder.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
             builder.build_dockerfile(self.docker_fullname, dockerfile)
 
+            self.stack.del_shim()
             log.info("{} build complete".format(self.fullname))
         else:
             log.info("Build not necessary, run with '--force' to override")
@@ -454,4 +454,4 @@ class Service:
 
     @staticmethod
     def gen_barrister_contract():
-        generate_contract('api.idl', utils.CONTRACTFILE)
+        generate_contract(utils.IDLFILE, utils.CONTRACTFILE)

@@ -14,21 +14,11 @@ RUN echo "Starting..." && \
 WORKDIR /workdir
 
 {% if service.dev %}
-# install stackhut app from github master
-RUN echo "Starting..." && \
-    cd / && \
-    wget -q https://github.com/StackHut/stackhut-tool/archive/master.zip && \
-    unzip -q master.zip && \
-    cd stackhut-tool-master && \
-    pip3 -q install --no-cache --compile wheel && \
-    python3 setup.py -q bdist_wheel && \
-    pip3 install ./dist/stackhut*.whl && \
-    cd / && \
-    rm -rf stackhut-tool-master master.zip && \
-    echo "...done" && exit
+# install stackhut-runner from github master
+RUN pip3 install --no-cache --compile https://github.com/StackHut/stackhut-runner/archive/master.zip && \
 {% else %}
-# install stackhut app
-RUN pip3 install --no-cache-dir --compile stackhut
+# install stackhut-runner from S3
+RUN pip3 install --no-cache-dir --compile https://s3-eu-west-1.amazonaws.com/stackhut-releases/stackhut_runner-1.0.dev0-py3-none-any.whl
 {% endif %}
 
 {% if service.stack.service_package_files %}
@@ -38,8 +28,7 @@ RUN {{ service.stack.install_service_packages() }}
 {% endif %}
 
 # copy all source files and dirs across
-COPY Hutfile .api.json {{ service.stack.entrypoint }} {{ service.hutcfg.files|join(' ') }} ./
-{# # COPY .stackhut ./.stackhut -#}
+COPY Hutfile .api.json {{ service.stack.entrypoint }} {{ service.stack.shim_files|join(' ') }} {{ service.hutcfg.files|join(' ') }} ./
 {% for d in service.hutcfg.dirs -%}
 COPY {{ d }} ./{{ d }}
 {% endfor -%}
@@ -50,8 +39,6 @@ COPY {{ d }} ./{{ d }}
 {% endfor -%}
 
 {## cache bust - {{ service.build_date }}#}
-
-{# TODO - move into Docker-runtime.txt, inject stackhut cmd in on server? -#}
 
 {#
 # setup the entrypoint (using -v for now)
