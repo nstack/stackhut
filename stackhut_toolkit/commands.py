@@ -22,12 +22,11 @@ from distutils.dir_util import copy_tree
 import sh
 from jinja2 import Environment, FileSystemLoader
 
-from stackhut_common import storage
 from stackhut_common.utils import log, CONTRACTFILE
+from stackhut_toolkit.utils import *
 from stackhut_common.commands import BaseCmd, HutCmd
 from stackhut_common.config import HutfileCfg, UserCfg
 from . import __version__
-import stackhut_toolkit.utils as t_utils
 from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
 
 class UserCmd(BaseCmd):
@@ -35,7 +34,7 @@ class UserCmd(BaseCmd):
     def __init__(self, args):
         super().__init__(args)
         self.usercfg = UserCfg()
-        t_utils.keen_client.start(self.usercfg)
+        keen_client.start(self.usercfg)
 
     def run(self):
         super().run()
@@ -43,7 +42,7 @@ class UserCmd(BaseCmd):
         args = {k: v for (k, v)
                 in vars(self.args).items()
                 if k not in ['func', 'command']}
-        t_utils.keen_client.send('cli_cmd', dict(cmd=self.name, args=args))
+        keen_client.send('cli_cmd', dict(cmd=self.name, args=args))
 
 
 class LoginCmd(UserCmd):
@@ -75,7 +74,7 @@ class LoginCmd(UserCmd):
         password = getpass.getpass("Password: ")
 
         # connect securely to Stackhut service to get hash
-        r = t_utils.stackhut_api_call('login', dict(username=username, password=password))
+        r = stackhut_api_call('login', dict(username=username, password=password))
 
         if r['success']:
             self.usercfg['docker_username'] = docker_username
@@ -210,7 +209,7 @@ class InitCmd(UserCmd):
 
         # copy the scaffolds into the service
         def copy_scaffold(name):
-            dir_path = t_utils.get_res_path(os.path.join('scaffold', name))
+            dir_path = get_res_path(os.path.join('scaffold', name))
             copy_tree(dir_path, '.')
             return os.listdir(dir_path)
 
@@ -287,7 +286,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
         host_req_file = os.path.abspath(self.reqfile)
 
-        host_store_dir = os.path.abspath(storage.LocalStore.local_store)
+        host_store_dir = os.path.abspath(LocalStore.local_store)
         os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
 
         uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
@@ -302,7 +301,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         verbose_mode = '-v' if self.args.verbose else None
 
         args = ['-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
-                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, storage.LocalStore.local_store, res_flag),
+                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalStore.local_store, res_flag),
                 '--entrypoint=/usr/bin/stackhut', service.docker_fullname, verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
@@ -390,7 +389,7 @@ class DeployCmd(HutCmd, UserCmd):
         }
 
         log.info("Deploying image '{}' to StackHut".format(service.fullname))
-        r = t_utils.stackhut_api_user_call('add', data, self.usercfg)
+        r = stackhut_api_user_call('add', data, self.usercfg)
         log.info("Service {} has been {}".format(service.fullname, r['message']))
         return 0
 
