@@ -14,10 +14,12 @@
 """
 Module performs basic command handling infrastructure for subcommands
 """
+import os
 import abc
 import argparse
-from .utils import setup_logging, log, create_stackhut_dir
+from stackhut_common import utils
 from .config import HutfileCfg
+
 
 class CmdRunner:
     def __init__(self, title, version):
@@ -57,10 +59,9 @@ class CmdRunner:
             self.parser.exit(0, "No command given\n")
 
         # General App Setup
-        global DEBUG
-        DEBUG = self.args.debug
-        setup_logging(self.args.verbose)
-        log.info("Starting {}".format(self.title))
+        utils.DEBUG = self.args.debug
+        utils.setup_logging(self.args.verbose)
+        utils.log.info("Starting {}".format(self.title))
 
         try:
             # dispatch to correct cmd class - i.e. build, compile, run, etc.
@@ -69,14 +70,14 @@ class CmdRunner:
         except Exception as e:
 
             if len(e.args) > 0:
-                [log.error(x) for x in e.args]
+                [utils.log.error(x) for x in e.args]
 
             self.custom_error(e)
 
             if self.args.verbose:
                 raise e
             else:
-                log.info("Exiting (run in verbose mode for more information)")
+                utils.log.info("Exiting (run in verbose mode for more information)")
             return 1
 
         finally:
@@ -113,5 +114,4 @@ class HutCmd(BaseCmd):
         # import the hutfile
         self.hutcfg = HutfileCfg()
         # create stackhut dir if not present
-        create_stackhut_dir()
-
+        os.mkdir(utils.STACKHUT_DIR) if not os.path.exists(utils.STACKHUT_DIR) else None

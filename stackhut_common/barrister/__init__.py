@@ -11,7 +11,7 @@
     :copyright: 2012 by James Cooper.
     :license: MIT, see LICENSE for more details.
 """
-__version__ = '0.1.7_stackhut'
+__version__ = '0.1.7.stackhut'
 
 import json
 

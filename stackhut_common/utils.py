@@ -13,8 +13,9 @@
 # limitations under the License.
 import logging
 import sys
-import os
 from . import barrister
+import abc
+import os
 
 ####################################################################################################
 # App Config
@@ -22,19 +23,19 @@ from . import barrister
 STACKHUT_DIR = '.stackhut'
 CONTRACTFILE = os.path.join('.api.json')
 IDLFILE = 'api.idl'
-S3_BUCKET = 'stackhut-payloads'
 DEBUG = None
 IN_CONTAINER = os.path.exists('/workdir')
-VERBOSE=False
+VERBOSE = False
+ROOT_DIR = os.getcwd()
+S3_BUCKET = 'stackhut-payloads'
 
 # Logging
 # LOGFILE = '.stackhut.log'
-log = None
+log = logging.getLogger('stackhut')
 def setup_logging(verbose_mode):
     global VERBOSE
     global log
     VERBOSE = verbose_mode
-    log = logging.getLogger('stackhut')
     log.propagate = False
     logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', '%H:%M:%S')
     # file output
@@ -46,22 +47,6 @@ def setup_logging(verbose_mode):
     consoleHandler.setFormatter(logFormatter)
     log.addHandler(consoleHandler)
     log.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
-
-# Setup app paths
-sys_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
-res_dir = os.path.normpath(os.path.join(sys_dir, '../res'))
-
-def get_res_path(res_name):
-    return os.path.join(res_dir, res_name)
-
-def get_req_dir(req_id):
-    return os.path.join(STACKHUT_DIR, req_id)
-
-def get_req_file(req_id, fname):
-    return os.path.join(STACKHUT_DIR, req_id, fname)
-
-def create_stackhut_dir():
-    os.mkdir(STACKHUT_DIR) if not os.path.exists(STACKHUT_DIR) else None
 
 ####################################################################################################
 # Error handling
@@ -92,3 +77,35 @@ class NonZeroExitError(barrister.RpcException):
         msg = 'Service sub-command returned a non-zero exit'
         data = dict(exitcode=exitcode, stderr=stderr)
         super(NonZeroExitError, self).__init__(code, msg, data)
+
+
+###################################################################################################
+# StackHut IO Handling on local and cloud backends
+
+def get_req_dir(req_id):
+    return os.path.join(STACKHUT_DIR, req_id)
+
+def get_req_file(req_id, fname):
+    return os.path.join(STACKHUT_DIR, req_id, fname)
+
+class IOStore:
+    """A base wrapper wrapper around common IO task state"""
+    @abc.abstractmethod
+    def get_request(self):
+        pass
+
+    @abc.abstractmethod
+    def put_response(self, s):
+        pass
+
+    def get_file(self, name):
+        raise NotImplementedError("IOStore.get_file called")
+
+    @abc.abstractmethod
+    def put_file(self, fname, req_id='', make_public=False):
+        pass
+
+    def set_task_id(self, task_id):
+        log.debug("Task id is {}".format(task_id))
+        self.task_id = task_id
+

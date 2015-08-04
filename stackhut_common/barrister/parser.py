@@ -189,7 +189,7 @@ class IdlScanner(Scanner):
             self.add_error("Unexpected end of file")
 
     def add_meta(self):
-        from stackhut.common.barrister import __version__
+        from stackhut_common.barrister import __version__
         meta = {
             "type"              : "meta",
             "barrister_version" : __version__,
