@@ -49,22 +49,24 @@ def run(req):
         return gen_error(-32601)
 
 if __name__ == "__main__":
-    # open the input
-    with open("req.json", "r") as f:
-        req = json.loads(f.read())
 
-    os.chdir(os.path.join('.stackhut', req['req_id']))
+    while True:
+        # open the input
+        with open("req.json", "r") as f:
+            req = json.loads(f.read())
 
-    # run the command
-    try:
-        resp = run(req)
-    except Exception as e:
-        resp = gen_error(-32000, str(e))
+        os.chdir(os.path.join('.stackhut', req['req_id']))
 
-    os.chdir(stackhut.root_dir)
+        # run the command
+        try:
+            resp = run(req)
+        except Exception as e:
+            resp = gen_error(-32000, str(e))
 
-    # save the output
-    with open("resp.json", "w") as f:
-        f.write(json.dumps(resp))
+        os.chdir(stackhut.root_dir)
+
+        # save the output
+        with open("resp.json", "w") as f:
+            f.write(json.dumps(resp))
 
     exit(0)

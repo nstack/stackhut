@@ -269,12 +269,14 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
     @staticmethod
     def register(sp):
-        sp.add_argument("reqfile", nargs='?', default='test_request.json', help="Test request file to use")
+        sp.add_argument("port", default='6000', help="Port to host API on locally", type=int)
+        sp.add_argument("--reqfile", '-r', help="Test request file to use")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
 
     def __init__(self, args):
         super().__init__(args)
         self.reqfile = args.reqfile
+        self.port = args.port
         self.force = args.force
 
     def run(self):
@@ -285,28 +287,31 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         service = Service(self.hutcfg, self.usercfg)
         service.build_push(force=self.force)
 
-        host_req_file = os.path.abspath(self.reqfile)
-
         host_store_dir = os.path.abspath(LocalStore.local_store)
         os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
 
-        uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
-
-        log.info("Running service with {} in container".format(self.reqfile))
+        log.info("Running service in container".format(self.reqfile))
         log.info("**** START SERVICE LOG ****")
         # call docker to run the same command but in the container
-        # use data vols for req and run_output
-
+        # use data vols for response output files
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
-        req_flag = 'z' if OS_TYPE == 'SELINUX' else 'ro'
         res_flag = 'z' if OS_TYPE == 'SELINUX' else 'rw'
         verbose_mode = '-v' if self.args.verbose else None
-        args = ['-v', '{}:/workdir/test_request.json:{}'.format(host_req_file, req_flag),
+        uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
+        args = ['-p', '{}:8080'.format(self.port),
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalStore.local_store, res_flag),
                 '--entrypoint=/usr/bin/stackhut-runner', service.docker_fullname, verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
-        out = sh.docker.run(args, _out=lambda x: print(x, end=''))
+        try:
+            out = sh.docker.run(args, _out=lambda x: print(x, end=''))
+
+            if self.reqfile:
+                host_req_file = os.path.abspath(self.reqfile)
+                log.debug("Send file using reqs here")
+        except KeyboardInterrupt:
+            pass
+
         log.info("**** END SERVICE LOG ****")
         log.info("Run completed successfully")
         return 0

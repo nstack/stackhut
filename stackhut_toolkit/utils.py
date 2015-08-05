@@ -94,14 +94,14 @@ class KeenClient(threading.Thread):
                 log.debug("Sending analytics msg to {}".format(endpoint))
                 log.debug("Analytics msg - {}".format(msg))
                 url = self.keen_url.format(event_collection=endpoint)
-                r = requests.post(url, data=json.dumps(msg), headers=json_header)
+                r = requests.post(url, data=json.dumps(msg), headers=json_header, timeout=2)
                 if not (r.status_code == requests.codes.created and r.json().get('created')):
                     log.debug("{} - {}".format(r.status_code, r.text()))
                     raise IOError()
             except:
                 log.debug("Failed sending analytics msg to '{}'".format(endpoint))
-
-            self.queue.task_done()
+            finally:
+                self.queue.task_done()
 
     def send(self, endpoint, msg):
         if self.send_analytics:
