@@ -66,12 +66,16 @@ class IOStore:
         self.task_id = task_id
 
 class LocalServer(threading.Thread):
-
     def __init__(self, port, req_q, resp_q, *args, **kwargs):
         super().__init__(*args, daemon=True, **kwargs)
         self.port = port
         self.req_q = req_q
         self.resp_q = resp_q
+
+    def run(self):
+        # start in a new thread
+        log.info("Starting StackHut local server on 0.0.0.0:{} - press Ctrl-C to quit".format(self.port))
+        run_simple('0.0.0.0', self.port, self.application)
 
     @Request.application
     def application(self, request):
@@ -81,10 +85,6 @@ class LocalServer(threading.Thread):
         self.resp_q.task_done()
         return Response(response.encode('utf-8'), mimetype='application/json')
 
-    def run(self):
-        # start in a new thread
-        log.info("Starting StackHut local server - press Ctrl-C to quit")
-        run_simple('localhost', self.port, self.application)
 
 
 class LocalStore(IOStore):
