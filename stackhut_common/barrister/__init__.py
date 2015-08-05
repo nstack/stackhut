@@ -19,7 +19,7 @@ from .runtime import contract_from_file, idgen_uuid, idgen_seq
 from .runtime import RpcException, Server, Filter, HttpTransport, InProcTransport
 from .runtime import Client, Batch
 from .runtime import Contract, Interface, Enum, Struct, Function
-from .runtime import ERR_PARSE, ERR_INVALID_REQ, ERR_METHOD_NOT_FOUND, \
+from .runtime import err_response, ERR_PARSE, ERR_INVALID_REQ, ERR_METHOD_NOT_FOUND, \
     ERR_INVALID_PARAMS, ERR_INTERNAL, ERR_UNKNOWN, ERR_INVALID_RESP
 from .parser import parse
 

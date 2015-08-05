@@ -14,6 +14,7 @@
 import logging
 import sys
 import os
+import json
 from colorlog import ColoredFormatter
 from . import barrister
 
@@ -29,16 +30,18 @@ ROOT_DIR = os.getcwd()
 
 # Logging
 # LOGFILE = '.stackhut.log'
+logging.getLogger().disabled = True
+logging.getLogger('werkzeug').disabled = True
+
 log = logging.getLogger('stackhut')
 def setup_logging(verbose_mode):
     global VERBOSE
     global log
     VERBOSE = verbose_mode
     log.propagate = False
-    #logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', '%H:%M:%S')
+    log.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
 
     logFormatter = ColoredFormatter(
-        # "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
         '%(blue)s%(asctime)s%(reset)s [%(log_color)s%(levelname)-5s%(reset)s] %(message)s',
         datefmt='%H:%M:%S',
         reset=True,
@@ -57,11 +60,11 @@ def setup_logging(verbose_mode):
     # fileHandler = logging.FileHandler(LOGFILE, mode='w')
     # fileHandler.setFormatter(logFormatter)
     # log.addHandler(fileHandler)
+
     # console
     consoleHandler = logging.StreamHandler(stream=sys.stdout)
     consoleHandler.setFormatter(logFormatter)
     log.addHandler(consoleHandler)
-    log.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
 
 ####################################################################################################
 # Error handling
@@ -70,26 +73,29 @@ class ParseError(barrister.RpcException):
         code = -32700
         msg = 'Parse Error'
         data = {} if data is not None else data
-        super(ParseError, self).__init__(code, msg, data)
+        super().__init__(code, msg, data)
 
 class InternalError(barrister.RpcException):
     def __init__(self, data=None):
         code = -32603
         msg = 'Internal Error'
         data = {} if data is not None else data
-        super(InternalError, self).__init__(code, msg, data)
+        super().__init__(code, msg, data)
 
 class ServerError(barrister.RpcException):
     def __init__(self, code, msg, data=None):
         code = code
         msg = 'Internal Service Error - {}'.format(msg)
         data = {} if data is not None else data
-        super(ServerError, self).__init__(code, msg, data)
+        super().__init__(code, msg, data)
 
 class NonZeroExitError(barrister.RpcException):
     def __init__(self, exitcode, stderr):
         code = -32001
         msg = 'Service sub-command returned a non-zero exit'
         data = dict(exitcode=exitcode, stderr=stderr)
-        super(NonZeroExitError, self).__init__(code, msg, data)
+        super().__init__(code, msg, data)
 
+def gen_error_resp(req_id, e):
+    resp = barrister.err_response(req_id, e.code, e.msg, e.data)
+    return json.dumps(resp)
