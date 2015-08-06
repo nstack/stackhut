@@ -22,10 +22,11 @@ from distutils.dir_util import copy_tree
 import sh
 from jinja2 import Environment, FileSystemLoader
 
+from stackhut_common import rpc
 from stackhut_common.utils import log, CONTRACTFILE
 from stackhut_common.commands import BaseCmd, HutCmd
 from stackhut_common.config import HutfileCfg, UserCfg
-from stackhut_common.storage import LocalStore
+from stackhut_common.backends import LocalBackend
 from . import __version__
 from .utils import *
 from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
@@ -270,7 +271,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
     @staticmethod
     def register(sp):
         sp.add_argument("port", default='6000', help="Port to host API on locally", type=int)
-        sp.add_argument("--reqfile", '-r', help="Test request file to use")
+        sp.add_argument("--reqfile", '-r', help="Test request file")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
 
     def __init__(self, args):
@@ -287,7 +288,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         service = Service(self.hutcfg, self.usercfg)
         service.build_push(force=self.force)
 
-        host_store_dir = os.path.abspath(LocalStore.local_store)
+        host_store_dir = os.path.abspath(LocalBackend.local_store)
         os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
 
         log.info("Running service in container".format(self.reqfile))
@@ -295,22 +296,28 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         # call docker to run the same command but in the container
         # use data vols for response output files
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
+        import random
+        name = 'stackhut-{}'.format(random.randrange(10000))
         res_flag = 'z' if OS_TYPE == 'SELINUX' else 'rw'
         verbose_mode = '-v' if self.args.verbose else None
         uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
         args = ['-p', '{}:8080'.format(self.port),
-                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalStore.local_store, res_flag),
+                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalBackend.local_store, res_flag),
+                '--rm=true', '--name={}'.format(name),
                 '--entrypoint=/usr/bin/stackhut-runner', service.docker_fullname, verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
         try:
             out = sh.docker.run(args, _out=lambda x: print(x, end=''))
+            log.debug("Out - {}".format(out))
 
             if self.reqfile:
                 host_req_file = os.path.abspath(self.reqfile)
                 log.debug("Send file using reqs here")
         except KeyboardInterrupt:
-            pass
+            sh.docker.stop('-t', '0', name)
+            log.debug("Shutdown service container")
+
 
         log.info("**** END SERVICE LOG ****")
         log.info("Run completed successfully")
@@ -379,7 +386,7 @@ class DeployCmd(HutCmd, UserCmd):
             service.build_push(force=self.force, push=True)
 
         # run the contract regardless
-        service.gen_barrister_contract()
+        rpc.generate_contract()
 
         # build up the deploy message body
         test_request = json.loads(self._read_file('test_request.json'))

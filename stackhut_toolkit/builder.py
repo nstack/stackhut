@@ -22,16 +22,14 @@ import json
 from distutils.dir_util import copy_tree
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
-import shutil
 import sh
 import arrow
 import docker as docker_py
 from docker.utils import kwargs_from_env
 from docker.errors import DockerException
 
-from stackhut_common import utils
+from stackhut_common import utils, rpc
 from stackhut_common.utils import log
-from stackhut_common.barrister import generate_contract
 import stackhut_toolkit.utils as t_utils
 
 template_env = Environment(loader=FileSystemLoader(t_utils.get_res_path('templates')))
@@ -441,7 +439,7 @@ class Service:
         if force or not self.image_exists or self.image_stale():
             log.debug("Image not found or stale - building...")
             # run barrister and copy shim
-            self.gen_barrister_contract()
+            rpc.generate_contract()
             self.stack.copy_shim()
 
             try:
@@ -455,7 +453,3 @@ class Service:
             log.info("Build not necessary, run with '--force' to override")
 
         builder.push_image(self.docker_fullname)
-
-    @staticmethod
-    def gen_barrister_contract():
-        generate_contract(utils.IDLFILE, utils.CONTRACTFILE)
