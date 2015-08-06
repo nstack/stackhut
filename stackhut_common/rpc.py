@@ -74,6 +74,13 @@ def exc_to_json_error(e, req_id=None):
     resp = err_response(req_id, e.code, e.msg, e.data)
     return json.dumps(resp)
 
+from enum import Enum
+
+class SHCmds(Enum):
+    startup = 1
+    shutdown = 2
+    start_batch = 3
+    stop_batch = 4
 
 class StackHutRPC:
     """
@@ -93,12 +100,46 @@ class StackHutRPC:
         os.mkfifo(RESP_FIFO)
 
         # run the shim
-        self.p = subprocess.Popen(shim_cmd, shell=False,
-                                  stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL,
-                                  stdout=subprocess.DEVNULL)
+        self.p = subprocess.Popen(shim_cmd, shell=False, stderr=subprocess.DEVNULL,
+                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
     def shutdown(self):
+        log.debug("Starting shutdown")
+        for iface in self.contract.interfaces.keys():
+            self._cmd_call('{}.{}'.format(iface, SHCmds.shutdown.name))
+        log.debug("Shutting down")
         self.p.terminate()
+
+    def call(self, task_req):
+        """Make RPC call for given task"""
+        # Massage the data
+        self._add_id(task_req, 'id')
+        self.backend.set_task_id(task_req['id'])
+
+        req = task_req['request']
+        if type(req) is list:
+            if len(req) < 1:
+                return exc_to_json_error(InvalidReqError(data=dict(msg="Empty Batch")))
+
+            # find batch interface
+            iface_name = None
+            first_method = req[0].get('method', None)
+            if first_method:
+                iface_name = 'Default' if first_method.find('.') < 0 else first_method.split('.')[0]
+            if iface_name:
+                self._cmd_call('{}.{}'.format(iface_name, SHCmds.start_batch.name))
+
+            task_resp = [self._req_call(r) for r in req]
+
+            if iface_name:
+                self._cmd_call('{}.{}'.format(iface_name, SHCmds.stop_batch.name))
+        else:
+            task_resp = self._req_call(req)
+        return task_resp
+
+    def _cmd_call(self, cmd):
+        log.debug('Sending cmd message - {}'.format(cmd))
+        self._sub_call(cmd, [], 'shcmd')
 
     def _add_id(self, d, v):
         d[v] = str(uuid.uuid4()) if v not in d else str(d[v])
@@ -131,29 +172,7 @@ class StackHutRPC:
             params = req.get('params', [])
 
             self.contract.validate_request(iface_name, func_name, params)
-            self.backend.new_request_path(req_id)
-
-            # create the (sub-)req
-            sub_req = dict(method=method, params=params, req_id=req_id)
-
-            # blocking-wait to send the request
-            with open(REQ_FIFO, "w") as f:
-                f.write(json.dumps(sub_req))
-
-            # blocking-wait to read the resp
-            with open(RESP_FIFO, "r") as f:
-                sub_resp = json.loads(f.read())
-
-            # check the response
-            if 'error' in sub_resp:
-                code = sub_resp['error']
-                if code == ERR_METHOD_NOT_FOUND:
-                    raise MethodNotFoundError()
-                else:
-                    raise CustomError(code, sub_resp['msg'])
-
-            # validate and return the response
-            result = sub_resp['result']
+            result = self._sub_call(method, params, req_id)
             self.contract.validate_response(iface_name, func_name, result)
             resp = dict(jsonrpc="2.0", id=req_id, result=result)
 
@@ -164,19 +183,28 @@ class StackHutRPC:
             resp = exc_to_json_error(_e, req_id)
         return resp
 
-    def call(self, task_req):
-        """Make RPC call for given task"""
-        # Massage the data
-        self._add_id(task_req, 'id')
-        self.backend.set_task_id(task_req['id'])
+    def _sub_call(self, method, params, req_id):
+        """Acutal call to the shim/client subprocess"""
+        self.backend.new_request_path(req_id)
+        # create the (sub-)req
+        sub_req = dict(method=method, params=params, req_id=req_id)
+        # blocking-wait to send the request
+        with open(REQ_FIFO, "w") as f:
+            f.write(json.dumps(sub_req))
 
-        req = task_req['request']
-        if type(req) is list:
-            if len(req) < 1:
-                return exc_to_json_error(InvalidReqError(data=dict(msg="Empty Batch")))
+        # blocking-wait to read the resp
+        with open(RESP_FIFO, "r") as f:
+            sub_resp = json.loads(f.read())
 
-            task_resp = [self._req_call(r) for r in req]
-        else:
-            task_resp = self._req_call(req)
-        return task_resp
+        # check the response
+        if 'error' in sub_resp:
+            code = sub_resp['error']
+            if code == ERR_METHOD_NOT_FOUND:
+                raise MethodNotFoundError()
+            else:
+                raise CustomError(code, sub_resp['msg'])
+
+        # validate and return the response
+        result = sub_resp['result']
+        return result
 
