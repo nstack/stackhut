@@ -33,17 +33,16 @@ def run(req):
 
     if iface_name in SERVICES:
         iface_impl = SERVICES[iface_name]
+
         try:
             func = getattr(iface_impl, func_name)
         except AttributeError:
             return gen_error(-32601)
-        # if hasattr(iface_impl, "barrister_pre"):
-        #     pre_hook = getattr(iface_impl, "barrister_pre")
-        #     pre_hook(context, params)
-        if params:
-            result = func(*params)
-        else:
-            result = func()
+
+        iface_impl.pre_request()
+        result = func(*params) if params else func()
+        iface_impl.post_request()
+
         return dict(result=result)
     else:
         return gen_error(-32601)

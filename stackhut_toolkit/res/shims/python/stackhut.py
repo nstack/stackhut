@@ -22,6 +22,29 @@ headers = {'content-type': 'application/json'}
 id_val = 0
 req_id = None
 
+
+class Service:
+    def __init__(self):
+        pass
+
+    def shutdown(self):
+        pass
+
+    def pre_batch(self):
+        pass
+
+    def post_batch(self):
+        pass
+
+    def pre_request(self):
+        pass
+
+    def post_request(self):
+        pass
+
+
+###############################################################################
+# Runtime Lib
 def make_call(method, *_params):
     global id_val
     global req_id

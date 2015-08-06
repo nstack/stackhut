@@ -5,12 +5,9 @@
 """
 import stackhut
 
-class DefaultService:
-    def __init__(self):
-        pass
-
+class Default(stackhut.Service):
     def add(self, x, y):
         return x + y
 
 # export the services
-SERVICES = {"Default": DefaultService()}
+SERVICES = {"Default": Default()}
