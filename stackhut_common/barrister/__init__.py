@@ -14,7 +14,6 @@
 __version__ = '0.1.7.stackhut'
 
 import json
-
 from .runtime import contract_from_file, idgen_uuid, idgen_seq
 from .runtime import RpcException, Server, Filter, HttpTransport, InProcTransport
 from .runtime import Client, Batch
@@ -23,13 +22,3 @@ from .runtime import err_response, ERR_PARSE, ERR_INVALID_REQ, ERR_METHOD_NOT_FO
     ERR_INVALID_PARAMS, ERR_INTERNAL, ERR_UNKNOWN, ERR_INVALID_RESP
 from .parser import parse
 
-def generate_contract(idl_fname, contract_fname):
-    """
-    Generate the IDL -> JSON Contract file
-    main interface into barrister parser
-    """
-    with open(idl_fname, 'r') as idl_file:
-        parsed = parse(idl_file, idl_fname)
-
-    with open(contract_fname, "w") as contract_file:
-        contract_file.write(json.dumps(parsed))

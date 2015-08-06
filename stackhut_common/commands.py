@@ -84,7 +84,7 @@ class CmdRunner:
             self.custom_shutdown()
 
         # all done
-        return retval
+        return retval if retval else 0
 
 
 ###################################################################################################

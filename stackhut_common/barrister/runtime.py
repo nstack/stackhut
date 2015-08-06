@@ -125,7 +125,7 @@ class RpcException(Exception, json.JSONEncoder):
     def __str__(self):
         s = "RpcException: code=%d msg=%s" % (self.code, self.msg)
         if self.data:
-            s += "%s data=%s" % (s, str(self.data))
+            s += " data=%s" % (str(self.data))
         return s
 
 
@@ -391,56 +391,41 @@ class Server(object):
 
         method = req["method"]
 
-        if method == "common.barrister-idl":
+        if method == "common.barrister-idl" or method == "getIdl":
             return self.contract.idl_parsed
 
         iface_name, func_name = unpack_method(method)
 
-        if "params" in req:
-            params = req["params"]
+        if iface_name in self.handlers:
+            iface_impl = self.handlers[iface_name]
+            func = getattr(iface_impl, func_name)
+            if func:
+                if "params" in req:
+                    params = req["params"]
+                else:
+                    params = []
+
+                if self.validate_req:
+                    self.contract.validate_request(iface_name, func_name, params)
+
+                if hasattr(iface_impl, "barrister_pre"):
+                    pre_hook = getattr(iface_impl, "barrister_pre")
+                    pre_hook(context, params)
+
+                if params:
+                    result = func(*params)
+                else:
+                    result = func()
+
+                if self.validate_resp:
+                    self.contract.validate_response(iface_name, func_name, result)
+                return result
+            else:
+                msg = "Method '%s' not found" % method
+                raise RpcException(ERR_METHOD_NOT_FOUND, msg)
         else:
-            params = []
-
-        self.contract.validate_request(iface_name, func_name, params)
-
-        # call out here
-        result = context.props['callback'](method, params, req['id'])
-
-        self.contract.validate_response(iface_name, func_name, result)
-        return result
-
-        # iface_name, func_name = unpack_method(method)
-        #
-        # if iface_name in self.handlers:
-        #     iface_impl = self.handlers[iface_name]
-        #     func = getattr(iface_impl, func_name)
-        #     if func:
-        #         if "params" in req:
-        #             params = req["params"]
-        #         else:
-        #             params = []
-        #
-        #         if self.validate_req:
-        #             self.contract.validate_request(iface_name, func_name, params)
-        #
-        #         if hasattr(iface_impl, "barrister_pre"):
-        #             pre_hook = getattr(iface_impl, "barrister_pre")
-        #             pre_hook(context, params)
-        #
-        #         if params:
-        #             result = func(*params)
-        #         else:
-        #             result = func()
-        #
-        #         if self.validate_resp:
-        #             self.contract.validate_response(iface_name, func_name, result)
-        #         return result
-        #     else:
-        #         msg = "Method '%s' not found" % method
-        #         raise RpcException(ERR_METHOD_NOT_FOUND, msg)
-        # else:
-        #     msg = "No implementation of '%s' found" % iface_name
-        #     raise RpcException(ERR_METHOD_NOT_FOUND, msg)
+            msg = "No implementation of '%s' found" % iface_name
+            raise RpcException(ERR_METHOD_NOT_FOUND, msg)
 
 
 class HttpTransport(object):

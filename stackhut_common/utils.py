@@ -66,36 +66,3 @@ def setup_logging(verbose_mode):
     consoleHandler.setFormatter(logFormatter)
     log.addHandler(consoleHandler)
 
-####################################################################################################
-# Error handling
-class ParseError(barrister.RpcException):
-    def __init__(self, data=None):
-        code = -32700
-        msg = 'Parse Error'
-        data = {} if data is not None else data
-        super().__init__(code, msg, data)
-
-class InternalError(barrister.RpcException):
-    def __init__(self, data=None):
-        code = -32603
-        msg = 'Internal Error'
-        data = {} if data is not None else data
-        super().__init__(code, msg, data)
-
-class ServerError(barrister.RpcException):
-    def __init__(self, code, msg, data=None):
-        code = code
-        msg = 'Internal Service Error - {}'.format(msg)
-        data = {} if data is not None else data
-        super().__init__(code, msg, data)
-
-class NonZeroExitError(barrister.RpcException):
-    def __init__(self, exitcode, stderr):
-        code = -32001
-        msg = 'Service sub-command returned a non-zero exit'
-        data = dict(exitcode=exitcode, stderr=stderr)
-        super().__init__(code, msg, data)
-
-def gen_error_resp(req_id, e):
-    resp = barrister.err_response(req_id, e.code, e.msg, e.data)
-    return json.dumps(resp)

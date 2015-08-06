@@ -33,16 +33,10 @@ def get_req_dir(req_id):
 def get_req_file(req_id, fname):
     return os.path.join(STACKHUT_DIR, req_id, fname)
 
-class IOStore:
+class AbstractBackend:
     """A base wrapper wrapper around common IO task state"""
     def __init__(self):
         os.mkdir(STACKHUT_DIR) if not os.path.exists(STACKHUT_DIR) else None
-
-    def new_request_path(self, req_id):
-        # create a private working dir
-        req_path = os.path.join(STACKHUT_DIR, req_id)
-        os.mkdir(req_path) if not os.path.exists(req_path) else None
-        return req_path
 
     def cleanup(self):
         pass
@@ -64,6 +58,12 @@ class IOStore:
 
     def set_task_id(self, task_id):
         self.task_id = task_id
+
+    def new_request_path(self, req_id):
+        # create a private working dir
+        req_path = os.path.join(STACKHUT_DIR, req_id)
+        os.mkdir(req_path) if not os.path.exists(req_path) else None
+        return req_path
 
 class LocalServer(threading.Thread):
     def __init__(self, port, req_q, resp_q, *args, **kwargs):
@@ -87,7 +87,7 @@ class LocalServer(threading.Thread):
 
 
 
-class LocalStore(IOStore):
+class LocalBackend(AbstractBackend):
     """Mock storage and server system for local testing"""
     local_store = "run_result"
 
