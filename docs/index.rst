@@ -6,7 +6,7 @@
 Welcome to StackHut's documentation!
 ====================================
 
-Thank you for browsing our documentation, it's all a bit rough and incomplete at the moment. Please let us know at docs@stackhut.com if anything is unclear or you find a mistake. Better still, submit a pull-request using the link at the top-right, thanks!
+Thank you for browsing our documentation. Please let us know at docs@stackhut.com if anything is unclear or you find a mistake. Better still, submit a pull-request using the link at the top-right, thanks!
 
 Check out :ref:`getting_started_index` for a quick guide to both using and creating APIs on StackHut.
 
