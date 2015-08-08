@@ -2,8 +2,8 @@
 Introduction
 ************
 
-StackHut is a way to deploy and run code in the cloud, which can then be called through a POST request. 
+StackHut is a way to deploy and run code in the cloud without worrying about a traditional server. 
 
-This means you can run functions, or fully-fledged applications,without deploying that code to a traditional server and worrying about implementing infrastructure or an API.
+You write a normal class in Python or JavaScript, specify your stack (operating system, language, and any dependencies), and specify the interface into your code. When you deploy it, it is replicated on a Kubernetes cluster and can be called direclty through an HTTP POST request, or through JSON-RPC, from anywhere (even client-side JavaScript.)
 
-Through this model, StackHut offers a repository of public, open-source, services which you can run: you can think of it as a repository of live code in the way GitHub is a repository of source-code. Anyone can contribute these services. 
+This means you can run functions and fully-fledged applications without deploying code to a traditional server. You can focus on the business logic, instead of spending time with server/API logic.
