@@ -114,15 +114,18 @@ class StackHutRPC:
         def handler(signum, frame):
             log.error("Force-quitting subprocess")
             self.p.kill()
+            raise TimeoutError()
 
         # Set the signal handler and a 5-second alarm
         signal.signal(signal.SIGALRM, handler)
         signal.alarm(5)
 
+        # send shutdown msg to each iface
         for iface in self.contract.interfaces.keys():
             log.debug("Send shutdown to {}".format(iface))
             self._cmd_call('{}.{}'.format(iface, SHCmds.shutdown.name))
-        log.debug("Terminating service")
+
+        log.debug("Terminating RPC sub-process")
         self.p.terminate()
         self.p.wait()
         signal.alarm(0)
