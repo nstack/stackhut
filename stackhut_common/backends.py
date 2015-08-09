@@ -119,8 +119,8 @@ class LocalBackend(AbstractBackend):
     def __exit__(self, exc_type, exc_val, exc_tb):
         log.debug("Shutting down Local backend")
         # wait for queues to empty
-#        self.req_q.join()
-#        self.resp_q.join()
+        self.req_q.join()
+        self.resp_q.join()
 
         # change the results owner
         if self.uid_gid is not None:
