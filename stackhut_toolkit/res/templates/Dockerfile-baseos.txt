@@ -1,4 +1,4 @@
-FROM {{ baseos.name|lower }}:latest
+FROM {{ baseos.name|lower }}:{{ baseos.tag }}
 MAINTAINER "StackHut" <stackhut@stackhut.com>
 LABEL description="{{ baseos.description }}"
 

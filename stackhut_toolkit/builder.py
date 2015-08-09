@@ -143,7 +143,13 @@ class DockerBuild:
 # Base OS's that we support
 class BaseOS:
     name = None
+    tag = 'latest'
     baseos_pkgs = []
+    # Override and set pre- and post- commands if needed for initial OS setup
+    pre = []
+    post = []
+    pip_update = ['pip3 install --no-cache --compile --upgrade pip']
+
 
     def __init__(self):
         super().__init__()
@@ -161,11 +167,8 @@ class BaseOS:
         builder = DockerBuild(*args)
         builder.stack_build_push('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name)
 
-    def initial_setup(self, pre=None, post=None):
-        pre = pre if pre else []
-        def_post = ['pip3 install --no-cache --compile --upgrade pip']
-        post = (post + def_post) if post else def_post
-        return pre + self.install_os_pkg(self.baseos_pkgs) + post
+    def setup_cmds(self):
+        return self.pre + self.install_os_pkg(self.baseos_pkgs) + self.post + self.pip_update
 
 
 class Fedora(BaseOS):
@@ -189,35 +192,63 @@ class Fedora(BaseOS):
             'rm -rf /tmp/*',
         ]
 
-    def setup_cmds(self):
-        return self.initial_setup()
 
-
-class Alpine(BaseOS):
-    name = 'alpine'
-
-    baseos_pkgs = ['python3', 'ca-certificates']
+class Debian(BaseOS):
+    name = 'debian'
+    baseos_pkgs = ['python3', 'python3-pip']
+    pre = [
+        'apt-get -y update',
+        'apt-get -y upgrade'
+    ]
+    pip_update = ['pip3 install --compile --upgrade pip']
 
     def os_pkg_cmd(self, pkgs):
-        return 'apk --update add {}'.format(' '.join(pkgs))
+        return 'apt-get install -y --no-install-recommends {}'.format(' '.join(pkgs))
 
     def install_os_pkg(self, pkgs):
         return [
             self.os_pkg_cmd(pkgs),
+            'apt-get -y clean',
+            'apt-get -y autoclean',
+            'apt-get -y autoremove',
             'rm -rf /usr/share/locale/*',
             'rm -rf /usr/share/doc/*',
+            # 'journalctl --vacuum-size=0',
             'rm -rf /var/log/* || true',
             'rm -rf /var/cache/*',
             'rm -rf /tmp/*',
-            'mkdir /var/cache/apk',
         ]
 
-    def setup_cmds(self):
-        pre = [
-            'echo "@edge http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories',
-            'echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories',
-        ]
-        return self.initial_setup(pre=pre)
+class Ubuntu(Debian):
+    name = 'ubuntu'
+    tag = 'vivid'
+
+# class Alpine(BaseOS):
+#     name = 'alpine'
+#
+#     baseos_pkgs = ['python3', 'ca-certificates']
+#     pre = [
+#         'echo "@edge http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories',
+#         'echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories',
+#     ]
+#
+#     def os_pkg_cmd(self, pkgs):
+#         return 'apk --update add {}'.format(' '.join(pkgs))
+#
+#     def install_os_pkg(self, pkgs):
+#         return [
+#             self.os_pkg_cmd(pkgs),
+#             'rm -rf /usr/share/locale/*',
+#             'rm -rf /usr/share/doc/*',
+#             'rm -rf /var/log/* || true',
+#             'rm -rf /var/cache/*',
+#             'rm -rf /tmp/*',
+#             'mkdir /var/cache/apk',
+#         ]
+#
+
+
+
 
 ###############################################################################
 # Language stacks that we support
@@ -293,20 +324,6 @@ class Python(Stack):
     def install_service_packages(self):
         return 'pip3 install --no-cache-dir --compile -r {}'.format(self.package_file)
 
-class Python2(Stack):
-    name = 'python2'
-    entrypoint = 'app.py'
-    stack_packages = ['requests', 'sh']
-    package_file = 'requirements.txt'
-
-    shim_files = ['runner.py', 'stackhut.py']
-    shim_cmd = ['/usr/bin/env', 'python2', 'runner.py']
-
-    def install_stack_packages(self):
-        return 'pip2 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_packages))
-
-    def install_service_packages(self):
-        return 'pip2 install --no-cache-dir --compile -r {}'.format(self.package_file)
 
 class NodeJS(Stack):
     name = 'nodejs'
@@ -325,20 +342,15 @@ class NodeJS(Stack):
 
 # Our BaseOS / Stack Dispatchers (e.g. pattern matching)
 # we need this as pkds installed per OS are OS dependent
-@dispatch(Fedora, Python2)
-def get_baseos_stack_pkgs(base_os, stack):
-    """return the docker cmds and any os packages needed to be installed"""
-    return [], ['python', 'python-pip']
-
-@dispatch(Alpine, Python2)
-def get_baseos_stack_pkgs(base_os, stack):
-    return [], ['python', 'py-pip']
-
 @dispatch(Fedora, Python)
 def get_baseos_stack_pkgs(base_os, stack):
     return [], []  # installed by default
 
-@dispatch(Alpine, Python)
+@dispatch(Debian, Python)
+def get_baseos_stack_pkgs(base_os, stack):
+    return [], []  # installed by default
+
+@dispatch(Ubuntu, Python)
 def get_baseos_stack_pkgs(base_os, stack):
     return [], []  # installed by default
 
@@ -350,17 +362,17 @@ def get_baseos_stack_pkgs(base_os, stack):
     pkgs = ['iojs', 'iojs-npm']
     return cmds, pkgs
 
-@dispatch(Alpine, NodeJS)
-def get_baseos_stack_pkgs(base_os, stack):
-    return [], ['iojs@testing', 'libstdc++@edge']
+# @dispatch(Alpine, NodeJS)
+# def get_baseos_stack_pkgs(base_os, stack):
+#     return [], ['iojs@testing', 'libstdc++@edge']
 
 @dispatch(object, object)
 def get_baseos_stack_pkgs(base_os, stack):
     log.debug("OS / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
     return None
 
-bases = dict([(b.name, b) for b in [Alpine(), Fedora()]])
-stacks = dict([(s.name, s) for s in [Python(), NodeJS(), Python2()]])
+bases = dict([(b.name, b) for b in [Fedora(), Debian(), Ubuntu()]])
+stacks = dict([(s.name, s) for s in [Python(), NodeJS()]])
 
 def is_stack_supported(base, stack):
     """Return true if the baseos & stack combination is supported"""

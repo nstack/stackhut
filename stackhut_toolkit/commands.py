@@ -270,7 +270,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
     @staticmethod
     def register(sp):
-        sp.add_argument("port", default='6000', help="Port to host API on locally", type=int)
+        sp.add_argument("port", nargs='?' ,default='8080', help="Port to host API on locally", type=int)
         sp.add_argument("--reqfile", '-r', help="Test request file")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
 
@@ -292,7 +292,6 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
 
         log.info("Running service in container".format(self.reqfile))
-        log.info("**** START SERVICE LOG ****")
         # call docker to run the same command but in the container
         # use data vols for response output files
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
@@ -304,20 +303,21 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         args = ['-p', '{}:8080'.format(self.port),
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalBackend.local_store, res_flag),
                 '--rm=true', '--name={}'.format(name),
-                '--entrypoint=/usr/bin/stackhut-runner', service.docker_fullname, verbose_mode, 'runcontainer', '--uid', uid_gid]
+                '--entrypoint=/usr/bin/env', service.docker_fullname, 'stackhut-runner', verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
+        log.debug("Running docker run with args - {}".format(args))
+        log.info("**** START SERVICE LOG ****")
         try:
             out = sh.docker.run(args, _out=lambda x: print(x, end=''))
-            log.debug("Out - {}".format(out))
 
             if self.reqfile:
                 host_req_file = os.path.abspath(self.reqfile)
                 log.debug("Send file using reqs here")
         except KeyboardInterrupt:
-            sh.docker.stop('-t', '0', name)
-            log.debug("Shutdown service container")
-
+            log.debug("Shutting down service container, press again to force-quit...")
+            # out.kill()
+            sh.docker.stop('-t', '5', name)
 
         log.info("**** END SERVICE LOG ****")
         log.info("Run completed successfully")

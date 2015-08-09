@@ -13,3 +13,6 @@ description: Awesome service in {{ scaffold.stack.name }}
 # stack we use, in terms of the OS and language runtime
 baseos: {{ scaffold.baseos.name }}
 stack: {{ scaffold.stack.name }}
+
+# Does the service persistent between requests
+persistent: True

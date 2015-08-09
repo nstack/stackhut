@@ -18,6 +18,8 @@ Demo StackHut service
 """
 import json
 import os
+import signal
+import sys
 import stackhut
 from app import SERVICES
 
@@ -47,25 +49,34 @@ def run(req):
     else:
         return gen_error(-32601)
 
+def sigterm_handler(signo, frame):
+    print("Received shutdown signal".format(signo))
+    sys.exit(0)
+
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, sigterm_handler)
 
-    while True:
-        # open the input
-        with open("req.json", "r") as f:
-            req = json.loads(f.read())
+    try:
+        while True:
+            # open the input
+            with open("req.json", "r") as f:
+                req = json.loads(f.read())
 
-        os.chdir(os.path.join('.stackhut', req['req_id']))
+            os.chdir(os.path.join('.stackhut', req['req_id']))
 
-        # run the command
-        try:
-            resp = run(req)
-        except Exception as e:
-            resp = gen_error(-32000, str(e))
+            # run the command
+            try:
+                resp = run(req)
+            except Exception as e:
+                resp = gen_error(-32000, str(e))
 
-        os.chdir(stackhut.root_dir)
+            os.chdir(stackhut.root_dir)
 
-        # save the output
-        with open("resp.json", "w") as f:
-            f.write(json.dumps(resp))
+            # save the output
+            with open("resp.json", "w") as f:
+                f.write(json.dumps(resp))
+
+    except Exception as e:
+        print(repr(e))
 
     exit(0)
