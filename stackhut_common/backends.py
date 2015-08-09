@@ -18,7 +18,6 @@ import abc
 import os
 import shutil
 import threading
-import json
 from queue import Queue
 import sh
 from werkzeug.wrappers import Request, Response
@@ -66,6 +65,10 @@ class AbstractBackend:
         return req_path
 
 class LocalServer(threading.Thread):
+    """
+    Local webserver running on separate thread for dev usage
+    Sends msgs to LocalBackend over a pair of shared queues
+    """
     def __init__(self, port, req_q, resp_q, *args, **kwargs):
         super().__init__(*args, daemon=True, **kwargs)
         self.port = port
@@ -79,11 +82,11 @@ class LocalServer(threading.Thread):
 
     @Request.application
     def application(self, request):
-        self.req_q.put(request.data.decode('utf-8'))
-        response = self.resp_q.get()
+        self.req_q.put(request.data)
 
+        response = self.resp_q.get()
         self.resp_q.task_done()
-        return Response(response.encode('utf-8'), mimetype='application/json')
+        return Response(response, mimetype='application/json')
 
 
 
@@ -120,11 +123,11 @@ class LocalBackend(AbstractBackend):
             sh.chown('-R', self.uid_gid, self.local_store)
 
     def get_request(self):
-        return self.req_q.get()
+        return self.req_q.get().decode('utf-8')
 
     def put_response(self, s):
         self.req_q.task_done()
-        self.resp_q.put(s)
+        self.resp_q.put(s.encode('utf-8'))
 
     def put_file(self, fname, req_id='', make_public=True):
         """Put file into a subdir keyed by req_id in local store"""

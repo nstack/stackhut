@@ -18,6 +18,7 @@ import os
 import subprocess
 import json
 import uuid
+import sh
 
 from .barrister.runtime import contract_from_file, RpcException
 from .barrister.runtime import err_response, ERR_PARSE, ERR_INVALID_REQ, ERR_METHOD_NOT_FOUND, \
@@ -71,8 +72,7 @@ class NonZeroExitError(RpcException):
 
 def exc_to_json_error(e, req_id=None):
     log.error(e)
-    resp = err_response(req_id, e.code, e.msg, e.data)
-    return json.dumps(resp)
+    return err_response(req_id, e.code, e.msg, e.data)
 
 from enum import Enum
 
@@ -100,15 +100,19 @@ class StackHutRPC:
         os.mkfifo(RESP_FIFO)
 
         # run the shim
-        self.p = subprocess.Popen(shim_cmd, shell=False, stderr=subprocess.DEVNULL,
-                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        cmd = sh.Command(shim_cmd[0])
+        self.p = cmd(shim_cmd[1:], _bg=True, _out=lambda x: log.debug("Runner - {}".format(x.rstrip())),
+                     _err=lambda x: log.error("Runner - {}".format(x.rstrip())))
 
     def shutdown(self):
-        log.debug("Starting shutdown")
+        # TODO - this should run in a sep thread that waits 5s before force-kill
         for iface in self.contract.interfaces.keys():
+            log.debug("Send shutdown to {}".format(iface))
             self._cmd_call('{}.{}'.format(iface, SHCmds.shutdown.name))
-        log.debug("Shutting down")
+        log.debug("Terminating service")
         self.p.terminate()
+        self.p.wait()
+        # self.p.kill()
 
     def call(self, task_req):
         """Make RPC call for given task"""
