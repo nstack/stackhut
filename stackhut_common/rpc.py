@@ -18,6 +18,7 @@ import os
 import subprocess
 import json
 import uuid
+import signal
 import contextlib
 import sh
 
@@ -110,14 +111,21 @@ class StackHutRPC:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # TODO - this should run in a sep thread that waits 5s before force-kill
+        def handler(signum, frame):
+            log.error("Force-quitting subprocess")
+            self.p.kill()
+
+        # Set the signal handler and a 5-second alarm
+        signal.signal(signal.SIGALRM, handler)
+        signal.alarm(5)
+
         for iface in self.contract.interfaces.keys():
             log.debug("Send shutdown to {}".format(iface))
             self._cmd_call('{}.{}'.format(iface, SHCmds.shutdown.name))
         log.debug("Terminating service")
         self.p.terminate()
         self.p.wait()
-        # self.p.kill()
+        signal.alarm(0)
 
     def call(self, task_req):
         """Make RPC call for given task"""
