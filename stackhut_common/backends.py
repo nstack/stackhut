@@ -86,8 +86,9 @@ class LocalServer(threading.Thread):
     @Request.application
     def application(self, request):
         self.req_q.put(request.data)
-
         response = self.resp_q.get()
+
+        self.req_q.task_done()
         self.resp_q.task_done()
         return Response(response, mimetype='application/json')
 
@@ -129,7 +130,6 @@ class LocalBackend(AbstractBackend):
         return self.req_q.get().decode('utf-8')
 
     def put_response(self, s):
-        self.req_q.task_done()
         self.resp_q.put(s.encode('utf-8'))
 
     def put_file(self, fname, req_id='', make_public=True):

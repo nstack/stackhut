@@ -127,7 +127,7 @@ class StackHutRPC:
 
         log.debug("Terminating RPC sub-process")
         self.p.terminate()
-        self.p.wait()
+        # self.p.wait()
         signal.alarm(0)
 
     def call(self, task_req):
