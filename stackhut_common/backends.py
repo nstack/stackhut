@@ -37,7 +37,10 @@ class AbstractBackend:
     def __init__(self):
         os.mkdir(STACKHUT_DIR) if not os.path.exists(STACKHUT_DIR) else None
 
-    def cleanup(self):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
     @abc.abstractmethod
@@ -112,7 +115,7 @@ class LocalBackend(AbstractBackend):
         self.server = LocalServer(port, self.req_q, self.resp_q)
         self.server.start()
 
-    def cleanup(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         log.debug("Cleaning up store")
         # wait for queues to empty
         self.req_q.join()

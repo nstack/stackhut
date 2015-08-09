@@ -18,6 +18,7 @@ import os
 import subprocess
 import json
 import uuid
+import contextlib
 import sh
 
 from .barrister.runtime import contract_from_file, RpcException
@@ -82,6 +83,7 @@ class SHCmds(Enum):
     start_batch = 3
     stop_batch = 4
 
+
 class StackHutRPC:
     """
     Alt. implementation of Barrister.server modified for StackHut needs
@@ -104,7 +106,10 @@ class StackHutRPC:
         self.p = cmd(shim_cmd[1:], _bg=True, _out=lambda x: log.debug("Runner - {}".format(x.rstrip())),
                      _err=lambda x: log.error("Runner - {}".format(x.rstrip())))
 
-    def shutdown(self):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         # TODO - this should run in a sep thread that waits 5s before force-kill
         for iface in self.contract.interfaces.keys():
             log.debug("Send shutdown to {}".format(iface))
