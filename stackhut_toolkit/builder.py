@@ -45,25 +45,29 @@ try:
 except sh.CommandNotFound as e:
     OS_TYPE = 'UNKNOWN'
 
-# TODO - make into a docker interface
-# Docker-py client interface
-docker_client = None
-docker_ip = 'localhost'
 
-def get_docker(_exit=True):
-    global docker_client
-    global docker_ip
+# TODO - move to docker machine instead
+class DockerClient:
+    client = None
+    ip = 'localhost'
+    x = "https://github.com/boot2docker/boot2docker/blob/master/doc/WORKAROUNDS.md"
 
-    if docker_client is None:
+    def __init__(self, _exit):
+        self.setup_client(_exit)
+
+    def setup_client(self, _exit):
         try:
+            # setup client depending if running on linux or using boot2docker (osx/win)
             if sys.platform == 'linux':
-                docker_client = docker_py.Client(version='auto')
+                self.client = docker_py.Client(version='auto')
             else:
-                # using boot2docker
+                # get b2d ip
+                self.ip = str(sh.boot2docker.ip()).strip()
+
                 try:
-                    # try secure first
+                    # try secure connection first
                     kw = kwargs_from_env(assert_hostname=False)
-                    docker_client = docker_py.Client(version='auto', **kw)
+                    self.client = docker_py.Client(version='auto', **kw)
                 except docker_py.errors.DockerException as e:
                     # shit - some weird boot2docker, python, docker-py, requests, and ssl error
                     # https://github.com/docker/docker-py/issues/465
@@ -72,18 +76,28 @@ def get_docker(_exit=True):
                     kw = kwargs_from_env(assert_hostname=False)
                     if 'tls' in kw:
                         kw['tls'].verify = False
-                    docker_client = docker_py.Client(version='auto', **kw)
-                # get b2d ip
-                docker_ip = str(sh.boot2docker.ip()).strip()
+                    self.client = docker_py.Client(version='auto', **kw)
 
         except Exception as e:
             log.error("Could not connect to Docker - try running 'docker info' first")
             if sys.platform != 'linux':
-                log.error("Make sure you've run 'boot2docker up' and have added the ENV VARs it suggests")
+                log.error("Please ensure you've run 'boot2docker up' and 'boot2docker shellinit' first and have added the ENV VARs it suggests")
             if _exit:
                 raise e
 
+    def run_docker_sh(self, docker_cmd, docker_args=None, **kwargs):
+        _docker_args = docker_args if docker_args is not None else []
+        _docker_args.insert(0, docker_cmd)
+        log.debug("Running 'docker {}' with args {}".format(docker_cmd, _docker_args[1:]))
+        return sh.docker(_docker_args, **kwargs)
+
+docker_client = None
+
+def get_docker(_exit=True):
+    global docker_client
+    docker_client = DockerClient(_exit) if docker_client is None else docker_client
     return docker_client
+
 
 class DockerBuild:
     def __init__(self, push=False, no_cache=False):
@@ -100,14 +114,13 @@ class DockerBuild:
         log.debug("Running docker build for {}".format(tag))
         cache_flag = '--no-cache=True' if self.no_cache else '--no-cache=False'
         cmds = ['-f', dockerfile, '-t', tag, '--rm', cache_flag, '.']
-        log.debug("Calling docker with cmds - {}".format(cmds))
         log.info("Starting build, this may take some time, please wait...")
 
         try:
             if utils.VERBOSE:
-                sh.docker.build(*cmds, _out=lambda x: log.debug(x.strip()))
+                self.docker.run_docker_sh('build', cmds, _out=lambda x: log.debug(x.strip()))
             else:
-                sh.docker.build(*cmds)
+                self.docker.run_docker_sh('build', cmds)
         except sh.ErrorReturnCode as e:
             log.error("Couldn't complete build")
             log.error("Build error - {}".format(e.stderr.decode('utf-8').strip()))
@@ -118,7 +131,7 @@ class DockerBuild:
     def push_image(self, tag):
         if self.push:
             log.info("Uploading image {} - this may take a while...".format(tag))
-            r = self.docker.push(tag, stream=True)
+            r = self.docker.client.push(tag, stream=True)
             r_summary = [json.loads(x.decode('utf-8')) for x in r][-1]
 
             if 'error' in r_summary:
@@ -129,7 +142,7 @@ class DockerBuild:
                 log.debug(r_summary['status'])
                 # log.error("Error pushing to Docker Hub - {}".format(r_summary['error']))
 
-            # sh.docker('push', tag, _in='Y')
+            # docker.run_docker_sh('push', tag, _in='Y')
 
     def stack_build_push(self, template_name, template_params, outdir, image_name):
         """Called by StackHut builders to build BaseOS and Stack images"""
@@ -424,7 +437,7 @@ class Service:
 
     @property
     def image_exists(self):
-        repo_images = get_docker().images(self.docker_repo)
+        repo_images = get_docker().client.images(self.docker_repo)
         service_images = [x for x in repo_images if self.docker_fullname in x['RepoTags']]
         assert len(service_images) < 2, "{} versions of {} found in Docker".format(self.docker_fullname)
         return True if len(service_images) > 0 else False
@@ -456,7 +469,7 @@ class Service:
         """Runs the build only if a file has changed"""
         max_mtime = self._files_mtime()
 
-        image_info = get_docker().inspect_image(self.docker_fullname)
+        image_info = get_docker().client.inspect_image(self.docker_fullname)
         image_build_string = image_info['Created']
 
         log.debug("Service {} last built at {}".format(self.fullname, image_build_string))

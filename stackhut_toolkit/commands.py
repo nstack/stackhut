@@ -29,7 +29,7 @@ from stackhut_common.config import HutfileCfg, UserCfg
 from stackhut_common.backends import LocalBackend
 from . import __version__
 from .utils import *
-from .builder import Service, bases, stacks, is_stack_supported, get_docker, docker_ip, OS_TYPE
+from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
 
 class UserCmd(BaseCmd):
     """User commands require the userconfig file"""
@@ -59,17 +59,13 @@ class LoginCmd(UserCmd):
         super().run()
         # get docker username
         # NOTE - this is so hacky - why does cli return username but REST API doesn't
-        try:
-            stdout = sh.docker.info()
-            docker_user_list = [x for x in stdout if x.startswith('Username')]
-            if len(docker_user_list) == 1:
-                docker_username = docker_user_list[0].split(':')[1].strip()
-                log.debug("Docker user is '{}', note this may be different to your StackHut login".format(docker_username))
-            else:
-                raise RuntimeError("Please run 'docker login' first")
-        except sh.ErrorReturnCode as e:
-            raise OSError("Could not connect to Docker - try running 'docker info', "
-                          "and if you are on OSX make sure you've run 'boot2docker up' first")
+        stdout = get_docker().run_docker_sh('info')
+        docker_user_list = [x for x in stdout if x.startswith('Username')]
+        if len(docker_user_list) == 1:
+            docker_username = docker_user_list[0].split(':')[1].strip()
+            log.debug("Docker user is '{}', note this may be different to your StackHut login".format(docker_username))
+        else:
+            raise RuntimeError("Please run 'docker login' first")
 
         username = input("Username: ")
         # email = input("Email: ")
@@ -122,7 +118,7 @@ class InfoCmd(UserCmd):
 
         docker = get_docker(_exit=False)
         if docker:
-            log.info("Docker version {}".format(docker.version().get('Version')))
+            log.info("Docker version {}".format(docker.client.version().get('Version')))
         else:
             log.info("Docker not installed or connection error")
 
@@ -270,7 +266,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
     @staticmethod
     def register(sp):
-        sp.add_argument("port", nargs='?' ,default='8080', help="Port to host API on locally", type=int)
+        sp.add_argument("port", nargs='?' ,default='6000', help="Port to host API on locally", type=int)
         sp.add_argument("--reqfile", '-r', help="Test request file")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
 
@@ -292,9 +288,9 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
 
         # docker setup
-        get_docker()
+        docker = get_docker()
 
-        log.info("Running service '{}' on http://{}:{}".format(self.hutcfg.service_fullname, docker_ip, self.port))
+        log.info("Running service '{}' on http://{}:{}".format(self.hutcfg.service_fullname, docker.ip, self.port))
         # call docker to run the same command but in the container
         # use data vols for response output files
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
@@ -309,10 +305,9 @@ class ToolkitRunCmd(HutCmd, UserCmd):
                 '--entrypoint=/usr/bin/env', service.docker_fullname, 'stackhut-runner', verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
-        log.debug("Running docker run with args - {}".format(args))
         log.info("**** START SERVICE LOG ****")
         try:
-            out = sh.docker.run(args, _out=lambda x: print(x, end=''))
+            out = docker.run_docker_sh('run', args, _out=lambda x: print(x, end=''))
 
             if self.reqfile:
                 host_req_file = os.path.abspath(self.reqfile)
@@ -320,7 +315,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         except KeyboardInterrupt:
             log.debug("Shutting down service container, press again to force-quit...")
             # out.kill()
-            sh.docker.stop('-t', '5', name)
+            docker.run_docker_sh('stop', ['-t', '5', name])
 
         log.info("**** END SERVICE LOG ****")
         log.info("Run completed successfully")
