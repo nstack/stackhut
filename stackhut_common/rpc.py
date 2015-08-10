@@ -81,8 +81,8 @@ from enum import Enum
 class SHCmds(Enum):
     startup = 1
     shutdown = 2
-    start_batch = 3
-    stop_batch = 4
+    preBatch = 3
+    postBatch = 4
 
 
 class StackHutRPC:
@@ -147,12 +147,12 @@ class StackHutRPC:
             if first_method:
                 iface_name = 'Default' if first_method.find('.') < 0 else first_method.split('.')[0]
             if iface_name:
-                self._cmd_call('{}.{}'.format(iface_name, SHCmds.start_batch.name))
+                self._cmd_call('{}.{}'.format(iface_name, SHCmds.preBatch.name))
 
             task_resp = [self._req_call(r) for r in req]
 
             if iface_name:
-                self._cmd_call('{}.{}'.format(iface_name, SHCmds.stop_batch.name))
+                self._cmd_call('{}.{}'.format(iface_name, SHCmds.postBatch.name))
         else:
             task_resp = self._req_call(req)
         return task_resp

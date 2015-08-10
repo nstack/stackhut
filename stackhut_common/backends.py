@@ -80,7 +80,7 @@ class LocalServer(threading.Thread):
 
     def run(self):
         # start in a new thread
-        log.info("Starting StackHut local server on 0.0.0.0:{} - press Ctrl-C to quit".format(self.port))
+        log.info("Started StackHut Request Server - press Ctrl-C to quit".format(self.port))
         run_simple('0.0.0.0', self.port, self.application)
 
     @Request.application
