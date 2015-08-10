@@ -25,6 +25,8 @@ let stackhut = require('./stackhut');
 // console.log('app - \n\t', util.inspect(app, false, null));
 // console.log('stackhut - \n\t', util.inspect(stackhut, false, null));
 
+///////////////////////////////////////////////////////////////////////////////
+// Utils
 const REQ_JSON = 'req.json';
 const RESP_JSON = 'resp.json';
 
@@ -33,30 +35,16 @@ function gen_error(code, msg) {
     return { error: code, msg: msg }
 }
 
-// promise-based error handling
-function gen_p_error(code, msg) {
-    return Promise.resolve(gen_error(code, msg))
-}
-
 // custom write func as bloody Node can't write to a named pipe otherwise!
-function write_resp(resp) {
-    let buf = new Buffer(resp);
+function sync_write_resp(resp) {
+    let buf = new Buffer(JSON.stringify(resp));
     let fd = fs.openSync(RESP_JSON, 'w');
     fs.writeSync(fd, buf, 0, buf.length, -1);
     fs.closeSync(fd)
 }
 
-function shutdown(resp) {
-    // console.log('res - %j', resp);
-    process.chdir(stackhut.root_dir);
-
-    // save the json resp
-    write_resp(JSON.stringify(resp));
-    // fs.writeFileSync(RESP_JSON, JSON.stringify(resp), 'utf8');
-    process.exit(0);
-}
-
-
+///////////////////////////////////////////////////////////////////////////////
+// Main Run function
 function run(req) {
     // tell the client helper the current taskid
     stackhut.req_id = req['req_id'];
@@ -72,35 +60,43 @@ function run(req) {
 
         if (func_name in iface_impl) {
             let func_impl = iface_impl[func_name];
+
             return func_impl.apply(iface_impl, params)
         }
-        else { return gen_p_error(-32601, 'Method not found') }
+        else { return Promise.resolve(gen_error(-32601, 'Method not found')); }
     }
-    else { return gen_p_error(-32601, 'Service not found') }
+    else { return Promise.resolve(gen_error(-32601, 'Service not found')); }
 }
 
 // top-level error handling
 process.on('uncaughtException', function(err) {
     console.log('Uncaught Exception - %s', err);
     let resp = gen_error(-32000, err.toString());
-    // fs.writeFileSync(RESP_JSON, JSON.stringify(resp), 'utf8');
-    write_resp(JSON.stringify(resp));
+    sync_write_resp(resp);
     process.exit(0);
 });
 
+function finish_req(resp) {
+    process.chdir(stackhut.root_dir);
+    // save the json resp
+    sync_write_resp(resp);
+}
+
 // Main
-// open the json req
-let req = JSON.parse(fs.readFileSync(REQ_JSON, 'utf8'));
+while (true) {
+    // open the json req
+    let req = JSON.parse(fs.readFileSync(REQ_JSON, 'utf8'));
 
-process.chdir(path.join('.stackhut', req['req_id']));
+    process.chdir(path.join('.stackhut', req['req_id']));
 
-// run the command sync/async and then shutdown
-run(req)
-.then(function(resp) {
-    // return the result
-    console.log(resp);
-    shutdown({ result: resp })
-})
-.catch(function(err) {
-    shutdown(gen_error(-32600, err))
-});
+    // run the command sync/async and then return the result or error
+    run(req)
+    .then(function(resp) {
+        finish_req({ result: resp })
+    })
+    .catch(function(err) {
+        finish_req(gen_error(-32600, err))
+    });
+}
+
+process.exit(0);

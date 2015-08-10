@@ -13,29 +13,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-let request = require('request')
-let url = "http://localhost:4000/jsonrpc"
+let request = require('request');
+let url = "http://localhost:4000/jsonrpc";
 
-let id_val = 0
-module.exports.req_id = null
-module.exports.root_dir = __dirname
+let id_val = 0;
+module.exports.req_id = null;
+module.exports.root_dir = __dirname;
 
+class Service {
+    constructor(){
+        // empty
+    }
+
+    shutdown(){
+        // empty
+    }
+
+    preBatch(){
+        // empty
+    }
+
+    postBatch(){
+        // empty
+    }
+
+    preRequest(){
+        // empty
+    }
+
+    postRequest(){
+        // empty
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Runtime Lib
 function make_call(method) {
-    console.log('make_call_1')
 
     let params = [].slice.call(arguments, 1);
-    params.unshift(module.exports.req_id)
+    params.unshift(module.exports.req_id);
 
     let payload = {
         method: method,
         params: params,
         jsonrpc: '2.0',
         id: id_val
-    }
-
-    console.log(payload)
-
-    console.log('make_call_2')
+    };
 
     return new Promise(function(resolve, reject) {
         request({
@@ -45,9 +68,8 @@ function make_call(method) {
             json: true
             },
             function(error, response, body) {
-                console.log('in callback')
                 if(!error && response.statusCode >= 200 && response.statusCode < 300) {
-                    id_val += 1
+                    id_val += 1;
                     if ('result' in body) {
                         resolve(body['result']);
                     } else { reject(body['error']) }
@@ -63,15 +85,14 @@ function make_call(method) {
 module.exports.put_file = function(fname, make_public) {
     let _make_public = typeof make_public !== 'undefined' ? make_public : true;
     return make_call('put_file', fname, _make_public)
-}
+};
 
 module.exports.download_file = function(url, fname) {
-    console.log('download file')
     let _fname = typeof fname !== 'undefined' ? fname : null;
     return make_call('download_file', url, _fname)
-}
+};
 
 module.exports.run_command = function(cmd, stdin) {
     let _stdin = typeof stdin !== 'undefined' ? stdin : '';
     return make_call('run_command', _cmd)
-}
+};

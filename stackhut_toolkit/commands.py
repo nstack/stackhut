@@ -29,7 +29,7 @@ from stackhut_common.config import HutfileCfg, UserCfg
 from stackhut_common.backends import LocalBackend
 from . import __version__
 from .utils import *
-from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
+from .builder import Service, bases, stacks, is_stack_supported, get_docker, docker_ip, OS_TYPE
 
 class UserCmd(BaseCmd):
     """User commands require the userconfig file"""
@@ -291,7 +291,10 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         host_store_dir = os.path.abspath(LocalBackend.local_store)
         os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
 
-        log.info("Running service in container".format(self.reqfile))
+        # docker setup
+        get_docker()
+
+        log.info("Running service '{}' on http://{}:{}".format(self.hutcfg.service_fullname, docker_ip, self.port))
         # call docker to run the same command but in the container
         # use data vols for response output files
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream

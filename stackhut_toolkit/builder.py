@@ -45,10 +45,14 @@ try:
 except sh.CommandNotFound as e:
     OS_TYPE = 'UNKNOWN'
 
+# TODO - make into a docker interface
 # Docker-py client interface
 docker_client = None
+docker_ip = 'localhost'
+
 def get_docker(_exit=True):
     global docker_client
+    global docker_ip
 
     if docker_client is None:
         try:
@@ -66,8 +70,12 @@ def get_docker(_exit=True):
                     log.debug(e)
                     log.warn("Cannot connect securely to Docker, trying insecurely")
                     kw = kwargs_from_env(assert_hostname=False)
-                    kw['tls'].verify = False
+                    if 'tls' in kw:
+                        kw['tls'].verify = False
                     docker_client = docker_py.Client(version='auto', **kw)
+                # get b2d ip
+                docker_ip = str(sh.boot2docker.ip()).strip()
+
         except Exception as e:
             log.error("Could not connect to Docker - try running 'docker info' first")
             if sys.platform != 'linux':
@@ -223,6 +231,7 @@ class Ubuntu(Debian):
     name = 'ubuntu'
     tag = 'vivid'
 
+# Alpine disabled for now while Python threading bug on musl exists
 # class Alpine(BaseOS):
 #     name = 'alpine'
 #
@@ -360,6 +369,22 @@ def get_baseos_stack_pkgs(base_os, stack):
             'dnf -y copr enable nibbler/iojs',
             ]
     pkgs = ['iojs', 'iojs-npm']
+    return cmds, pkgs
+
+@dispatch(Ubuntu, NodeJS)
+def get_baseos_stack_pkgs(base_os, stack):
+    cmds = ['apt-get install -y curl',
+            'curl -sL https://deb.nodesource.com/setup_iojs_3.x | bash -',
+            ]
+    pkgs = ['iojs']
+    return cmds, pkgs
+
+@dispatch(Debian, NodeJS)
+def get_baseos_stack_pkgs(base_os, stack):
+    cmds = ['apt-get install -y curl',
+            'curl -sL https://deb.nodesource.com/setup_iojs_3.x | bash -',
+            ]
+    pkgs = ['iojs']
     return cmds, pkgs
 
 # @dispatch(Alpine, NodeJS)

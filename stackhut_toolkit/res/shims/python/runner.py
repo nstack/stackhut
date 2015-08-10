@@ -41,9 +41,9 @@ def run(req):
         except AttributeError:
             return gen_error(-32601)
 
-        iface_impl.pre_request()
+        iface_impl.preRequest()
         result = func(*params) if params else func()
-        iface_impl.post_request()
+        iface_impl.postRequest()
 
         return dict(result=result)
     else:

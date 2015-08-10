@@ -3,12 +3,12 @@
 let stackhut = require('./stackhut');
 
 // create each service as either an ES6 class or an object of functions
-class DefaultService {
-    constructor() {
+class Default(Service){
+    constructor(){
         // empty
     }
 
-    add(x, y) {
+    add(x, y){
         let res = x + y;
         return Promise.resolve(res);
     }
@@ -16,5 +16,5 @@ class DefaultService {
 
 // export the services here
 module.exports = {
-    Default : new DefaultService()
+    Default : new Default()
 };

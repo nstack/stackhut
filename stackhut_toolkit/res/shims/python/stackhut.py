@@ -30,16 +30,16 @@ class Service:
     def shutdown(self):
         pass
 
-    def pre_batch(self):
+    def preBatch(self):
         pass
 
-    def post_batch(self):
+    def postBatch(self):
         pass
 
-    def pre_request(self):
+    def preRequest(self):
         pass
 
-    def post_request(self):
+    def postRequest(self):
         pass
 
 

@@ -3,6 +3,12 @@
 History
 -------
 
+0.4.x (2015-08-10)
+---------------------
+
+* Large rewrite and refactoring of codebase
+* Added support for long-running/persistent services
+
 0.3.x (2015-07-20)
 ---------------------
 
