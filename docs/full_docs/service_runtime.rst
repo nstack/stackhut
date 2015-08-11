@@ -74,13 +74,15 @@ Firstly Python has a good threading library that works very well when used with 
 Secondly Python 3.5 will introduce ``async`` and ``await`` type-functionality as seen in C# that can be used to interleave these calls.
 
 
-NodeJS / ES6
-^^^^^^^^^^^^
+Node.js / ES6
+^^^^^^^^^^^^^
 
-The Node story is more complex as StackHut is primarily a request->response system exhibited through functions as entrypoints. This conflicts with the callback-based model of Node at present.
+The Node.js story is more complex as StackHut is primarily a request->response system exhibited through functions as entrypoints. This conflicts with the callback-based model of Node at present.
 
 However things are looking much better with both ES6 and ES7 on the horizon.
-StackHut's Node support is based on the latest NodeJS with support for ES6, and promises in particular (`this <http://www.html5rocks.com/en/tutorials/es6/promises/>`_ is a good intro).
+StackHut's Node support is based on the latest io.js with support for ES6, and promises in particular (`this <http://www.html5rocks.com/en/tutorials/es6/promises/>`_ is a good intro).
+
+.. note:: We currently utilise `io.js v3 <https://iojs.org/>`_ to provide a compatible version of Node.js with ES6 features. These projects have now remerged and we will follow io.js in moving to the Node.js project accordingly.
 
 The StackHut runtime is promise-based on Node, with each call returning a promise than resolves on completion.
 

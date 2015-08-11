@@ -95,7 +95,7 @@ Name        Description
 =======     ===========
 python      `Python 3 <http://python.org/>`_ 
 python2     `Python 2 <http://python.org/>`_ 
-nodejs      `NodeJS <http://nodejs.org/>`_
+nodejs      `Node.js <http://nodejs.org/>`_  (implemented using `io.js <http://iojs.org/>`_)
 =======     ===========
 
 .. note:: Currently we only support one language stack per service (although you could use this to call anothor language you've bundled into the image)
