@@ -8,8 +8,6 @@ Please read :ref:`tutorial_use` for basic information on how to access a service
 Access a service directly
 -------------------------
 
-**TODO** 
-
 See :ref:`tutorial_use` for basic info.
 
 
