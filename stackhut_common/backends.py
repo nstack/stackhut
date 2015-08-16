@@ -92,7 +92,10 @@ class LocalServer(threading.Thread):
         self.resp_q.task_done()
 
         status_code = 500 if 'error' in response else 200
-        return Response(response, status=status_code, mimetype='application/json')
+        response_obj = Response(response, mimetype='application/json')
+        # response_obj.status = 'Internal Service Error'
+        response_obj.status_code = status_code
+        return response_obj
 
 class LocalBackend(AbstractBackend):
     """Mock storage and server system for local testing"""
