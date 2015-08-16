@@ -68,8 +68,8 @@ class CustomError(RpcException):
         super().__init__(code, 'Error - {}'.format(msg), data)
 
 class NonZeroExitError(RpcException):
-    def __init__(self, exitcode, stderr):
-        data = dict(exitcode=exitcode, stderr=stderr)
+    def __init__(self, exit_code, stderr):
+        data = dict(exit_code=exit_code, stderr=stderr)
         super().__init__(-32001, 'Sub-command returned a non-zero exit', data)
 
 def exc_to_json_error(e, req_id=None):
@@ -112,7 +112,7 @@ class StackHutRPC:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         def handler(signum, frame):
-            log.error("Force-quitting subprocess")
+            log.error("Force-quitting RPC subprocess")
             self.p.kill()
             raise TimeoutError()
 
@@ -126,8 +126,14 @@ class StackHutRPC:
             self._cmd_call('{}.{}'.format(iface, SHCmds.shutdown.name))
 
         log.debug("Terminating RPC sub-process")
-        self.p.terminate()
-        self.p.wait()
+
+        try:
+            self.p.terminate()
+            self.p.wait()
+        except sh.SignalException_15:
+            log.warn("RPC subprocess shutdown uncleanly")
+            pass
+
         signal.alarm(0)
 
     def call(self, task_req):
@@ -159,7 +165,8 @@ class StackHutRPC:
 
     def _cmd_call(self, cmd):
         log.debug('Sending cmd message - {}'.format(cmd))
-        self._sub_call(cmd, [], 'shcmd')
+        resp = self._sub_call(cmd, [], 'shcmd')
+        log.debug("Cmd response - {}".format(resp))
 
     def _add_id(self, d, v):
         d[v] = str(uuid.uuid4()) if v not in d else str(d[v])

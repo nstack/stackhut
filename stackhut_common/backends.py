@@ -90,9 +90,9 @@ class LocalServer(threading.Thread):
 
         self.req_q.task_done()
         self.resp_q.task_done()
-        return Response(response, mimetype='application/json')
 
-
+        status_code = 500 if 'error' in response else 200
+        return Response(response, status=status_code, mimetype='application/json')
 
 class LocalBackend(AbstractBackend):
     """Mock storage and server system for local testing"""
