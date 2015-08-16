@@ -231,7 +231,8 @@ class Debian(BaseOS):
             self.os_pkg_cmd(pkgs),
             'apt-get -y clean',
             'apt-get -y autoclean',
-            'apt-get -y autoremove',
+            'apt-get -y autoremove --purge',
+            # 'rm -rf /var/lib/apt/lists/*',
             'rm -rf /usr/share/locale/*',
             'rm -rf /usr/share/doc/*',
             # 'journalctl --vacuum-size=0',
@@ -316,6 +317,7 @@ class Stack:
     def service_package_files(self):
         return self.package_file if os.path.exists(self.package_file) else None
 
+    # TODO - keep shim in project dir and only update on build/run if newer
     def copy_shim(self):
         shim_dir = os.path.join(t_utils.get_res_path('shims'), self.name)
         copy_tree(shim_dir, utils.ROOT_DIR)
@@ -388,6 +390,9 @@ def get_baseos_stack_pkgs(base_os, stack):
 def get_baseos_stack_pkgs(base_os, stack):
     cmds = ['apt-get install -y curl',
             'curl -sL https://deb.nodesource.com/setup_iojs_3.x | bash -',
+            'apt-get install -y --no-install-recommends iojs',
+            'apt-get remove --purge -y curl',
+            # 'apt-get remove --purge -y curl $(apt-mark showauto)',
             ]
     pkgs = ['iojs']
     return cmds, pkgs
@@ -396,6 +401,9 @@ def get_baseos_stack_pkgs(base_os, stack):
 def get_baseos_stack_pkgs(base_os, stack):
     cmds = ['apt-get install -y curl',
             'curl -sL https://deb.nodesource.com/setup_iojs_3.x | bash -',
+            'apt-get install -y --no-install-recommends iojs',
+            'apt-get remove --purge -y curl',
+            # 'apt-get remove --purge -y curl $(apt-mark showauto)',
             ]
     pkgs = ['iojs']
     return cmds, pkgs
@@ -409,8 +417,11 @@ def get_baseos_stack_pkgs(base_os, stack):
     log.debug("OS / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
     return None
 
-bases = dict([(b.name, b) for b in [Fedora(), Debian(), Ubuntu()]])
-stacks = dict([(s.name, s) for s in [Python(), NodeJS()]])
+#bases = dict([(b.name, b) for b in [Fedora(), Debian(), Ubuntu()]])
+#stacks = dict([(s.name, s) for s in [Python(), NodeJS()]])
+
+bases = dict([(b.name, b) for b in [Debian(), Ubuntu(), Fedora()]])
+stacks = dict([(s.name, s) for s in [NodeJS(), Python()]])
 
 def is_stack_supported(base, stack):
     """Return true if the baseos & stack combination is supported"""

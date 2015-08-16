@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 // Copyright 2015 StackHut Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,31 +20,31 @@ let id_val = 0;
 module.exports.req_id = null;
 module.exports.root_dir = __dirname;
 
-class Service {
-    constructor(){
+module.exports.Service = class {
+    constructor() {
         // empty
-    }
+    };
 
-    shutdown(){
-        // empty
-    }
+    shutdown() {
+        return Promise.resolve(null);
+    };
 
-    preBatch(){
-        // empty
-    }
+    preBatch() {
+        return Promise.resolve(null);
+    };
 
-    postBatch(){
-        // empty
-    }
+    postBatch() {
+        return Promise.resolve(null);
+    };
 
-    preRequest(){
-        // empty
-    }
+    preRequest() {
+        return Promise.resolve(null);
+    };
 
-    postRequest(){
-        // empty
-    }
-}
+    postRequest() {
+        return Promise.resolve(null);
+    };
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Runtime Lib

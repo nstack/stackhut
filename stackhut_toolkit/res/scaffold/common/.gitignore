@@ -3,6 +3,7 @@
 !test_request.json
 run_result
 .stackhut
+.Dockerfile
 
 # ide
 *.iml

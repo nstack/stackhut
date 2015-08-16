@@ -68,6 +68,7 @@ function run(req) {
     else { return Promise.resolve(gen_error(-32601, 'Service not found')); }
 }
 
+
 // top-level error handling
 process.on('uncaughtException', function(err) {
     console.log('Uncaught Exception - %s', err);
@@ -76,14 +77,21 @@ process.on('uncaughtException', function(err) {
     process.exit(0);
 });
 
-function finish_req(resp) {
+//process.on('SIGTERM', function() {
+//    //console.log('Received shutdown signal');
+//    process.exit(0);
+//});
+
+// mutual recursion to handle processing req->resp
+// Thank god for TCO in ES6
+function process_resp(resp) {
     process.chdir(stackhut.root_dir);
     // save the json resp
     sync_write_resp(resp);
+    process_req();
 }
 
-// Main
-while (true) {
+function process_req() {
     // open the json req
     let req = JSON.parse(fs.readFileSync(REQ_JSON, 'utf8'));
 
@@ -92,11 +100,12 @@ while (true) {
     // run the command sync/async and then return the result or error
     run(req)
     .then(function(resp) {
-        finish_req({ result: resp })
+        process_resp({ result: resp });
     })
     .catch(function(err) {
-        finish_req(gen_error(-32600, err))
+        process_resp(gen_error(-32600, err));
     });
 }
 
-process.exit(0);
+// start the loop
+process_req();

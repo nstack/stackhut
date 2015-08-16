@@ -140,8 +140,7 @@ class StackBuildCmd(UserCmd):
 
     @staticmethod
     def register(sp):
-        sp.add_argument("--outdir", '-o', default='stacks',
-                               help="Directory to save stacks to")
+        sp.add_argument("--outdir", '-o', default='stacks', help="Directory to save stacks to")
         sp.add_argument("--push", '-p', action='store_true', help="Push image to public after")
         sp.add_argument("--no-cache", '-n', action='store_true', help="Disable cache during build")
 
@@ -154,6 +153,7 @@ class StackBuildCmd(UserCmd):
     def run(self):
         super().run()
 
+        # Python, y u no have assert function??
         assert self.usercfg.username == 'stackhut', "Must be logged in as StackHut user to build & deploy these"
 
         # build bases and stacks
@@ -269,12 +269,14 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         sp.add_argument("port", nargs='?' ,default='6000', help="Port to host API on locally", type=int)
         sp.add_argument("--reqfile", '-r', help="Test request file")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
+        sp.add_argument("--privileged", '-p', action='store_true', help="Run as a privileged service")
 
     def __init__(self, args):
         super().__init__(args)
         self.reqfile = args.reqfile
         self.port = args.port
         self.force = args.force
+        self.privileged = args.privileged
 
     def run(self):
         super().run()
@@ -302,6 +304,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         args = ['-p', '{}:8080'.format(self.port),
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalBackend.local_store, res_flag),
                 '--rm=true', '--name={}'.format(name),
+                '--privileged' if self.args.privileged else None,
                 '--entrypoint=/usr/bin/env', service.docker_fullname, 'stackhut-runner', verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
@@ -330,11 +333,13 @@ class DeployCmd(HutCmd, UserCmd):
     def register(sp):
         sp.add_argument("--no-build", '-n', action='store_true', help="Deploy without re-building & pushing the image")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
+        sp.add_argument("--local", '-l', action='store_true', help="Perform image build & push locally rather than remote")
 
     def __init__(self, args):
         super().__init__(args)
         self.no_build = args.no_build
         self.force = args.force
+        self.local = args.local
 
     def create_methods(self):
         with open(CONTRACTFILE, 'r') as f:
@@ -379,10 +384,47 @@ class DeployCmd(HutCmd, UserCmd):
 
         service = Service(self.hutcfg, self.usercfg)
 
-        # call build+push first using Docker builder
-        if not self.no_build:
-            service.build_push(force=self.force, push=True)
+        if self.local:
+            # call build+push first using Docker builder
+            if not self.no_build:
+                service.build_push(force=self.force, push=True)
+        else:
+            import tempfile
+            import requests
+            import urllib.parse
+            import os.path
+            # get the upload url
+            # r_file = stackhut_api_user_call('file', dict(), self.usercfg)
 
+            # compress and upload the service
+            with tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False) as f:
+                f.close()
+            sh.tar('-cavf', f.name, '--exclude', ".git", '--exclude', "__pycache__", '--exclude', "run_result", '--exclude', ".stackhut", '.')
+            log.debug("Uploading file {} ({:.2f} Kb)...".format(f.name, os.path.getsize(f.name)/1024))
+            # with open(f.name, 'rb') as f1:
+            #     requests.post(r_file['url'], files=dict(file=f1))
+
+            sh.aws.s3('cp', f.name, 's3://stackhut-uploads', acl='public-read')
+
+            os.unlink(f.name)
+            test_url = urllib.parse.urljoin("https://s3.amazonaws.com/stackhut-uploads/", os.path.basename(f.name))
+
+            # call the remote build service
+            # TODO - this should be replaced with a SH client-side lib
+            log.debug("Calling remote build")
+            msg = dict(requesta=dict(
+                method="Default.remoteBuildAndDeploy",
+                params=[test_url]
+            ))
+
+            # r = stackhut_api_user_call('run', msg, self.usercfg)
+            r = requests.post("http://localhost:6000", data=json.dumps(msg), headers={'content-type': 'application/json'})
+
+            log.info("Remote build completed")
+            log.debug(r.json())
+            return 0
+
+        # Inform the SH server re the new/updated service
         # run the contract regardless
         rpc.generate_contract()
 
