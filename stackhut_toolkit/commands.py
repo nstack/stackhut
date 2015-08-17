@@ -253,11 +253,33 @@ class HutBuildCmd(HutCmd, UserCmd):
     def run(self):
         super().run()
 
-        # self.usercfg.assert_user_is_author(self.hutcfg)
-
+        self.usercfg.assert_user_is_author(self.hutcfg)
         # Docker builder
         service = Service(self.hutcfg, self.usercfg)
         service.build_push(force=self.force, dev=self.dev, no_cache=self.no_cache)
+        return 0
+
+
+class RemoteBuildCmd(HutCmd, UserCmd):
+    """Build StackHut service using docker"""
+    name = 'remotebuild'
+    description = "Build a StackHut service"
+    visible = False
+
+    @staticmethod
+    def register(sp):
+        sp.add_argument("--dev", '-v', action='store_true', help="Install dev version of StackHut Runner")
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.dev = args.dev
+
+    def run(self):
+        super().run()
+        # self.usercfg.assert_user_is_author(self.hutcfg)
+        # Docker builder
+        service = Service(self.hutcfg, self.usercfg)
+        service.build_push(force=True, dev=self.dev, no_cache=False, push=True)
         return 0
 
 
@@ -386,6 +408,9 @@ class DeployCmd(HutCmd, UserCmd):
 
         service = Service(self.hutcfg, self.usercfg)
 
+        # run the contract regardless
+        rpc.generate_contract()
+
         if self.local:
             # call build+push first using Docker builder
             if not self.no_build:
@@ -393,43 +418,34 @@ class DeployCmd(HutCmd, UserCmd):
         else:
             import tempfile
             import requests
-            import urllib.parse
             import os.path
+            log.info("Starting Remote build, this may take a while...")
+
             # get the upload url
-            # r_file = stackhut_api_user_call('file', dict(), self.usercfg)
+            r_file = stackhut_api_user_call('file', dict(), self.usercfg)
 
             # compress and upload the service
             with tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False) as f:
                 f.close()
             sh.tar('-cavf', f.name, '--exclude', ".git", '--exclude', "__pycache__", '--exclude', "run_result", '--exclude', ".stackhut", '.')
             log.debug("Uploading file {} ({:.2f} Kb)...".format(f.name, os.path.getsize(f.name)/1024))
-            # with open(f.name, 'rb') as f1:
-            #     requests.post(r_file['url'], files=dict(file=f1))
-
-            sh.aws.s3('cp', f.name, 's3://stackhut-uploads', acl='public-read')
-
+            with open(f.name, 'rb') as f1:
+                requests.post(r_file['url'], files=dict(file=f1))
+            # remove temp file
             os.unlink(f.name)
-            test_url = urllib.parse.urljoin("https://s3.amazonaws.com/stackhut-uploads/", os.path.basename(f.name))
 
             # call the remote build service
             # TODO - this should be replaced with a SH client-side lib
-            log.debug("Calling remote build")
             msg = dict(request=dict(
                 method="Default.remoteBuildAndDeploy",
-                params=[test_url]
+                params=[r_file['url']]
             ))
 
-            # r = stackhut_api_user_call('run', msg, self.usercfg)
-            r = requests.post("http://localhost:6000", data=json.dumps(msg), headers={'content-type': 'application/json'})
-
-            log.info("Remote build completed")
+            r = stackhut_api_user_call('run', msg, self.usercfg)
             log.debug(r.json())
-            return 0
+            log.info("...completed Remote build")
 
         # Inform the SH server re the new/updated service
-        # run the contract regardless
-        rpc.generate_contract()
-
         # build up the deploy message body
         test_request = json.loads(self._read_file('test_request.json'))
         readme = self._read_file('README.md')
