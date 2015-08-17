@@ -434,9 +434,8 @@ class Service:
         self.baseos = bases[hutcfg.baseos]
         self.stack = stacks[hutcfg.stack]
 
-        self.fullname = hutcfg.service_fullname
-        self.docker_fullname = hutcfg.docker_fullname(usercfg)
-        self.docker_repo = hutcfg.docker_repo(usercfg)
+        self.fullname = hutcfg.service_fullname(usercfg.username)
+        self.repo_name = hutcfg.repo_name(usercfg)
         self.dev = False
 
     @property
@@ -445,9 +444,9 @@ class Service:
 
     @property
     def image_exists(self):
-        repo_images = get_docker().client.images(self.docker_repo)
-        service_images = [x for x in repo_images if self.docker_fullname in x['RepoTags']]
-        assert len(service_images) < 2, "{} versions of {} found in Docker".format(self.docker_fullname)
+        repo_images = get_docker().client.images(self.repo_name)
+        service_images = [x for x in repo_images if self.fullname in x['RepoTags']]
+        assert len(service_images) < 2, "{} versions of {} found in Docker".format(self.fullname)
         return True if len(service_images) > 0 else False
 
     def _files_mtime(self):
@@ -477,7 +476,7 @@ class Service:
         """Runs the build only if a file has changed"""
         max_mtime = self._files_mtime()
 
-        image_info = get_docker().client.inspect_image(self.docker_fullname)
+        image_info = get_docker().client.inspect_image(self.fullname)
         image_build_string = image_info['Created']
 
         log.debug("Service {} last built at {}".format(self.fullname, image_build_string))
@@ -502,7 +501,7 @@ class Service:
 
             try:
                 builder.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-                builder.build_dockerfile(self.docker_fullname, dockerfile)
+                builder.build_dockerfile(self.fullname, dockerfile)
             finally:
                 self.stack.del_shim()
 
@@ -510,4 +509,4 @@ class Service:
         else:
             log.info("Build not necessary, run with '--force' to override")
 
-        builder.push_image(self.docker_fullname)
+        builder.push_image(self.fullname)

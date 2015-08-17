@@ -1,16 +1,13 @@
-# Name for the service - must consist of lower case letters, numbers, and dashes
+# Service name (use lower case letters, numbers, and dashes)
 name: {{ scaffold.name }}
 
-# Service author - must be a valid StackHut user
-author: {{ scaffold.author }}
-
-# uncomment if your service is hosted on GitHub
-# github_url: www.github.com/...
-
-# description of the service
+# Service description
 description: Awesome service in {{ scaffold.stack.name }}
 
-# stack we use, in terms of the OS and language runtime
+# GitHub source repo link (optional)
+# github_url: www.github.com/...
+
+# The service dependencies, in terms of the base OS and language runtime
 baseos: {{ scaffold.baseos.name }}
 stack: {{ scaffold.stack.name }}
 

@@ -252,8 +252,6 @@ class HutBuildCmd(HutCmd, UserCmd):
     # TODO - run clean cmd first
     def run(self):
         super().run()
-
-        self.usercfg.assert_user_is_author(self.hutcfg)
         # Docker builder
         service = Service(self.hutcfg, self.usercfg)
         service.build_push(force=self.force, dev=self.dev, no_cache=self.no_cache)
@@ -304,7 +302,6 @@ class ToolkitRunCmd(HutCmd, UserCmd):
 
     def run(self):
         super().run()
-        self.usercfg.assert_user_is_author(self.hutcfg)
 
         # Docker builder (if needed)
         service = Service(self.hutcfg, self.usercfg)
@@ -316,7 +313,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         # docker setup
         docker = get_docker()
 
-        log.info("Running service '{}' on http://{}:{}".format(self.hutcfg.service_fullname, docker.ip, self.port))
+        log.info("Running service '{}' on http://{}:{}".format(self.hutcfg.service_fullname(self.usercfg.username), docker.ip, self.port))
         # call docker to run the same command but in the container
         # use data vols for response output files
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
@@ -329,7 +326,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalBackend.local_store, res_flag),
                 '--rm=true', '--name={}'.format(name),
                 '--privileged' if self.args.privileged else None,
-                '--entrypoint=/usr/bin/env', service.docker_fullname, 'stackhut-runner', verbose_mode, 'runcontainer', '--uid', uid_gid]
+                '--entrypoint=/usr/bin/env', service.fullname, 'stackhut-runner', verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
         log.info("**** START SERVICE LOG ****")
@@ -404,8 +401,6 @@ class DeployCmd(HutCmd, UserCmd):
 
     def run(self):
         super().run()
-        self.usercfg.assert_user_is_author(self.hutcfg)
-
         service = Service(self.hutcfg, self.usercfg)
 
         # run the contract regardless
@@ -452,7 +447,6 @@ class DeployCmd(HutCmd, UserCmd):
 
         data = {
             'service': service.fullname,  # StackHut Service,
-            'docker_service': self.hutcfg.docker_fullname(self.usercfg),  # Docker service name
             'github_url': self.hutcfg.github_url,
             'example_request': test_request,
             'description': self.hutcfg.description,
