@@ -27,7 +27,7 @@ class UserCfg(dict):
     UserConfig configuration handling
     Wrapper class around dict that uses a json backing store
     """
-    show_keys = ['username', 'docker_username', 'send_analytics']
+    show_keys = ['username', 'send_analytics']
     keep_keys = ['send_analytics', 'm_id']
     config_version = 1
     config_fpath = os.path.expanduser(os.path.join('~', '.stackhut.cfg'))
@@ -86,22 +86,10 @@ class UserCfg(dict):
         if not self.logged_in:
             raise AssertionError("Please login first - run 'stackhut login'")
 
-    def assert_user_is_author(self, hutcfg):
-        if self.username != hutcfg.author:
-            raise AssertionError("StackHut username ({}) not equal to service author ({})\n"
-                                 "Please login as a different user or edit the Hutfile as required"
-                                 .format(self.username, hutcfg.author))
-
     @property
     def username(self):
         self.assert_logged_in()
         return self['username']
-
-    @property
-    def docker_username(self):
-        self.assert_logged_in()
-        log.debug("Using docker username '{}'".format(self['docker_username']))
-        return self['docker_username']
 
     @property
     def send_analytics(self):
@@ -131,7 +119,6 @@ class HutfileCfg:
         # get vals from the hutfile
         self.name = hutfile['name']
         self.assert_valid_name(self.name)
-        self.author = hutfile['author']
         self.version = 'latest'
 
         # self.email = hutfile['contact']
@@ -159,16 +146,10 @@ class HutfileCfg:
     def from_image(self):
         return "{}-{}".format(self.baseos, self.stack)
 
-    @property
-    def service_fullname(self):
+    def service_fullname(self, username):
         """Returns the StackHut service name for the image"""
-        return "{}/{}:{}".format(self.author, self.name, self.version)
+        return "{}/{}:{}".format(username, self.name, self.version)
 
-    def docker_fullname(self, usercfg):
-        """Returns the DockerHub name for the image"""
-        return "{}/{}:{}".format(usercfg.docker_username, self.name, self.version)
-
-    def docker_repo(self, usercfg):
+    def repo_name(self, usercfg):
         """Returns the DockerHub repo for the image"""
-        return self.docker_fullname(usercfg).split(':')[0]
-
+        return self.service_fullname(usercfg.username).split(':')[0]
