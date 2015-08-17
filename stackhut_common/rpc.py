@@ -73,7 +73,6 @@ class NonZeroExitError(RpcException):
         super().__init__(-32001, 'Sub-command returned a non-zero exit', data)
 
 def exc_to_json_error(e, req_id=None):
-    log.error(e)
     return err_response(req_id, e.code, e.msg, e.data)
 
 from enum import Enum
@@ -142,25 +141,30 @@ class StackHutRPC:
         self._add_id(task_req, 'id')
         self.backend.set_task_id(task_req['id'])
 
-        req = task_req['request']
-        if type(req) is list:
-            if len(req) < 1:
-                return exc_to_json_error(InvalidReqError(data=dict(msg="Empty Batch")))
+        try:
+            req = task_req['request']
+            if type(req) is list:
+                if len(req) < 1:
+                    return exc_to_json_error(InvalidReqError(data=dict(msg="Empty Batch")))
 
-            # find batch interface
-            iface_name = None
-            first_method = req[0].get('method', None)
-            if first_method:
-                iface_name = 'Default' if first_method.find('.') < 0 else first_method.split('.')[0]
-            if iface_name:
-                self._cmd_call('{}.{}'.format(iface_name, SHCmds.preBatch.name))
+                # find batch interface
+                iface_name = None
+                first_method = req[0].get('method', None)
+                if first_method:
+                    iface_name = 'Default' if first_method.find('.') < 0 else first_method.split('.')[0]
+                if iface_name:
+                    self._cmd_call('{}.{}'.format(iface_name, SHCmds.preBatch.name))
 
-            task_resp = [self._req_call(r) for r in req]
+                task_resp = [self._req_call(r) for r in req]
 
-            if iface_name:
-                self._cmd_call('{}.{}'.format(iface_name, SHCmds.postBatch.name))
-        else:
-            task_resp = self._req_call(req)
+                if iface_name:
+                    self._cmd_call('{}.{}'.format(iface_name, SHCmds.postBatch.name))
+            else:
+                task_resp = self._req_call(req)
+
+        except Exception as e:
+            task_resp = exc_to_json_error(InternalError(dict(exception=repr(e))))
+
         return task_resp
 
     def _cmd_call(self, cmd):

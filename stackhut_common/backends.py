@@ -16,6 +16,8 @@ StackHut IO Handling on local and cloud backends
 """
 import abc
 import os
+
+import json
 import shutil
 import threading
 from queue import Queue
@@ -23,6 +25,7 @@ import sh
 from werkzeug.wrappers import Request, Response
 from werkzeug.serving import run_simple
 from stackhut_common.utils import log
+from stackhut_common import rpc
 
 STACKHUT_DIR = '.stackhut'
 
@@ -31,6 +34,19 @@ def get_req_dir(req_id):
 
 def get_req_file(req_id, fname):
     return os.path.join(STACKHUT_DIR, req_id, fname)
+
+def http_status_code(data):
+    if 'error' not in data:
+        return 200
+
+    code = data['error']['code']
+
+    if code == -32600:
+        return 400
+    elif code == -32601:
+        return 404
+    else:
+        return 500
 
 class AbstractBackend:
     """A base wrapper wrapper around common IO task state"""
@@ -43,6 +59,7 @@ class AbstractBackend:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
+    # Interace between backend and runner
     @abc.abstractmethod
     def get_request(self):
         pass
@@ -50,6 +67,21 @@ class AbstractBackend:
     @abc.abstractmethod
     def put_response(self, s):
         pass
+
+    # First-stage processing of request/response
+    def _process_request(self, data):
+        try:
+            task_req = json.loads(data.decode('utf-8'))
+            log.info("Request - {}".format(task_req))
+        except Exception as e:
+            _e = rpc.exc_to_json_error(rpc.ParseError(dict(exception=repr(e))))
+            return True, _e
+        else:
+            return False, task_req
+
+    def _process_response(self, data):
+        log.info("Response - {}".format(data))
+        return json.dumps(data).encode('utf-8')
 
     def get_file(self, name):
         raise NotImplementedError("IOStore.get_file called")
@@ -67,35 +99,6 @@ class AbstractBackend:
         os.mkdir(req_path) if not os.path.exists(req_path) else None
         return req_path
 
-class LocalServer(threading.Thread):
-    """
-    Local webserver running on separate thread for dev usage
-    Sends msgs to LocalBackend over a pair of shared queues
-    """
-    def __init__(self, port, req_q, resp_q, *args, **kwargs):
-        super().__init__(*args, daemon=True, **kwargs)
-        self.port = port
-        self.req_q = req_q
-        self.resp_q = resp_q
-
-    def run(self):
-        # start in a new thread
-        log.info("Started StackHut Request Server - press Ctrl-C to quit".format(self.port))
-        run_simple('0.0.0.0', self.port, self.application)
-
-    @Request.application
-    def application(self, request):
-        self.req_q.put(request.data)
-        response = self.resp_q.get()
-
-        self.req_q.task_done()
-        self.resp_q.task_done()
-
-        status_code = 500 if 'error' in response else 200
-        response_obj = Response(response, mimetype='application/json')
-        # response_obj.status = 'Internal Service Error'
-        response_obj.status_code = status_code
-        return response_obj
 
 class LocalBackend(AbstractBackend):
     """Mock storage and server system for local testing"""
@@ -113,11 +116,18 @@ class LocalBackend(AbstractBackend):
         if not os.path.exists(self.local_store):
             os.mkdir(self.local_store)
 
+        # configure the local server thread
+        self.port = port
         self.req_q = Queue(1)
         self.resp_q = Queue(1)
         self.got_req = threading.Event()
-        self.server = LocalServer(port, self.req_q, self.resp_q)
-        self.server.start()
+        server_t = threading.Thread(target=self.start_server, daemon=True)
+        server_t.start()
+
+    def start_server(self):
+        # start in a new thread
+        log.info("Started StackHut Request Server - press Ctrl-C to quit")
+        run_simple('0.0.0.0', self.port, self.local_server)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         log.debug("Shutting down Local backend")
@@ -129,11 +139,34 @@ class LocalBackend(AbstractBackend):
         if self.uid_gid is not None:
             sh.chown('-R', self.uid_gid, self.local_store)
 
-    def get_request(self):
-        return self.req_q.get().decode('utf-8')
+    @Request.application
+    def local_server(self, request):
+        """
+        Local webserver running on separate thread for dev usage
+        Sends msgs to LocalBackend over a pair of shared queues
+        """
+        (rpc_error, data) = self._process_request(request.data)
+        if rpc_error:
+            return self._process_response(data)
 
-    def put_response(self, s):
-        self.resp_q.put(s.encode('utf-8'))
+        task_req = data
+        self.req_q.put(task_req)
+        response = self.resp_q.get()
+
+        self.req_q.task_done()
+        self.resp_q.task_done()
+
+        return self._process_response(response)
+
+    def _process_response(self, data):
+        return Response(super()._process_response(data),
+                        status=http_status_code(data), mimetype='application/json')
+
+    def get_request(self):
+        return self.req_q.get()
+
+    def put_response(self, data):
+        self.resp_q.put(data)
 
     def put_file(self, fname, req_id='', make_public=True):
         """Put file into a subdir keyed by req_id in local store"""
