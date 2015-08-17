@@ -21,7 +21,7 @@ RUN echo "Starting..." && \
     echo "...done" && exit
 {% else %}
 # install stackhut-runner from release branch
-RUN pip3 install --no-cache-dir --compile https://s3-eu-west-1.amazonaws.com/stackhut-releases/stackhut_runner-1.0.dev0-py3-none-any.whl && \
+RUN pip3 install --no-cache-dir --compile https://s3-eu-west-1.amazonaws.com/stackhut-releases/stackhut_runner-1.0.dev0-py3-none-any.whl
 {% endif %}
 
 {% if service.stack.service_package_files %}

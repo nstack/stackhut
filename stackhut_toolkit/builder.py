@@ -342,10 +342,10 @@ class Python(Stack):
     shim_cmd = ['/usr/bin/env', 'python3', 'runner.py']
 
     def install_stack_packages(self):
-        return 'pip3 install --no-cache-dir --compile --upgrade {}'.format(str.join(' ', self.stack_packages))
+        return 'pip3 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_packages))
 
     def install_service_packages(self):
-        return 'pip3 install --no-cache-dir --compile -r --upgrade {}'.format(self.package_file)
+        return 'pip3 install --no-cache-dir --compile -r {}'.format(self.package_file)
 
 
 class NodeJS(Stack):
