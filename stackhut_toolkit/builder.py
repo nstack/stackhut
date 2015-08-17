@@ -22,6 +22,7 @@ import json
 from distutils.dir_util import copy_tree
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
+import shutil
 import sh
 import arrow
 import docker as docker_py
@@ -46,7 +47,7 @@ except sh.CommandNotFound as e:
     OS_TYPE = 'UNKNOWN'
 
 
-# TODO - move to docker machine instead
+# TODO - move to docker machine/toolkit instead
 class DockerClient:
     client = None
     ip = 'localhost'
@@ -169,8 +170,9 @@ class BaseOS:
     # Override and set pre- and post- commands if needed for initial OS setup
     pre = []
     post = []
-    pip_update = ['pip3 install --no-cache --compile --upgrade pip']
-
+    py_update = ['python3 /get-pip.py',
+                 'rm /get-pip.py'
+                 ]
 
     def __init__(self):
         super().__init__()
@@ -189,13 +191,13 @@ class BaseOS:
         builder.stack_build_push('Dockerfile-baseos.txt', dict(baseos=self), outdir, image_name)
 
     def setup_cmds(self):
-        return self.pre + self.install_os_pkg(self.baseos_pkgs) + self.post + self.pip_update
+        return self.pre + self.install_os_pkg(self.baseos_pkgs) + self.post + self.py_update
 
 
 class Fedora(BaseOS):
     name = 'fedora'
 
-    baseos_pkgs = ['python3', 'python3-pip']
+    baseos_pkgs = ['python3']
 
     def os_pkg_cmd(self, pkgs):
         return 'dnf -y install {}'.format(' '.join(pkgs))
@@ -216,23 +218,20 @@ class Fedora(BaseOS):
 
 class Debian(BaseOS):
     name = 'debian'
-    baseos_pkgs = ['python3', 'python3-pip']
-    pre = [
-        'apt-get -y update',
-        'apt-get -y upgrade'
-    ]
-    pip_update = ['pip3 install --compile --upgrade pip']
+    baseos_pkgs = ['python3']
+    pre = []
 
     def os_pkg_cmd(self, pkgs):
         return 'apt-get install -y --no-install-recommends {}'.format(' '.join(pkgs))
 
     def install_os_pkg(self, pkgs):
         return [
+            'apt-get -y update',
             self.os_pkg_cmd(pkgs),
             'apt-get -y clean',
             'apt-get -y autoclean',
             'apt-get -y autoremove --purge',
-            # 'rm -rf /var/lib/apt/lists/*',
+            'rm -rf /var/lib/apt/lists/*',
             'rm -rf /usr/share/locale/*',
             'rm -rf /usr/share/doc/*',
             # 'journalctl --vacuum-size=0',
@@ -343,10 +342,10 @@ class Python(Stack):
     shim_cmd = ['/usr/bin/env', 'python3', 'runner.py']
 
     def install_stack_packages(self):
-        return 'pip3 install --no-cache-dir --compile {}'.format(str.join(' ', self.stack_packages))
+        return 'pip3 install --no-cache-dir --compile --upgrade {}'.format(str.join(' ', self.stack_packages))
 
     def install_service_packages(self):
-        return 'pip3 install --no-cache-dir --compile -r {}'.format(self.package_file)
+        return 'pip3 install --no-cache-dir --compile -r --upgrade {}'.format(self.package_file)
 
 
 class NodeJS(Stack):
@@ -388,22 +387,20 @@ def get_baseos_stack_pkgs(base_os, stack):
 
 @dispatch(Ubuntu, NodeJS)
 def get_baseos_stack_pkgs(base_os, stack):
-    cmds = ['apt-get install -y curl',
+    cmds = ['apt-get update',
+            'apt-get install -y curl',
             'curl -sL https://deb.nodesource.com/setup_iojs_3.x | bash -',
-            'apt-get install -y --no-install-recommends iojs',
             'apt-get remove --purge -y curl',
-            # 'apt-get remove --purge -y curl $(apt-mark showauto)',
             ]
     pkgs = ['iojs']
     return cmds, pkgs
 
 @dispatch(Debian, NodeJS)
 def get_baseos_stack_pkgs(base_os, stack):
-    cmds = ['apt-get install -y curl',
+    cmds = ['apt-get update',
+            'apt-get install -y curl',
             'curl -sL https://deb.nodesource.com/setup_iojs_3.x | bash -',
-            'apt-get install -y --no-install-recommends iojs',
             'apt-get remove --purge -y curl',
-            # 'apt-get remove --purge -y curl $(apt-mark showauto)',
             ]
     pkgs = ['iojs']
     return cmds, pkgs
@@ -417,11 +414,11 @@ def get_baseos_stack_pkgs(base_os, stack):
     log.debug("OS / Stack combo for {}/{} not implemented".format(base_os.name, stack.name))
     return None
 
-#bases = dict([(b.name, b) for b in [Fedora(), Debian(), Ubuntu()]])
-#stacks = dict([(s.name, s) for s in [Python(), NodeJS()]])
-
 bases = dict([(b.name, b) for b in [Debian(), Ubuntu(), Fedora()]])
 stacks = dict([(s.name, s) for s in [NodeJS(), Python()]])
+
+# bases = dict([(b.name, b) for b in [Debian()]])
+# stacks = dict([(s.name, s) for s in [NodeJS()]])
 
 def is_stack_supported(base, stack):
     """Return true if the baseos & stack combination is supported"""

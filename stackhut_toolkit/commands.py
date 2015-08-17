@@ -18,6 +18,7 @@ import json
 import os
 import getpass
 import uuid
+import urllib.request
 from distutils.dir_util import copy_tree
 import sh
 from jinja2 import Environment, FileSystemLoader
@@ -251,7 +252,8 @@ class HutBuildCmd(HutCmd, UserCmd):
     # TODO - run clean cmd first
     def run(self):
         super().run()
-        self.usercfg.assert_user_is_author(self.hutcfg)
+
+        # self.usercfg.assert_user_is_author(self.hutcfg)
 
         # Docker builder
         service = Service(self.hutcfg, self.usercfg)
@@ -412,7 +414,7 @@ class DeployCmd(HutCmd, UserCmd):
             # call the remote build service
             # TODO - this should be replaced with a SH client-side lib
             log.debug("Calling remote build")
-            msg = dict(requesta=dict(
+            msg = dict(request=dict(
                 method="Default.remoteBuildAndDeploy",
                 params=[test_url]
             ))
