@@ -23,8 +23,8 @@ import sys
 import stackhut
 from app import SERVICES
 
-def gen_error(code, msg=''):
-    return dict(error=code, msg=msg)
+def gen_error(code, msg='', data=None):
+    return dict(error=code, msg=msg, data=data)
 
 def run(req):
     # tell the client helper the current taskid
@@ -41,9 +41,14 @@ def run(req):
         except AttributeError:
             return gen_error(-32601)
 
-        iface_impl.preRequest()
-        result = func(*params) if params else func()
-        iface_impl.postRequest()
+        # iface_impl.preRequest()
+        # result = func(*params) if params else func()
+        # iface_impl.postRequest()
+
+        try:
+            result = func(*params) if params else func()
+        except stackhut.ServiceError as e:
+            return gen_error(-32002, e.msg, e.data)
 
         return dict(result=result)
     else:
@@ -68,7 +73,7 @@ if __name__ == "__main__":
             try:
                 resp = run(req)
             except Exception as e:
-                resp = gen_error(-32000, str(e))
+                resp = gen_error(-32603, repr(e))
 
             os.chdir(stackhut.root_dir)
 

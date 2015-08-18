@@ -239,7 +239,7 @@ class HutBuildCmd(HutCmd, UserCmd):
     def register(sp):
         sp.add_argument("--full", '-l', action='store_true', help="Run a full build")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
-        sp.add_argument("--dev", '-v', action='store_true', help="Install dev version of StackHut Runner")
+        sp.add_argument("--dev", '-d', action='store_true', help="Install dev version of StackHut Runner")
 
     def __init__(self, args):
         super().__init__(args)
@@ -253,7 +253,7 @@ class HutBuildCmd(HutCmd, UserCmd):
     def run(self):
         super().run()
         # Docker builder
-        service = Service(self.hutcfg, self.usercfg)
+        service = Service(self.hutcfg, self.usercfg.username)
         service.build_push(force=self.force, dev=self.dev, no_cache=self.no_cache)
         return 0
 
@@ -266,17 +266,18 @@ class RemoteBuildCmd(HutCmd, UserCmd):
 
     @staticmethod
     def register(sp):
-        sp.add_argument("--dev", '-v', action='store_true', help="Install dev version of StackHut Runner")
+        sp.add_argument("--dev", action='store_true', help="Install dev version of StackHut Runner")
+        sp.add_argument("author", help="Service author")
 
     def __init__(self, args):
         super().__init__(args)
         self.dev = args.dev
+        self.author = args.author
 
     def run(self):
         super().run()
-        # self.usercfg.assert_user_is_author(self.hutcfg)
         # Docker builder
-        service = Service(self.hutcfg, self.usercfg)
+        service = Service(self.hutcfg, self.author)
         service.build_push(force=True, dev=self.dev, no_cache=False, push=True)
         return 0
 
@@ -304,7 +305,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         super().run()
 
         # Docker builder (if needed)
-        service = Service(self.hutcfg, self.usercfg)
+        service = Service(self.hutcfg, self.usercfg.username)
         service.build_push(force=self.force)
 
         host_store_dir = os.path.abspath(LocalBackend.local_store)
@@ -401,7 +402,7 @@ class DeployCmd(HutCmd, UserCmd):
 
     def run(self):
         super().run()
-        service = Service(self.hutcfg, self.usercfg)
+        service = Service(self.hutcfg, self.usercfg.username)
 
         # run the contract regardless
         rpc.generate_contract()
@@ -450,6 +451,7 @@ class DeployCmd(HutCmd, UserCmd):
             'github_url': self.hutcfg.github_url,
             'example_request': test_request,
             'description': self.hutcfg.description,
+            'private': self.hutcfg.private,
             'readme': readme,
             'schema': self.create_methods()
         }
@@ -468,5 +470,5 @@ COMMANDS = [
     InitCmd,
     HutBuildCmd, ToolkitRunCmd, DeployCmd,
     # hidden
-    StackBuildCmd,
+    StackBuildCmd, RemoteBuildCmd
 ]

@@ -427,15 +427,14 @@ def is_stack_supported(base, stack):
 ###############################################################################
 class Service:
     """Main primitive representing a StackHut service"""
-    def __init__(self, hutcfg, usercfg):
+    def __init__(self, hutcfg, author):
         super().__init__()
         self.hutcfg = hutcfg
-        self.usercfg = usercfg
         self.baseos = bases[hutcfg.baseos]
         self.stack = stacks[hutcfg.stack]
 
-        self.fullname = hutcfg.service_fullname(usercfg.username)
-        self.repo_name = hutcfg.repo_name(usercfg)
+        self.fullname = hutcfg.service_fullname(author)
+        self.repo_name = hutcfg.repo_name(author)
         self.dev = False
 
     @property

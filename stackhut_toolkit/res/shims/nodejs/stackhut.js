@@ -48,9 +48,9 @@ module.exports.Service = class {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Runtime Lib
-function make_call(method) {
+function make_call(method, ...params) {
 
-    let params = [].slice.call(arguments, 1);
+    //let params = [].slice.call(arguments, 1);
     params.unshift(module.exports.req_id);
 
     let payload = {
@@ -82,6 +82,10 @@ function make_call(method) {
 }
 
 // stackhut library functions
+module.exports.get_stackhut_user = function() {
+    return make_call('get_stackhut_user')
+};
+
 module.exports.put_file = function(fname, make_public) {
     let _make_public = typeof make_public !== 'undefined' ? make_public : true;
     return make_call('put_file', fname, _make_public)

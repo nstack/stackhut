@@ -11,5 +11,8 @@ description: Awesome service in {{ scaffold.stack.name }}
 baseos: {{ scaffold.baseos.name }}
 stack: {{ scaffold.stack.name }}
 
-# Does the service persistent between requests
+# Persist the service between requests
 persistent: True
+
+# Restrict service access to authenticated users
+private: True

@@ -22,7 +22,6 @@ headers = {'content-type': 'application/json'}
 id_val = 0
 req_id = None
 
-
 class Service:
     def __init__(self):
         pass
@@ -41,6 +40,11 @@ class Service:
 
     def postRequest(self):
         pass
+
+class ServiceError(Exception):
+    def __init__(self, msg, data=None):
+        self.msg = msg
+        self.data = data
 
 
 ###############################################################################
@@ -73,6 +77,9 @@ root_dir = os.getcwd()
 in_container = True if os.path.exists('/workdir') else False
 
 # stackhut library functions
+def get_stackhut_user():
+    return make_call('get_stackhut_user')
+
 def put_file(fname, make_public=True):
     return make_call('put_file', fname, make_public)
 
