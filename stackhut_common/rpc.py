@@ -47,6 +47,8 @@ def generate_contract():
 
 ####################################################################################################
 # Error handling
+ERR_SERVICE = -32002
+
 class ParseError(RpcException):
     def __init__(self, data=None):
         super().__init__(ERR_PARSE, 'Parse Error', data)
@@ -60,8 +62,12 @@ class MethodNotFoundError(RpcException):
         super().__init__(ERR_METHOD_NOT_FOUND, 'Method Not Found', data)
 
 class InternalError(RpcException):
-    def __init__(self, data=None):
-        super().__init__(ERR_INTERNAL, 'Internal Error', data)
+    def __init__(self, msg='', data=None):
+        super().__init__(ERR_INTERNAL, 'Internal Error - {}'.format(msg), data)
+
+class ServiceError(RpcException):
+    def __init__(self, msg, data=None):
+        super().__init__(ERR_SERVICE, 'Service Error - {}'.format(msg), data)
 
 class CustomError(RpcException):
     def __init__(self, code, msg, data=None):
@@ -83,6 +89,11 @@ class SHCmds(Enum):
     preBatch = 3
     postBatch = 4
 
+def add_get_id(d):
+    """add id to json rpc if not present"""
+    if 'id' not in d:
+        d['id'] = str(uuid.uuid4())
+    return d['id']
 
 class StackHutRPC:
     """
@@ -135,46 +146,10 @@ class StackHutRPC:
 
         signal.alarm(0)
 
-    def call(self, task_req):
-        """Make RPC call for given task"""
-        # Massage the data
-        self._add_id(task_req, 'id')
-        self.backend.set_task_id(task_req['id'])
-
-        try:
-            req = task_req['request']
-            if type(req) is list:
-                if len(req) < 1:
-                    return exc_to_json_error(InvalidReqError(data=dict(msg="Empty Batch")))
-
-                # find batch interface
-                iface_name = None
-                first_method = req[0].get('method', None)
-                if first_method:
-                    iface_name = 'Default' if first_method.find('.') < 0 else first_method.split('.')[0]
-                if iface_name:
-                    self._cmd_call('{}.{}'.format(iface_name, SHCmds.preBatch.name))
-
-                task_resp = [self._req_call(r) for r in req]
-
-                if iface_name:
-                    self._cmd_call('{}.{}'.format(iface_name, SHCmds.postBatch.name))
-            else:
-                task_resp = self._req_call(req)
-
-        except Exception as e:
-            task_resp = exc_to_json_error(InternalError(dict(exception=repr(e))))
-
-        self.backend.set_task_id(None)
-        return task_resp
-
     def _cmd_call(self, cmd):
         log.debug('Sending cmd message - {}'.format(cmd))
         resp = self._sub_call(cmd, [], 'shcmd')
         log.debug("Cmd response - {}".format(resp))
-
-    def _add_id(self, d, v):
-        d[v] = str(uuid.uuid4()) if v not in d else str(d[v])
 
     def _req_call(self, req):
         """Make RPC call for a single request"""
@@ -184,10 +159,10 @@ class StackHutRPC:
                 raise InvalidReqError(dict(msg="%s is not an object.".format(req)))
 
             # massage the data (if needed)
-            self._add_id(req, 'id')
-            req_id = req['id']
+            req_id = add_get_id(req)
 
-            if 'jsonrpc' not in req: req['jsonrpc'] = "2.0"
+            if 'jsonrpc' not in req:
+                req['jsonrpc'] = "2.0"
             if "method" not in req:
                 raise InvalidReqError(dict(msg="No method"))
             # return the idl - TODO - move into Scala
@@ -230,13 +205,44 @@ class StackHutRPC:
 
         # check the response
         if 'error' in sub_resp:
-            code = sub_resp['error']
-            if code == ERR_METHOD_NOT_FOUND:
+            error_code = sub_resp['error']
+            log.debug(sub_resp)
+            if error_code == ERR_METHOD_NOT_FOUND:
                 raise MethodNotFoundError()
+            elif error_code == ERR_INTERNAL:
+                raise InternalError(sub_resp['msg'], sub_resp['data'])
             else:
-                raise CustomError(code, sub_resp['msg'])
+                raise CustomError(error_code, sub_resp['msg'], sub_resp['data'])
 
         # validate and return the response
         result = sub_resp['result']
         return result
 
+    def call(self, task_req):
+        """Make RPC call for given task"""
+        # Massage the data
+        try:
+            req = task_req['request']
+            if type(req) is list:
+                if len(req) < 1:
+                    return exc_to_json_error(InvalidReqError(data=dict(msg="Empty Batch")))
+
+                # find batch interface
+                iface_name = None
+                first_method = req[0].get('method', None)
+                if first_method:
+                    iface_name = 'Default' if first_method.find('.') < 0 else first_method.split('.')[0]
+                if iface_name:
+                    self._cmd_call('{}.{}'.format(iface_name, SHCmds.preBatch.name))
+
+                task_resp = [self._req_call(r) for r in req]
+
+                if iface_name:
+                    self._cmd_call('{}.{}'.format(iface_name, SHCmds.postBatch.name))
+            else:
+                task_resp = self._req_call(req)
+
+        except Exception as e:
+            task_resp = exc_to_json_error(InternalError(repr(e)))
+
+        return task_resp

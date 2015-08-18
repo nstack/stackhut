@@ -52,6 +52,7 @@ class AbstractBackend:
     """A base wrapper wrapper around common IO task state"""
     def __init__(self):
         os.mkdir(STACKHUT_DIR) if not os.path.exists(STACKHUT_DIR) else None
+        self.request = {}
 
     def __enter__(self):
         return self
@@ -71,16 +72,18 @@ class AbstractBackend:
     # First-stage processing of request/response
     def _process_request(self, data):
         try:
-            task_req = json.loads(data.decode('utf-8'))
-            log.info("Request - {}".format(task_req))
+            self.request = json.loads(data.decode('utf-8'))
+            rpc.add_get_id(self.request)
+            log.info("Request - {}".format(self.request))
         except Exception as e:
             _e = rpc.exc_to_json_error(rpc.ParseError(dict(exception=repr(e))))
             return True, _e
         else:
-            return False, task_req
+            return False, self.request
 
     def _process_response(self, data):
         log.info("Response - {}".format(data))
+        self.request = {}
         return json.dumps(data).encode('utf-8')
 
     def get_file(self, name):
@@ -90,8 +93,9 @@ class AbstractBackend:
     def put_file(self, fname, req_id='', make_public=False):
         pass
 
-    def set_task_id(self, task_id):
-        self.task_id = task_id
+    @property
+    def task_id(self):
+        return self.request.get('id', None)
 
     def new_request_path(self, req_id):
         # create a private working dir

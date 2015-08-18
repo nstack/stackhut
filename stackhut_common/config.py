@@ -119,7 +119,7 @@ class HutfileCfg:
         # get vals from the hutfile
         self.name = hutfile['name']
         self.assert_valid_name(self.name)
-        self.version = 'latest'
+        self.version = hutfile.get('version', 'latest')
 
         # self.email = hutfile['contact']
         self.description = hutfile['description']
@@ -131,6 +131,7 @@ class HutfileCfg:
         self.dirs = [d for d in files if os.path.isdir(d)]
 
         self.persistent = hutfile.get('persistent', False)
+        self.private = hutfile.get('private', True)
 
         self.os_deps = hutfile.get('os_deps', [])
         self.docker_cmds = hutfile.get('docker_cmds', [])
@@ -150,6 +151,6 @@ class HutfileCfg:
         """Returns the StackHut service name for the image"""
         return "{}/{}:{}".format(username, self.name, self.version)
 
-    def repo_name(self, usercfg):
+    def repo_name(self, username):
         """Returns the DockerHub repo for the image"""
-        return self.service_fullname(usercfg.username).split(':')[0]
+        return self.service_fullname(username).split(':')[0]
