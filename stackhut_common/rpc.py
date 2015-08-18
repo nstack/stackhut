@@ -165,6 +165,7 @@ class StackHutRPC:
         except Exception as e:
             task_resp = exc_to_json_error(InternalError(dict(exception=repr(e))))
 
+        self.backend.set_task_id(None)
         return task_resp
 
     def _cmd_call(self, cmd):
