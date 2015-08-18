@@ -258,7 +258,7 @@ class HutBuildCmd(HutCmd, UserCmd):
         return 0
 
 
-class RemoteBuildCmd(HutCmd, UserCmd):
+class RemoteBuildCmd(HutCmd):
     """Build StackHut service using docker"""
     name = 'remotebuild'
     description = "Build a StackHut service"
@@ -437,8 +437,8 @@ class DeployCmd(HutCmd, UserCmd):
                 params=[r_file['url']]
             ))
 
-            r = stackhut_api_user_call('run', msg, self.usercfg)
-            log.debug(r.json())
+            r = stackhut_api_user_call('run', msg, self.usercfg).json()
+            log.debug(r['cmdOutput'])
             log.info("...completed Remote build")
 
         # Inform the SH server re the new/updated service
