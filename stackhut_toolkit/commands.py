@@ -434,7 +434,7 @@ class DeployCmd(HutCmd, UserCmd):
             from . import client
             auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
             sh_client = client.SHService('stackhut', 'stackhut', auth=auth)
-            r = sh_client.remoteBuildAndDeploy(r_file['key'])
+            r = sh_client.remoteBuild(r_file['key'])
             log.debug(r['cmdOutput'])
             log.info("...completed Remote build")
 
