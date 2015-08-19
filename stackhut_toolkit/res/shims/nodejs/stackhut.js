@@ -91,6 +91,10 @@ module.exports.put_file = function(fname, make_public) {
     return make_call('put_file', fname, _make_public)
 };
 
+module.exports.get_file = function(key) {
+    return make_call('get_file', key)
+};
+
 module.exports.download_file = function(url, fname) {
     let _fname = typeof fname !== 'undefined' ? fname : null;
     return make_call('download_file', url, _fname)

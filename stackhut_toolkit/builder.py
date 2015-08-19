@@ -25,6 +25,7 @@ from multipledispatch import dispatch
 import shutil
 import sh
 import arrow
+import urllib.parse
 import docker as docker_py
 from docker.utils import kwargs_from_env
 from docker.errors import DockerException
@@ -129,10 +130,11 @@ class DockerBuild:
                 log.error("Build Traceback - \n{}".format(e.stdout.decode('utf-8').strip()))
             raise RuntimeError("Docker Build failed") from None
 
-    def push_image(self, tag):
+    def push_image(self, tag, registry_url):
         if self.push:
-            log.info("Uploading image {} - this may take a while...".format(tag))
-            r = self.docker.client.push(tag, stream=True)
+            image_uri = urllib.parse.urljoin(registry_url, tag)
+            log.info("Uploading image {} - this may take a while...".format(image_uri))
+            r = self.docker.client.push(image_uri, stream=True)
             r_summary = [json.loads(x.decode('utf-8')) for x in r][-1]
 
             if 'error' in r_summary:
@@ -157,7 +159,7 @@ class DockerBuild:
         tag = "{}/{}:{}".format('stackhut', image_name, 'latest')
 
         self.build_dockerfile(tag)
-        self.push_image(tag)
+        self.push_image(tag, 'https://index.docker.io/v1/')
 
         os.chdir(utils.ROOT_DIR)
 
@@ -508,4 +510,4 @@ class Service:
         else:
             log.info("Build not necessary, run with '--force' to override")
 
-        builder.push_image(self.fullname)
+        builder.push_image(self.fullname, 'https://registry.stackhut.com:5000')

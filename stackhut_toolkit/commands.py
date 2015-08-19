@@ -431,13 +431,10 @@ class DeployCmd(HutCmd, UserCmd):
             os.unlink(f.name)
 
             # call the remote build service
-            # TODO - this should be replaced with a SH client-side lib
-            msg = dict(request=dict(
-                method="Default.remoteBuildAndDeploy",
-                params=[r_file['url']]
-            ))
-
-            r = stackhut_api_user_call('run', msg, self.usercfg).json()
+            from . import client
+            auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
+            sh_client = client.SHService('stackhut', 'stackhut', auth=auth)
+            r = sh_client.remoteBuildAndDeploy(r_file['key'])
             log.debug(r['cmdOutput'])
             log.info("...completed Remote build")
 
@@ -451,7 +448,7 @@ class DeployCmd(HutCmd, UserCmd):
             'github_url': self.hutcfg.github_url,
             'example_request': test_request,
             'description': self.hutcfg.description,
-            'private': self.hutcfg.private,
+            'private_service': self.hutcfg.private,
             'readme': readme,
             'schema': self.create_methods()
         }

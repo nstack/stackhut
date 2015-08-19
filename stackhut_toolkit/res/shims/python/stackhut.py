@@ -83,6 +83,9 @@ def get_stackhut_user():
 def put_file(fname, make_public=True):
     return make_call('put_file', fname, make_public)
 
+def get_file(key):
+    return make_call('get_file', key)
+
 def download_file(url, fname=None):
     return make_call('download_file', url, fname)
 
