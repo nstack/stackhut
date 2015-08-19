@@ -86,7 +86,7 @@ class AbstractBackend:
         self.request = {}
         return json.dumps(data).encode('utf-8')
 
-    def get_file(self, name):
+    def get_file(self, key):
         raise NotImplementedError("IOStore.get_file called")
 
     @abc.abstractmethod
