@@ -19,6 +19,7 @@ from queue import Queue
 import urllib.parse
 import requests
 from stackhut_common.utils import log, SERVER_URL
+from stackhut_common import utils
 
 # names to export
 __all__ = ['stackhut_api_call', 'stackhut_api_user_call', 'keen_client', 'get_res_path']
@@ -35,7 +36,7 @@ def get_res_path(res_name):
 json_header = {'content-type': 'application/json'}
 
 def stackhut_api_call(endpoint, msg, secure=True):
-    url = urllib.parse.urljoin(SERVER_URL, endpoint)
+    url = urllib.parse.urljoin(utils.SERVER_URL, endpoint)
     log.debug("Calling Stackhut Server at {} with \n\t{}".format(url, json.dumps(msg)))
     r = requests.post(url, data=json.dumps(msg), headers=json_header)
 
