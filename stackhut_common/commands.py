@@ -60,7 +60,9 @@ class CmdRunner:
 
         # General App Setup
         if self.args.server:
-            utils.SERVER_URL = self.args.server
+            utils.setup_server_url(self.args.server)
+            # utils.SERVER_URL = self.args.server
+
         utils.setup_logging(self.args.verbose)
         utils.log.info("Starting {}".format(self.title))
 

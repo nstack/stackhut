@@ -66,3 +66,6 @@ def setup_logging(verbose_mode):
     consoleHandler.setFormatter(logFormatter)
     log.addHandler(consoleHandler)
 
+def setup_server_url(url):
+    global SERVER_URL
+    SERVER_URL = url
