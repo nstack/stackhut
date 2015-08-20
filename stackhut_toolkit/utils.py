@@ -18,7 +18,7 @@ import json
 from queue import Queue
 import urllib.parse
 import requests
-from stackhut_common.utils import log, DEBUG
+from stackhut_common.utils import log, SERVER_URL
 
 # names to export
 __all__ = ['stackhut_api_call', 'stackhut_api_user_call', 'keen_client', 'get_res_path']
@@ -34,17 +34,9 @@ def get_res_path(res_name):
 # StackHut server comms
 json_header = {'content-type': 'application/json'}
 
-def secure_url_prefix():
-    return "http://{}/".format(DEBUG) if DEBUG is not None else "https://api.stackhut.com/"
-
-def unsecure_url_prefix():
-    return "http://{}/".format(DEBUG) if DEBUG is not None else "http://api.stackhut.com/"
-
 def stackhut_api_call(endpoint, msg, secure=True):
-    url_prefix = secure_url_prefix() if secure else unsecure_url_prefix()
-    log.debug(url_prefix)
-    url = urllib.parse.urljoin(url_prefix, endpoint)
-    log.debug("Calling Stackhut Server {} with \n\t{}".format(endpoint, json.dumps(msg)))
+    url = urllib.parse.urljoin(SERVER_URL, endpoint)
+    log.debug("Calling Stackhut Server at {} with \n\t{}".format(url, json.dumps(msg)))
     r = requests.post(url, data=json.dumps(msg), headers=json_header)
 
     if r.status_code == requests.codes.ok:
@@ -54,10 +46,10 @@ def stackhut_api_call(endpoint, msg, secure=True):
         log.error(r.text)
         r.raise_for_status()
 
-def stackhut_api_user_call(endpoint, data, usercfg):
-    auth = dict(username=usercfg.username, hash=usercfg['hash'])
-    message = dict(auth=auth, data=data)
-    return stackhut_api_call(endpoint, message)
+def stackhut_api_user_call(endpoint, _msg, usercfg):
+    msg = _msg.copy()
+    msg['auth'] = dict(username=usercfg.username, hash=usercfg['hash'])
+    return stackhut_api_call(endpoint, msg)
 
 
 

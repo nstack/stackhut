@@ -368,7 +368,7 @@ class DeployCmd(HutCmd, UserCmd):
             contract = json.load(f)
 
         # remove the common.barrister element
-        interfaces = [x for x in contract if 'barrister_version' not in x]
+        interfaces = [x for x in contract if 'barrister_version' not in x and x['type'] == 'interface']
 
         def render_param(param):
             # main render function

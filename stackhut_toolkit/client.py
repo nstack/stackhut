@@ -17,8 +17,8 @@ Initial stab at a dynamic client-side lib
 """
 import json
 import requests
-from stackhut_common.utils import log, DEBUG
-
+import urllib.parse
+from stackhut_common.utils import log, SERVER_URL
 
 class SHRPCError(Exception):
     def __init__(self, code, msg, data=None):
@@ -50,7 +50,7 @@ class SHAuth:
 # Stage 3 - Stage 2 + client-side validation
 class SHService:
     json_header = {'content-type': 'application/json'}
-    url = "https://api.stackhut.com/run"
+    url = urllib.parse.urljoin(SERVER_URL, 'run')
 
     def __init__(self, author, name, version='latest', auth=None):
         self.service_fullname = "{}/{}:{}".format(author, name, version)
@@ -82,5 +82,4 @@ class SHService:
             return self._make_call(name, args)
 
         return method
-
 
