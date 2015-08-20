@@ -76,7 +76,7 @@ class LoginCmd(UserCmd):
         r = stackhut_api_call('login', dict(username=username, password=password))
 
         if r['success']:
-            self.usercfg['docker_username'] = docker_username
+            # self.usercfg['docker_username'] = docker_username
             self.usercfg['username'] = username
             self.usercfg['hash'] = r['hash']
             self.usercfg['u_id'] = hashlib.sha256(("stackhut_is_da_bomb" + username).encode('utf-8')).hexdigest()
