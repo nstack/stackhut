@@ -30,7 +30,7 @@ class CmdRunner:
         self.parser.add_argument('-V', '--version', help="{} Version".format(title),
                                  action="version", version="%(prog)s {}".format(version))
         self.parser.add_argument('-v', dest='verbose', help="Verbose mode", action='store_true')
-        self.parser.add_argument('-d', dest='debug', help=argparse.SUPPRESS)
+        self.parser.add_argument('-s', dest='server', help=argparse.SUPPRESS)
 
     def register_commands(self, cmds):
         metavar = '{{{}}}'.format(str.join(',', [cmd.name for cmd in cmds if cmd.visible]))
@@ -59,7 +59,8 @@ class CmdRunner:
             self.parser.exit(0, "No command given\n")
 
         # General App Setup
-        utils.DEBUG = self.args.debug
+        if self.args.server:
+            utils.SERVER_URL = self.args.server
         utils.setup_logging(self.args.verbose)
         utils.log.info("Starting {}".format(self.title))
 

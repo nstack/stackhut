@@ -23,7 +23,7 @@ from . import barrister
 # global constants
 CONTRACTFILE = '.api.json'
 IDLFILE = 'api.idl'
-DEBUG = None
+SERVER_URL = "https://api.stackhut.com/"
 IN_CONTAINER = os.path.exists('/workdir')
 VERBOSE = False
 ROOT_DIR = os.getcwd()
