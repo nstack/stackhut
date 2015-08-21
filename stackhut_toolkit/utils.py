@@ -18,7 +18,7 @@ import json
 from queue import Queue
 import urllib.parse
 import requests
-from stackhut_common.utils import log, SERVER_URL
+from stackhut_common.utils import log
 from stackhut_common import utils
 
 # names to export
@@ -85,7 +85,7 @@ class KeenClient(threading.Thread):
             msg.update(self.analytics_ids)
             try:
                 log.debug("Sending analytics msg to {}".format(endpoint))
-                log.debug("Analytics msg - {}".format(msg))
+                # log.debug("Analytics msg - {}".format(msg))
                 url = self.keen_url.format(event_collection=endpoint)
                 r = requests.post(url, data=json.dumps(msg), headers=json_header, timeout=2)
                 if not (r.status_code == requests.codes.created and r.json().get('created')):

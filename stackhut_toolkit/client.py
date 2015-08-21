@@ -18,7 +18,8 @@ Initial stab at a dynamic client-side lib
 import json
 import requests
 import urllib.parse
-from stackhut_common.utils import log, SERVER_URL
+from stackhut_common.utils import log
+from stackhut_common import utils
 
 class SHRPCError(Exception):
     def __init__(self, code, msg, data=None):
@@ -50,11 +51,15 @@ class SHAuth:
 # Stage 3 - Stage 2 + client-side validation
 class SHService:
     json_header = {'content-type': 'application/json'}
-    url = urllib.parse.urljoin(SERVER_URL, 'run')
 
-    def __init__(self, author, name, version='latest', auth=None):
+    def __init__(self, author, name, version='latest', auth=None, host=None):
         self.service_fullname = "{}/{}:{}".format(author, name, version)
         self.auth = auth
+        if host:
+            self.host_url = host
+        else:
+            self.host_url = urllib.parse.urljoin(utils.SERVER_URL, 'run')
+
         # call to stackhut and get the json
 
     def _make_call(self, method, params):
@@ -68,7 +73,7 @@ class SHService:
         if self.auth:
             msg['auth'] = self.auth.msg
 
-        r = requests.post(self.url, data=json.dumps(msg), headers=self.json_header)
+        r = requests.post(self.host_url, data=json.dumps(msg), headers=self.json_header)
         r_json = r.json()
         if r.status_code == requests.codes.ok:
             return r_json['result']

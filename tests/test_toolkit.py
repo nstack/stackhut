@@ -12,71 +12,121 @@ import unittest
 import os
 import time
 import shutil
-
-import stackhut
-from stackhut.toolkit import commands
-from stackhut.common import utils, primitives
-from stackhut.common.primitives import bases, stacks, get_docker
-import argparse
+import sh
 import json
 
-# utils.DEBUG = 'localhost:8080' # None # args.debug
-utils.set_log_level(True)
-orig_usercfg = utils.UserCfg()
+from stackhut_common import utils, config
+from stackhut_toolkit.builder import get_docker, bases, stacks
 
-def create_args(d):
-    args = argparse.Namespace()
-    args.__dict__.update(d)
-    return args
+def copy_config(suffix):
+    src = os.path.expanduser(os.path.join('~', '.stackhut.cfg.{}'.format(suffix)))
+    dest = os.path.expanduser(os.path.join('~', '.stackhut.cfg'))
+    shutil.copy(src, dest)
 
 
-class TestToolkit1User(unittest.TestCase):
-    backup_file = utils.CFGFILE + '.bak'
+
+class SHToolkitTest(unittest.TestCase):
+    # def __init__(self):
+    #     super().__init__()
+    #     self.out = None
+
+    def run_toolkit(self, subcmd, _args=None, server=None, verbose=False, **kwargs):
+        def do_args(args):
+            a = (x[1] if (type(x) is tuple) and x[0] else x for x in args)
+            b = (x for x in a if x and type(x) is not tuple)
+            return list(b)
+
+        _args = _args if _args else []
+        args = do_args(['-v', (server, '-s'), (server, server), subcmd] + _args)
+        if verbose:
+            self.out = sh.stackhut(args, _out=lambda x: print(x.strip()), **kwargs)
+        else:
+            self.out = sh.stackhut(args)
+
+
+        self.assertEqual(0, self.out.exit_code)
+
+        return self.out
+
+    def assertInStdout(self, substring, msg=None):
+        self.assertIn(substring, self.out.stdout.decode(), msg)
+
+
+    # asserts taken from https://github.com/iLoveTux/CLITest
+    def assertFileExists(self, filename, msg=None):
+        """Return True if filename exists and is a file, otherwise raise an
+        AssertionError with msg"""
+        if msg is None:
+            msg = "An assertion Failed, file '{}' ".format(filename)
+            msg += "does not exist or is not a file."
+        if not (os.path.exists(filename)) or not (os.path.isfile(filename)):
+            raise AssertionError(msg)
+        return True
+
+    def assertFileNotExists(self, filename, msg=None):
+        """Return True if filename does not exist or is not a file,
+        otherwise raise an AssertionError with msg"""
+        if msg is None:
+            msg = "An assertion Failed, file '{}' exists.".format(filename)
+        if os.path.exists(filename) and os.path.isfile(filename):
+            raise AssertionError(msg)
+        return True
+
+    def assertDirectoryExists(self, path, msg=None):
+        """Return True if path exists and is a directory, otherwise
+        raise an AssertionError with msg"""
+        if msg is None:
+            msg = "An assertion Failed, directory '{}' ".format(path)
+            msg += "does not exist or is not a directory."
+        if not (os.path.exists(path)) or not (os.path.isdir(path)):
+            raise AssertionError(msg)
+        return True
+
+    def assertDirectoryNotExists(self, path, msg=None):
+        """Return True if path does not exist or is not a directory,
+        otherwise raise an AssertionError with msg"""
+        if msg is None:
+            msg = "An assertion Failed, directory '{}' exists.".format(path)
+        if os.path.exists(path) and os.path.isdir(path):
+            raise AssertionError(msg)
+        return True
+
+
+
+class TestToolkit1User(SHToolkitTest):
+    backup_file = config.UserCfg.config_fpath + '.bak'
 
     @classmethod
     def setUpClass(cls):
-        pass
+        copy_config('mands')
 
-    def test_version(self):
-        print("Toolkit version {}".format(stackhut.__version__))
-        self.assertEqual(stackhut.__version__, stackhut.__version__)
-
-    @unittest.skipIf(utils.DEBUG is None, 'Not running on debug server')
+    @unittest.skip('disabled for now')
     def test_1_login(self):
-        args = create_args(dict())
-        cmd = commands.LoginCmd(args)
-        self.assertEqual(0, cmd.run())
+        self.run_toolkit('login', verbose=True)
 
-        usercfg = utils.UserCfg()
+        usercfg = config.UserCfg()
         self.assertIn('username', usercfg)
         self.assertIn('hash', usercfg)
 
     def test_2_info(self):
-        args = create_args(dict())
-        cmd = commands.InfoCmd(args)
-        self.assertEqual(0, cmd.run())
+        out = self.run_toolkit('info')
+        self.assertInStdout('username', 'User logged in')
 
+    @unittest.skip('disabled for now')
     def test_3_logout(self):
-        args = create_args(dict())
-        cmd = commands.LogoutCmd(args)
-        self.assertEqual(0, cmd.run())
-
-        usercfg = utils.UserCfg()
+        self.run_toolkit('logout')
+        usercfg = config.UserCfg()
         self.assertNotIn('username', usercfg)
         self.assertNotIn('hash', usercfg)
 
     @classmethod
     def tearDownClass(cls):
-        orig_usercfg.save()
+        pass
 
-# @unittest.skipUnless(orig_usercfg.username == 'stackhut', "Only test 'stackbuild' with 'stackhut' user")
-@unittest.skip('disabled for now')
-class TestToolkit2StackBuild(unittest.TestCase):
+class TestToolkit2StackBuild(SHToolkitTest):
     def setUp(self):
         self.docker = get_docker()
-        new_usercfg = utils.UserCfg()
-        new_usercfg['username'] = 'stackhut'
-        new_usercfg.save()
+        copy_config('stackhut')
 
     def check_image(self, image_name, dirs):
         """check docker build dir and docker image exists"""
@@ -85,31 +135,30 @@ class TestToolkit2StackBuild(unittest.TestCase):
         self.assertIn(image_name, dirs)
 
     def test_stackbuild(self):
-        args = create_args(dict(outdir='test-stackbuild', push=False, no_cache=False))
-        cmd = commands.StackBuildCmd(args)
-        self.assertEqual(0, cmd.run())
-
+        out = self.run_toolkit('stackbuild', ['--outdir', 'test-stackbuild'], verbose=True)
         os.chdir('test-stackbuild')
-        dirs = {d for d in os.listdir() if os.path.isdir(d)}
+        dirs = {d for d in os.listdir('.') if os.path.isdir(d)}
 
         # check docker build dir and docker image exists
-        [self.check_image(b.name, dirs) for b in primitives.bases.values()]
+        [self.check_image(b.name, dirs) for b in bases.values()]
         [self.check_image("{}-{}".format(b.name, s.name), dirs)
          for b in bases.values()
          for s in stacks.values()]
 
     def tearDown(self):
-        orig_usercfg.save()
         os.chdir('..')
         shutil.rmtree('test-stackbuild', ignore_errors=False)
 
 
-class TestToolkit3Service(unittest.TestCase):
+import client
+
+class TestToolkit3Service(SHToolkitTest):
     image_name = 'mands/test-service:latest'
     repo_name = image_name.split(':')[0]
 
     @classmethod
     def setUpClass(cls):
+        copy_config('mands')
         os.mkdir('test-service')
         os.chdir('test-service')
 
@@ -118,7 +167,7 @@ class TestToolkit3Service(unittest.TestCase):
         # delete any image if exists
         try:
             cls.docker.remove_image(cls.image_name, force=True)
-        except Exception as e:
+        except:
             pass
 
     # def test_service(self):
@@ -128,54 +177,44 @@ class TestToolkit3Service(unittest.TestCase):
     #     # self.test_4_deploy()
 
     def test_1_init(self):
-        args = create_args(dict(baseos='alpine', stack='python', no_git=False))
-        cmd = commands.InitCmd(args)
-        self.assertEqual(0, cmd.run())
-
+        out = self.run_toolkit('init', ['debian', 'python'], verbose=True)
         # check files copied across
-        files = ['Hutfile', 'api.idl', 'README.md']
+        files = ['Hutfile', 'api.idl', 'README.md', 'app.py']
         [self.assertTrue(os.path.exists(f)) for f in files]
 
     def test_2_build(self):
-        args = create_args(dict(full=True, force=True))
-        cmd = commands.HutBuildCmd(args)
-        self.assertEqual(0, cmd.run())
-
+        out = self.run_toolkit('build', ['--force', '--full', '--dev'], verbose=True)
         # check image exists
         images = self.docker.images(self.repo_name)
         self.assertGreater(len(images), 0)
 
-    def assert_response(self, resp):
-        self.assertIn('id', resp)
-        self.assertIn('jsonrpc', resp)
-        self.assertIn('result', resp)
-        self.assertNotIn('error', resp)
-        self.assertEqual(3, resp['result'])
+    # def assert_response(self, resp):
+    #     self.assertIn('id', resp)
+    #     self.assertIn('jsonrpc', resp)
+    #     self.assertIn('result', resp)
+    #     self.assertNotIn('error', resp)
+    #     self.assertEqual(3, resp['result'])
 
+    @unittest.skip('Not ready')
     def test_3_run(self):
-        args = create_args(dict(reqfile='test_request.json', force=False, verbose=True))
-        cmd = commands.ToolkitRunCmd(args)
-        self.assertEqual(0, cmd.run())
+        out = self.run_toolkit('run', verbose=True, _bg=True)
+        # use the client lib to send some requests
+        c = client.SHService('mands', 'test-service', host='http://localhost:6000')
+        res = c.add(1,2)
+        self.assertEqual(res, 3)
 
-        # test by reading the response
-        with open('run_result/response.json') as f:
-            resp = json.load(f)
-        self.assert_response(resp)
+        out.terminate()
 
-    @unittest.skipIf(utils.DEBUG is None, 'Not running on debug server')
+    @unittest.skip('Not ready')
     def test_4_deploy(self):
-        args = create_args(dict(no_build=False, force=False))
-        cmd = commands.ToolkitRunCmd(args)
-        self.assertEqual(0, cmd.run())
+        out = self.run_toolkit('deploy', ['--local'], verbose=True)
 
         # test by making a request to live API and checking response
         time.sleep(20)  # is this needed?
 
-        with open('test_request.json') as f:
-            req = json.load(f)
-        # make the request
-        resp = utils.stackhut_api_call('run', req)
-        self.assert_response(resp)
+        c = client.SHService('mands', 'test-service')
+        res = c.add(1,2)
+        self.assertEqual(res, 3)
 
     @classmethod
     def tearDownClass(cls):

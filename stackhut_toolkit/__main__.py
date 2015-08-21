@@ -24,7 +24,7 @@ class ToolkitRunner(CmdRunner):
         import traceback
         # exception analytics
         try:
-            dv = get_docker(_exit=False).client.version().get('Version')
+            dv = get_docker(_exit=False, verbose=False).client.version().get('Version')
         except:
             dv = None
 

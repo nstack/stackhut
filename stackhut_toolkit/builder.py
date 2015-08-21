@@ -54,10 +54,8 @@ class DockerClient:
     ip = 'localhost'
     x = "https://github.com/boot2docker/boot2docker/blob/master/doc/WORKAROUNDS.md"
 
-    def __init__(self, _exit):
-        self.setup_client(_exit)
-
-    def setup_client(self, _exit):
+    def __init__(self, _exit, verbose):
+        # setup_client
         try:
             # setup client depending if running on linux or using boot2docker (osx/win)
             if sys.platform == 'linux':
@@ -73,7 +71,8 @@ class DockerClient:
                 except docker_py.errors.DockerException as e:
                     # shit - some weird boot2docker, python, docker-py, requests, and ssl error
                     # https://github.com/docker/docker-py/issues/465
-                    log.debug(e)
+                    if verbose:
+                        log.debug(e)
                     log.warn("Cannot connect securely to Docker, trying insecurely")
                     kw = kwargs_from_env(assert_hostname=False)
                     if 'tls' in kw:
@@ -81,9 +80,10 @@ class DockerClient:
                     self.client = docker_py.Client(version='auto', **kw)
 
         except Exception as e:
-            log.error("Could not connect to Docker - try running 'docker info' first")
-            if sys.platform != 'linux':
-                log.error("Please ensure you've run 'boot2docker up' and 'boot2docker shellinit' first and have added the ENV VARs it suggests")
+            if verbose:
+                log.error("Could not connect to Docker - try running 'docker info' first")
+                if sys.platform != 'linux':
+                    log.error("Please ensure you've run 'boot2docker up' and 'boot2docker shellinit' first and have added the ENV VARs it suggests")
             if _exit:
                 raise e
 
@@ -95,9 +95,9 @@ class DockerClient:
 
 docker_client = None
 
-def get_docker(_exit=True):
+def get_docker(_exit=True, verbose=True):
     global docker_client
-    docker_client = DockerClient(_exit) if docker_client is None else docker_client
+    docker_client = docker_client if docker_client is not None else DockerClient(_exit, verbose)
     return docker_client
 
 
@@ -130,11 +130,10 @@ class DockerBuild:
                 log.error("Build Traceback - \n{}".format(e.stdout.decode('utf-8').strip()))
             raise RuntimeError("Docker Build failed") from None
 
-    def push_image(self, tag, registry_url):
+    def push_image(self, tag):
         if self.push:
-            image_uri = urllib.parse.urljoin(registry_url, tag)
-            log.info("Uploading image {} - this may take a while...".format(image_uri))
-            r = self.docker.client.push(image_uri, stream=True)
+            log.info("Uploading image {} - this may take a while...".format(tag))
+            r = self.docker.client.push(tag, stream=True)
             r_summary = [json.loads(x.decode('utf-8')) for x in r][-1]
 
             if 'error' in r_summary:
@@ -159,7 +158,7 @@ class DockerBuild:
         tag = "{}/{}:{}".format('stackhut', image_name, 'latest')
 
         self.build_dockerfile(tag)
-        self.push_image(tag, 'https://index.docker.io/v1/')
+        self.push_image(tag)
 
         os.chdir(utils.ROOT_DIR)
 
@@ -437,6 +436,7 @@ class Service:
 
         self.fullname = hutcfg.service_fullname(author)
         self.repo_name = hutcfg.repo_name(author)
+        self.tag = 'registry.stackhut.com:5000/{}'.format(self.fullname)
         self.dev = False
 
     @property
@@ -446,8 +446,8 @@ class Service:
     @property
     def image_exists(self):
         repo_images = get_docker().client.images(self.repo_name)
-        service_images = [x for x in repo_images if self.fullname in x['RepoTags']]
-        assert len(service_images) < 2, "{} versions of {} found in Docker".format(self.fullname)
+        service_images = [x for x in repo_images if self.tag in x['RepoTags']]
+        assert len(service_images) < 2, "{} versions of {} found in Docker".format(self.tag)
         return True if len(service_images) > 0 else False
 
     def _files_mtime(self):
@@ -477,7 +477,7 @@ class Service:
         """Runs the build only if a file has changed"""
         max_mtime = self._files_mtime()
 
-        image_info = get_docker().client.inspect_image(self.fullname)
+        image_info = get_docker().client.inspect_image(self.tag)
         image_build_string = image_info['Created']
 
         log.debug("Service {} last built at {}".format(self.fullname, image_build_string))
@@ -502,7 +502,7 @@ class Service:
 
             try:
                 builder.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-                builder.build_dockerfile(self.fullname, dockerfile)
+                builder.build_dockerfile(self.tag, dockerfile)
             finally:
                 self.stack.del_shim()
 
@@ -510,4 +510,4 @@ class Service:
         else:
             log.info("Build not necessary, run with '--force' to override")
 
-        builder.push_image(self.fullname, 'https://registry.stackhut.com:5000')
+        builder.push_image(self.tag)

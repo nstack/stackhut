@@ -116,13 +116,14 @@ class InfoCmd(UserCmd):
 
         # log sys info
         log.info("StackHut version {}".format(__version__))
-
-        docker = get_docker(_exit=False)
+        # docker info
+        docker = get_docker(_exit=False, verbose=False)
         if docker:
             log.info("Docker version {}".format(docker.client.version().get('Version')))
         else:
             log.info("Docker not installed or connection error")
 
+        # usercfg info
         if self.usercfg.logged_in:
             log.info("User logged in")
 
@@ -130,6 +131,7 @@ class InfoCmd(UserCmd):
                 log.info("{}: {}".format(x, self.usercfg.get(x)))
         else:
             log.info("User not logged in")
+
 
         return 0
 
@@ -327,7 +329,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalBackend.local_store, res_flag),
                 '--rm=true', '--name={}'.format(name),
                 '--privileged' if self.args.privileged else None,
-                '--entrypoint=/usr/bin/env', service.fullname, 'stackhut-runner', verbose_mode, 'runcontainer', '--uid', uid_gid]
+                '--entrypoint=/usr/bin/env', service.tag, 'stackhut-runner', verbose_mode, 'runcontainer', '--uid', uid_gid]
         args = [x for x in args if x is not None]
 
         log.info("**** START SERVICE LOG ****")
