@@ -17,6 +17,7 @@ import json
 
 from stackhut_common import utils, config
 from stackhut_toolkit.builder import get_docker, bases, stacks
+from stackhut_toolkit import client
 
 def copy_config(suffix):
     src = os.path.expanduser(os.path.join('~', '.stackhut.cfg.{}'.format(suffix)))
@@ -130,7 +131,7 @@ class TestToolkit2StackBuild(SHToolkitTest):
 
     def check_image(self, image_name, dirs):
         """check docker build dir and docker image exists"""
-        images = self.docker.images("{}/{}".format('stackhut', image_name))
+        images = self.docker.client.images("{}/{}".format('stackhut', image_name))
         self.assertGreater(len(images), 0)
         self.assertIn(image_name, dirs)
 
@@ -149,12 +150,9 @@ class TestToolkit2StackBuild(SHToolkitTest):
         os.chdir('..')
         shutil.rmtree('test-stackbuild', ignore_errors=False)
 
-
-import client
-
 class TestToolkit3Service(SHToolkitTest):
-    image_name = 'mands/test-service:latest'
-    repo_name = image_name.split(':')[0]
+    repo_name = 'registry.stackhut.com:5000/mands/test-service'
+    image_name = '{}:latest'.format(repo_name)
 
     @classmethod
     def setUpClass(cls):
@@ -162,11 +160,11 @@ class TestToolkit3Service(SHToolkitTest):
         os.mkdir('test-service')
         os.chdir('test-service')
 
-        cls.docker = get_docker()
+        cls.docker_client = get_docker().client
 
         # delete any image if exists
         try:
-            cls.docker.remove_image(cls.image_name, force=True)
+            cls.docker_client.remove_image(cls.image_name, force=True)
         except:
             pass
 
@@ -185,7 +183,7 @@ class TestToolkit3Service(SHToolkitTest):
     def test_2_build(self):
         out = self.run_toolkit('build', ['--force', '--full', '--dev'], verbose=True)
         # check image exists
-        images = self.docker.images(self.repo_name)
+        images = self.docker_client.images(self.repo_name)
         self.assertGreater(len(images), 0)
 
     # def assert_response(self, resp):
@@ -199,8 +197,8 @@ class TestToolkit3Service(SHToolkitTest):
     def test_3_run(self):
         out = self.run_toolkit('run', verbose=True, _bg=True)
         # use the client lib to send some requests
-        c = client.SHService('mands', 'test-service', host='http://localhost:6000')
-        res = c.add(1,2)
+        sh_client = client.SHService('mands', 'test-service', host='http://localhost:6000')
+        res = sh_client.add(1,2)
         self.assertEqual(res, 3)
 
         out.terminate()
@@ -220,7 +218,7 @@ class TestToolkit3Service(SHToolkitTest):
     def tearDownClass(cls):
         os.chdir('..')
         shutil.rmtree('test-service', ignore_errors=False)
-        cls.docker.remove_image(cls.image_name, force=True)
+        # cls.docker_client.remove_image(cls.image_name, force=True)
 
 
 if __name__ == '__main__':

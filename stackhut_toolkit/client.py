@@ -18,8 +18,9 @@ Initial stab at a dynamic client-side lib
 import json
 import requests
 import urllib.parse
-from stackhut_common.utils import log
-from stackhut_common import utils
+import logging as log
+
+log.basicConfig(level=log.INFO)
 
 class SHRPCError(Exception):
     def __init__(self, code, msg, data=None):
@@ -53,7 +54,7 @@ class SHService:
     json_header = {'content-type': 'application/json'}
 
     def __init__(self, author, name, version='latest', auth=None, host=None):
-        self.service_fullname = "{}/{}:{}".format(author, name, version)
+        self.service_short_name = "{}/{}:{}".format(author, name, version)
         self.auth = auth
         if host:
             self.host_url = host
@@ -63,12 +64,14 @@ class SHService:
         # call to stackhut and get the json
 
     def _make_call(self, method, params):
-        log.debug("Making RPC call to {}.Default.{}".format(self.service_fullname, method))
+        log.info("Making RPC call to {}.Default.{}".format(self.service_short_name, method))
 
         msg = {
-            "service": self.service_fullname,
-            "method": "Default.{}".format(method),
-            "params": params
+            "service": self.service_short_name,
+            "request": {
+                "method": "Default.{}".format(method),
+                "params": params
+            }
         }
         if self.auth:
             msg['auth'] = self.auth.msg
@@ -80,11 +83,22 @@ class SHService:
         else:
             log.error("RPC Error {}, HTTP Error".format(r_json['error']['code'], r.status_code))
             log.error(r_json)
-            raise SHRPCError(r_json['code'], r_json['message'], r_json.get('data', {}))
+            error_msg = r_json['error']
+            raise SHRPCError(error_msg['code'], error_msg['message'], error_msg.get('data', {}))
 
     def __getattr__(self, name):
         def method(*args):
             return self._make_call(name, args)
 
         return method
+
+
+if __name__ == '__main__':
+    sh_client = SHService('mands', 'test-service', host='http://localhost:6000')
+    log.info("Result - {}".format(sh_client.add(1, 2)))
+
+    try:
+        log.info("Result - {}".format(sh_client.sub(1, 2)))
+    except SHRPCError as e:
+        log.error("Caught error - {}".format(repr(e)))
 

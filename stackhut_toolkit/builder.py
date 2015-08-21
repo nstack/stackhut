@@ -434,9 +434,9 @@ class Service:
         self.baseos = bases[hutcfg.baseos]
         self.stack = stacks[hutcfg.stack]
 
-        self.fullname = hutcfg.service_fullname(author)
-        self.repo_name = hutcfg.repo_name(author)
-        self.tag = 'registry.stackhut.com:5000/{}'.format(self.fullname)
+        self.short_name = hutcfg.service_short_name(author)
+        self.repo_name = 'registry.stackhut.com:5000/{}'.format(self.short_name.split(':')[0])
+        self.full_name = 'registry.stackhut.com:5000/{}'.format(self.short_name)
         self.dev = False
 
     @property
@@ -446,8 +446,8 @@ class Service:
     @property
     def image_exists(self):
         repo_images = get_docker().client.images(self.repo_name)
-        service_images = [x for x in repo_images if self.tag in x['RepoTags']]
-        assert len(service_images) < 2, "{} versions of {} found in Docker".format(self.tag)
+        service_images = [x for x in repo_images if self.full_name in x['RepoTags']]
+        assert len(service_images) < 2, "{} versions of {} found in Docker".format(self.full_name)
         return True if len(service_images) > 0 else False
 
     def _files_mtime(self):
@@ -477,10 +477,10 @@ class Service:
         """Runs the build only if a file has changed"""
         max_mtime = self._files_mtime()
 
-        image_info = get_docker().client.inspect_image(self.tag)
+        image_info = get_docker().client.inspect_image(self.full_name)
         image_build_string = image_info['Created']
 
-        log.debug("Service {} last built at {}".format(self.fullname, image_build_string))
+        log.debug("Service {} last built at {}".format(self.short_name, image_build_string))
         build_date = arrow.get(image_build_string).datetime.timestamp()
         log.debug("Files max mtime is {}, image build date is {}".format(max_mtime, build_date))
 
@@ -502,12 +502,12 @@ class Service:
 
             try:
                 builder.gen_dockerfile('Dockerfile-service.txt', dict(service=self), dockerfile)
-                builder.build_dockerfile(self.tag, dockerfile)
+                builder.build_dockerfile(self.full_name, dockerfile)
             finally:
                 self.stack.del_shim()
 
-            log.info("{} build complete".format(self.fullname))
+            log.info("{} build complete".format(self.short_name))
         else:
             log.info("Build not necessary, run with '--force' to override")
 
-        builder.push_image(self.tag)
+        builder.push_image(self.full_name)
