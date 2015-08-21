@@ -186,7 +186,7 @@ class StackHutRPC:
         except RpcException as e:
             resp = exc_to_json_error(e, req_id)
         except Exception as e:
-            _e = InternalError(dict(exception=str(e)))
+            _e = InternalError('Exception', dict(exception=repr(e)))
             resp = exc_to_json_error(_e, req_id)
         return resp
 
