@@ -147,10 +147,6 @@ class HutfileCfg:
     def from_image(self):
         return "{}-{}".format(self.baseos, self.stack)
 
-    def service_fullname(self, username):
+    def service_short_name(self, username):
         """Returns the StackHut service name for the image"""
         return "{}/{}:{}".format(username, self.name, self.version)
-
-    def repo_name(self, username):
-        """Returns the DockerHub repo for the image"""
-        return self.service_fullname(username).split(':')[0]
