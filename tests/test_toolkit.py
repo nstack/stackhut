@@ -15,7 +15,7 @@ import shutil
 import sh
 import json
 
-from stackhut_common import utils, config
+from stackhut_common import utils, config, rpc
 from stackhut_toolkit.builder import get_docker, bases, stacks
 from stackhut_toolkit import client
 
@@ -39,10 +39,11 @@ class SHToolkitTest(unittest.TestCase):
 
         _args = _args if _args else []
         args = do_args(['-v', (server, '-s'), (server, server), subcmd] + _args)
+        print(kwargs)
         if verbose:
             self.out = sh.stackhut(args, _out=lambda x: print(x.strip()), **kwargs)
         else:
-            self.out = sh.stackhut(args)
+            self.out = sh.stackhut(args, **kwargs)
 
 
         self.assertEqual(0, self.out.exit_code)
@@ -168,12 +169,6 @@ class TestToolkit3Service(SHToolkitTest):
         except:
             pass
 
-    # def test_service(self):
-    #     self.test_1_init()
-    #     self.test_2_build()
-    #     self.test_3_run()
-    #     # self.test_4_deploy()
-
     def test_1_init(self):
         out = self.run_toolkit('init', ['debian', 'python'], verbose=True)
         # check files copied across
@@ -186,22 +181,26 @@ class TestToolkit3Service(SHToolkitTest):
         images = self.docker_client.images(self.repo_name)
         self.assertGreater(len(images), 0)
 
-    # def assert_response(self, resp):
-    #     self.assertIn('id', resp)
-    #     self.assertIn('jsonrpc', resp)
-    #     self.assertIn('result', resp)
-    #     self.assertNotIn('error', resp)
-    #     self.assertEqual(3, resp['result'])
-
-    @unittest.skip('Not ready')
     def test_3_run(self):
-        out = self.run_toolkit('run', verbose=True, _bg=True)
+        # out = self.run_toolkit('run', verbose=True, _bg=True)
+        out = sh.stackhut('-v', 'run', _out=lambda x:print(x.strip()), _bg=True)
+        time.sleep(5)
+
         # use the client lib to send some requests
         sh_client = client.SHService('mands', 'test-service', host='http://localhost:6000')
+        # valid request
         res = sh_client.add(1,2)
         self.assertEqual(res, 3)
+        # invalid request
+        try:
+            res = sh_client.sub(1,2)
+        except client.SHRPCError as e:
+            self.assertEqual(e.code, rpc.ERR_METHOD_NOT_FOUND)
+            self.assertIn('sub', e.msg)
 
-        out.terminate()
+        out.process.signal(2)
+        out.wait()
+        self.assertEqual(0, out.exit_code)
 
     @unittest.skip('Not ready')
     def test_4_deploy(self):
@@ -218,7 +217,7 @@ class TestToolkit3Service(SHToolkitTest):
     def tearDownClass(cls):
         os.chdir('..')
         shutil.rmtree('test-service', ignore_errors=False)
-        # cls.docker_client.remove_image(cls.image_name, force=True)
+        cls.docker_client.remove_image(cls.image_name, force=True)
 
 
 if __name__ == '__main__':

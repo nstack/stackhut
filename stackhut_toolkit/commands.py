@@ -321,6 +321,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         # use data vols for response output files
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
         import random
+
         name = 'stackhut-{}'.format(random.randrange(10000))
         res_flag = 'z' if OS_TYPE == 'SELINUX' else 'rw'
         verbose_mode = '-v' if self.args.verbose else None
@@ -333,6 +334,7 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         args = [x for x in args if x is not None]
 
         log.info("**** START SERVICE LOG ****")
+
         try:
             out = docker.run_docker_sh('run', args, _out=lambda x: print(x, end=''))
 
@@ -347,7 +349,6 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         log.info("**** END SERVICE LOG ****")
         log.info("Run completed successfully")
         return 0
-
 
 class DeployCmd(HutCmd, UserCmd):
     name = 'deploy'
