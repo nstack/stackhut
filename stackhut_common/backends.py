@@ -16,7 +16,6 @@ StackHut IO Handling on local and cloud backends
 """
 import abc
 import os
-
 import json
 import shutil
 import threading
@@ -27,7 +26,7 @@ from werkzeug.serving import run_simple
 from stackhut_common.utils import log
 from stackhut_common import rpc
 
-STACKHUT_DIR = '.stackhut'
+STACKHUT_DIR = os.path.abspath('.stackhut')
 
 def get_req_dir(req_id):
     return os.path.join(STACKHUT_DIR, req_id)
@@ -97,12 +96,15 @@ class AbstractBackend:
     def task_id(self):
         return self.request.get('id', None)
 
-    def new_request_path(self, req_id):
+    def create_request_dir(self, req_id):
         # create a private working dir
         req_path = os.path.join(STACKHUT_DIR, req_id)
         os.mkdir(req_path) if not os.path.exists(req_path) else None
         return req_path
 
+    def del_request_dir(self, req_id):
+        req_path = os.path.join(STACKHUT_DIR, req_id)
+        shutil.rmtree(req_path, ignore_errors=True)
 
 class LocalBackend(AbstractBackend):
     """Mock storage and server system for local testing"""

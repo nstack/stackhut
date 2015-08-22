@@ -192,7 +192,7 @@ class StackHutRPC:
 
     def _sub_call(self, method, params, req_id):
         """Acutal call to the shim/client subprocess"""
-        self.backend.new_request_path(req_id)
+        self.backend.create_request_dir(req_id)
         # create the (sub-)req
         sub_req = dict(method=method, params=params, req_id=req_id)
         # blocking-wait to send the request
@@ -214,6 +214,7 @@ class StackHutRPC:
             else:
                 raise CustomError(error_code, sub_resp['msg'], sub_resp['data'])
 
+        self.backend.del_request_dir(req_id)
         # validate and return the response
         result = sub_resp['result']
         return result
