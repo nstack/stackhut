@@ -12,13 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Initial stab at a dynamic client-side lib
-- only server-side validation
+StackHut Client Side library
+Initial version w/ only server-side validation
+* multiple stages
+  * Stage 1 - (current) construct call dyamically via monkey-patching
+  * Stage 2 - use server idl file to gen class via monkey-patching/meta-class
+  * Stage 3 - Stage 2 + client-side validation
 """
 import json
-import requests
 import urllib.parse
 import logging as log
+import uuid
+import requests
 
 __all__ = ['SHRPCError', 'SHAuth', 'SHService']
 
@@ -45,11 +50,6 @@ class SHAuth:
             return dict(user=self.user, token=self.token)
 
 
-# TODO - make a metaclass?
-# multiple stages
-# Stage 1 - construct call dyamically via monkey-patching
-# Stage 2 - use server idl file to gen class via monkey-patching/meta-class
-# Stage 3 - Stage 2 + client-side validation
 class SHService:
     json_header = {'content-type': 'application/json'}
 
@@ -63,15 +63,17 @@ class SHService:
 
         # call to stackhut and get the json
 
-    def _make_call(self, method, params):
-        log.info("Making RPC call to {}.Default.{}".format(self.service_short_name, method))
+    def _make_call(self, iface_name, method, params):
+        log.info("Making RPC call to {}.{}.{}".format(self.service_short_name, iface_name, method))
 
         msg = {
             "service": self.service_short_name,
             "request": {
-                "method": "Default.{}".format(method),
-                "params": params
-            }
+                "method": "{}.{}".format(iface_name, method),
+                "params": list(params),
+                "id": str(uuid.uuid4()),
+            },
+            "id": str(uuid.uuid4()),
         }
         if self.auth:
             msg['auth'] = self.auth.msg
@@ -86,17 +88,26 @@ class SHService:
             error_msg = r_json['error']
             raise SHRPCError(error_msg['code'], error_msg['message'], error_msg.get('data', {}))
 
+    def __getattr__(self, iface_name):
+        return IFaceCall(self, iface_name)
+
+class IFaceCall:
+    def __init__(self, service, iface_name):
+        self.service = service
+        self.iface_name = iface_name
+
     def __getattr__(self, name):
         def method(*args):
-            return self._make_call(name, args)
-
+            return self.service._make_call(self.iface_name, name, args)
         return method
 
 
+
 if __name__ == '__main__':
+    # Simple test code
     log.basicConfig(level=log.INFO)
     sh_client = SHService('mands', 'test-service', host='http://localhost:6000')
-    log.info("Result - {}".format(sh_client.add(1, 2)))
+    log.info("Result - {}".format(sh_client.Default.add(1, 2)))
 
     try:
         log.info("Result - {}".format(sh_client.sub(1, 2)))
