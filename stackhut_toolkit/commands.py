@@ -442,6 +442,7 @@ class DeployCmd(HutCmd, UserCmd):
             import tempfile
             import requests
             import os.path
+            from stackhut_common import client
             log.info("Starting Remote build, this may take a while...")
 
             # get the upload url
@@ -458,7 +459,7 @@ class DeployCmd(HutCmd, UserCmd):
             os.unlink(f.name)
 
             # call the remote build service
-            from . import client
+
             auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
             sh_client = client.SHService('stackhut', 'stackhut', auth=auth)
             r = sh_client.remoteBuild(r_file['key'])
