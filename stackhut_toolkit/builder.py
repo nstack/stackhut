@@ -20,19 +20,19 @@ import sys
 import time
 import json
 from distutils.dir_util import copy_tree
+
 from jinja2 import Environment, FileSystemLoader
 from multipledispatch import dispatch
-import shutil
 import sh
 import arrow
-import urllib.parse
 import docker as docker_py
 from docker.utils import kwargs_from_env
 from docker.errors import DockerException
 
-from stackhut_common import utils, rpc
+from stackhut_common import utils
+from stackhut_common.runtime import rpc
 from stackhut_common.utils import log
-import stackhut_toolkit.utils as t_utils
+from stackhut_toolkit import utils as t_utils
 
 template_env = Environment(loader=FileSystemLoader(t_utils.get_res_path('templates')))
 

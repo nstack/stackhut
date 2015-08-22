@@ -18,19 +18,21 @@ import json
 import os
 import getpass
 import uuid
-import urllib.request
 from distutils.dir_util import copy_tree
+
 import sh
 from jinja2 import Environment, FileSystemLoader
 
-from stackhut_common import rpc
 from stackhut_common.utils import log, CONTRACTFILE
+from stackhut_common.runtime import rpc
+from stackhut_common.runtime.backends import LocalBackend
+from stackhut_common.runtime.runner import ServiceRunner
 from stackhut_common.commands import BaseCmd, HutCmd
 from stackhut_common.config import HutfileCfg, UserCfg
-from stackhut_common.backends import LocalBackend
 from . import __version__
 from .utils import *
 from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
+
 
 class UserCmd(BaseCmd):
     """User commands require the userconfig file"""
@@ -284,9 +286,9 @@ class RemoteBuildCmd(HutCmd):
         return 0
 
 
-class ToolkitRunCmd(HutCmd, UserCmd):
+class RunContainerCmd(HutCmd, UserCmd):
     """"Concrete Run Command within a container"""
-    name = 'run'
+    name = 'runcontainer'
     description = "Run StackHut service in a container"
 
     @staticmethod
@@ -349,6 +351,28 @@ class ToolkitRunCmd(HutCmd, UserCmd):
         log.info("**** END SERVICE LOG ****")
         log.info("Run completed successfully")
         return 0
+
+class RunHostCmd(HutCmd):
+    """Concrete Run Command using Local system for dev on Host OS"""
+    name = 'runhost'
+    description = "Run StackHut service on host OS"
+
+    def __init__(self, args):
+        super().__init__(args)
+
+    def run(self):
+        toolkit_stack = stacks[self.hutcfg.stack]
+        toolkit_stack.copy_shim()
+        rpc.generate_contract()
+
+        try:
+            with ServiceRunner(LocalBackend(), self.hutcfg) as runner:
+                runner.run()
+        finally:
+            toolkit_stack.del_shim()
+            os.remove(rpc.REQ_FIFO)
+            os.remove(rpc.RESP_FIFO)
+
 
 class DeployCmd(HutCmd, UserCmd):
     name = 'deploy'
@@ -468,7 +492,7 @@ COMMANDS = [
     # visible
     LoginCmd, LogoutCmd, InfoCmd,
     InitCmd,
-    HutBuildCmd, ToolkitRunCmd, DeployCmd,
+    HutBuildCmd, RunContainerCmd, RunHostCmd, DeployCmd,
     # hidden
     StackBuildCmd, RemoteBuildCmd
 ]

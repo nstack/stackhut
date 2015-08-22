@@ -12,12 +12,14 @@ import unittest
 import os
 import time
 import shutil
-import sh
-import json
 
-from stackhut_common import utils, config, rpc
+import sh
+
+from stackhut_common import config
+from stackhut_common.runtime import rpc
 from stackhut_toolkit.builder import get_docker, bases, stacks
 from stackhut_toolkit import client
+
 
 def copy_config(suffix):
     src = os.path.expanduser(os.path.join('~', '.stackhut.cfg.{}'.format(suffix)))
