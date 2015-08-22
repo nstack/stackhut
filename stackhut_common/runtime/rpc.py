@@ -15,18 +15,15 @@
 StackHut interface and modifications to Barrister RPC library
 """
 import os
-import subprocess
 import json
 import uuid
 import signal
-import contextlib
 import sh
 
-from .barrister.runtime import contract_from_file, RpcException
-from .barrister.runtime import err_response, ERR_PARSE, ERR_INVALID_REQ, ERR_METHOD_NOT_FOUND, \
-    ERR_INVALID_PARAMS, ERR_INTERNAL, ERR_UNKNOWN, ERR_INVALID_RESP
-from .barrister.parser import parse
-from .utils import log
+from ..barrister import err_response, ERR_PARSE, ERR_INVALID_REQ, ERR_METHOD_NOT_FOUND, \
+    ERR_INVALID_PARAMS, ERR_INTERNAL, ERR_UNKNOWN, ERR_INVALID_RESP, \
+    parse, contract_from_file, RpcException
+from ..utils import log
 
 CONTRACTFILE = '.api.json'
 IDLFILE = 'api.idl'

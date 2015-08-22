@@ -14,9 +14,7 @@
 import logging
 import sys
 import os
-import json
 from colorlog import ColoredFormatter
-from . import barrister
 
 ####################################################################################################
 # App Config

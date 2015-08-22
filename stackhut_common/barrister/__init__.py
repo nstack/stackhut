@@ -13,7 +13,6 @@
 """
 __version__ = '0.1.7.stackhut'
 
-import json
 from .runtime import contract_from_file, idgen_uuid, idgen_seq
 from .runtime import RpcException, Server, Filter, HttpTransport, InProcTransport
 from .runtime import Client, Batch

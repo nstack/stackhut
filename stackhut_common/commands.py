@@ -17,7 +17,7 @@ Module performs basic command handling infrastructure for subcommands
 import os
 import abc
 import argparse
-from stackhut_common import utils
+from . import utils
 from .config import HutfileCfg
 
 

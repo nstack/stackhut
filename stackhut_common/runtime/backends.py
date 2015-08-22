@@ -20,11 +20,13 @@ import json
 import shutil
 import threading
 from queue import Queue
+
 import sh
 from werkzeug.wrappers import Request, Response
 from werkzeug.serving import run_simple
+
 from stackhut_common.utils import log
-from stackhut_common import rpc
+from . import rpc
 
 STACKHUT_DIR = os.path.abspath('.stackhut')
 
