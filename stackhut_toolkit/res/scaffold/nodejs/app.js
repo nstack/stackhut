@@ -3,8 +3,9 @@
 let stackhut = require('./stackhut');
 
 // create each service as either an ES6 class or an object of functions
-class Default(Service){
-    constructor(){
+class Default extends stackhut.Service {
+    constructor() {
+        super();
         // empty
     }
 
