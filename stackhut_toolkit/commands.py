@@ -60,16 +60,6 @@ class LoginCmd(UserCmd):
     def run(self):
         import hashlib
         super().run()
-        # get docker username
-        # NOTE - this is so hacky - why does cli return username but REST API doesn't
-        # stdout = get_docker().run_docker_sh('info')
-        # docker_user_list = [x for x in stdout if x.startswith('Username')]
-        # if len(docker_user_list) == 1:
-        #     docker_username = docker_user_list[0].split(':')[1].strip()
-        #     log.debug("Docker user is '{}', note this may be different to your StackHut login".format(docker_username))
-        # else:
-        #     raise RuntimeError("Please run 'docker login' first")
-
         username = input("Username: ")
         # email = input("Email: ")
         password = getpass.getpass("Password: ")
@@ -133,7 +123,6 @@ class InfoCmd(UserCmd):
                 log.info("{}: {}".format(x, self.usercfg.get(x)))
         else:
             log.info("User not logged in")
-
 
         return 0
 
@@ -293,14 +282,14 @@ class RunContainerCmd(HutCmd, UserCmd):
 
     @staticmethod
     def register(sp):
-        sp.add_argument("port", nargs='?' ,default='6000', help="Port to host API on locally", type=int)
-        sp.add_argument("--reqfile", '-r', help="Test request file")
+        sp.add_argument("port", nargs='?', default='4001', help="Port to host API on locally", type=int)
+        # sp.add_argument("--reqfile", '-r', help="Test request file")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
         sp.add_argument("--privileged", '-p', action='store_true', help="Run as a privileged service")
 
     def __init__(self, args):
         super().__init__(args)
-        self.reqfile = args.reqfile
+        # self.reqfile = args.reqfile
         self.port = args.port
         self.force = args.force
         self.privileged = args.privileged
@@ -328,7 +317,7 @@ class RunContainerCmd(HutCmd, UserCmd):
         res_flag = 'z' if OS_TYPE == 'SELINUX' else 'rw'
         verbose_mode = '-v' if self.args.verbose else None
         uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
-        args = ['-p', '{}:8080'.format(self.port),
+        args = ['-p', '{}:4001'.format(self.port),
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalBackend.local_store, res_flag),
                 '--rm=true', '--name={}'.format(name),
                 '--privileged' if self.args.privileged else None,
@@ -340,9 +329,9 @@ class RunContainerCmd(HutCmd, UserCmd):
         try:
             out = docker.run_docker_sh('run', args, _out=lambda x: print(x, end=''))
 
-            if self.reqfile:
-                host_req_file = os.path.abspath(self.reqfile)
-                log.debug("Send file using reqs here")
+            # if self.reqfile:
+            #     host_req_file = os.path.abspath(self.reqfile)
+            #     log.debug("Send file using reqs here")
         except KeyboardInterrupt:
             log.debug("Shutting down service container, press again to force-quit...")
             # out.kill()
@@ -352,21 +341,27 @@ class RunContainerCmd(HutCmd, UserCmd):
         log.info("Run completed successfully")
         return 0
 
-class RunHostCmd(HutCmd):
+class RunHostCmd(HutCmd, UserCmd):
     """Concrete Run Command using Local system for dev on Host OS"""
     name = 'runhost'
     description = "Run StackHut service on host OS"
 
+    @staticmethod
+    def register(sp):
+        sp.add_argument("port", nargs='?', default='4001', help="Port to host API on locally", type=int)
+
     def __init__(self, args):
         super().__init__(args)
+        self.port = args.port
 
     def run(self):
         toolkit_stack = stacks[self.hutcfg.stack]
         toolkit_stack.copy_shim()
         rpc.generate_contract()
 
+        log.info("Running service '{}' on http://127.0.0.1:{}".format(self.hutcfg.service_short_name(self.usercfg.username), self.port))
         try:
-            with ServiceRunner(LocalBackend(), self.hutcfg) as runner:
+            with ServiceRunner(LocalBackend(port=self.port), self.hutcfg) as runner:
                 runner.run()
         finally:
             toolkit_stack.del_shim()
