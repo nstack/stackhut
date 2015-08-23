@@ -56,10 +56,7 @@ class SHService:
     def __init__(self, author, name, version='latest', auth=None, host=None):
         self.service_short_name = "{}/{}:{}".format(author, name, version)
         self.auth = auth
-        if host:
-            self.host_url = host
-        else:
-            self.host_url = urllib.parse.urljoin(utils.SERVER_URL, 'run')
+        self.host_url = host if host else 'https://api.stackhut.com/run'
 
         # call to stackhut and get the json
 
@@ -72,6 +69,7 @@ class SHService:
                 "method": "{}.{}".format(iface_name, method),
                 "params": list(params),
                 "id": str(uuid.uuid4()),
+                "jsonrpc": "2.0",
             },
             "id": str(uuid.uuid4()),
         }

@@ -108,6 +108,46 @@ class AbstractBackend:
         req_path = os.path.join(STACKHUT_DIR, req_id)
         shutil.rmtree(req_path, ignore_errors=True)
 
+
+class LocalRequestServer(threading.Thread):
+    def __init__(self, port, backend, req_q, resp_q):
+        super().__init__(daemon=True)
+        # configure the local server thread
+        self.port = port
+        self.req_q = req_q
+        self.resp_q = resp_q
+        self.backend = backend
+        # self.got_req = threading.Event()
+        self.start()
+
+    def run(self):
+        # start in a new thread
+        log.info("Started StackHut Request Server - press Ctrl-C to quit")
+        run_simple('0.0.0.0', self.port, self.local_server)
+
+    @Request.application
+    def local_server(self, request):
+        """
+        Local webserver running on separate thread for dev usage
+        Sends msgs to LocalBackend over a pair of shared queues
+        """
+        (rpc_error, data) = self.backend._process_request(request.data)
+        if rpc_error:
+            return self.return_reponse(data)
+
+        task_req = data
+        self.req_q.put(task_req)
+        response = self.resp_q.get()
+
+        self.req_q.task_done()
+        self.resp_q.task_done()
+
+        return self.return_reponse(response)
+
+    def return_reponse(self, data):
+        return Response(self.backend._process_response(data),
+                        status=http_status_code(data), mimetype='application/json')
+
 class LocalBackend(AbstractBackend):
     """Mock storage and server system for local testing"""
     local_store = "run_result"
@@ -115,7 +155,7 @@ class LocalBackend(AbstractBackend):
     def _get_path(self, name):
         return "{}/{}".format(self.local_store, name)
 
-    def __init__(self, port=8080, uid_gid=None):
+    def __init__(self, port, uid_gid=None):
         super().__init__()
         self.uid_gid = uid_gid
 
@@ -125,17 +165,9 @@ class LocalBackend(AbstractBackend):
             os.mkdir(self.local_store)
 
         # configure the local server thread
-        self.port = port
         self.req_q = Queue(1)
         self.resp_q = Queue(1)
-        self.got_req = threading.Event()
-        server_t = threading.Thread(target=self.start_server, daemon=True)
-        server_t.start()
-
-    def start_server(self):
-        # start in a new thread
-        log.info("Started StackHut Request Server - press Ctrl-C to quit")
-        run_simple('0.0.0.0', self.port, self.local_server)
+        self.server = LocalRequestServer(port, self, self.req_q, self.resp_q)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         log.debug("Shutting down Local backend")
@@ -146,29 +178,6 @@ class LocalBackend(AbstractBackend):
         # change the results owner
         if self.uid_gid is not None:
             sh.chown('-R', self.uid_gid, self.local_store)
-
-    @Request.application
-    def local_server(self, request):
-        """
-        Local webserver running on separate thread for dev usage
-        Sends msgs to LocalBackend over a pair of shared queues
-        """
-        (rpc_error, data) = self._process_request(request.data)
-        if rpc_error:
-            return self._process_response(data)
-
-        task_req = data
-        self.req_q.put(task_req)
-        response = self.resp_q.get()
-
-        self.req_q.task_done()
-        self.resp_q.task_done()
-
-        return self._process_response(response)
-
-    def _process_response(self, data):
-        return Response(super()._process_response(data),
-                        status=http_status_code(data), mimetype='application/json')
 
     def get_request(self):
         return self.req_q.get()
