@@ -53,10 +53,10 @@ class SHAuth:
 class SHService:
     json_header = {'content-type': 'application/json'}
 
-    def __init__(self, author, name, version='latest', auth=None, host=None):
+    def __init__(self, author, name, version='latest', auth=None, host_url='https://api.stackhut.com/run'):
         self.service_short_name = "{}/{}:{}".format(author, name, version)
         self.auth = auth
-        self.host_url = host if host else 'https://api.stackhut.com/run'
+        self.host_url = host_url
 
         # call to stackhut and get the json
 
