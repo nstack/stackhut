@@ -57,7 +57,7 @@ class RuntimeServer(threading.Thread):
 @dispatcher.add_method
 def get_stackhut_user(req_id):
     auth = backend.request.get('auth', None)
-    return auth['user'] if auth else None
+    return auth['username'] if auth else None
 
 @dispatcher.add_method
 def put_file(req_id, fname, make_public=True):

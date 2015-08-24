@@ -53,11 +53,11 @@ class SHAuth:
 class SHService:
     json_header = {'content-type': 'application/json'}
 
-    def __init__(self, author, name, version='latest', auth=None, host_url='https://api.stackhut.com/run'):
+    def __init__(self, author, name, version='latest', auth=None, host_url='https://api.stackhut.com'):
         # self.service_short_name = "{}/{}:{}".format(author, name, version)
         self.service_short_name = "{}/{}".format(author, name)
         self.auth = auth
-        self.host_url = host_url
+        self.host_url = urllib.parse.urljoin(host_url, '/run')
 
         # call to stackhut and get the json
 
@@ -78,16 +78,18 @@ class SHService:
             msg['auth'] = self.auth.msg
 
         r = requests.post(self.host_url, data=json.dumps(msg), headers=self.json_header)
-        if r.status_code == requests.codes.ok:
-            r_json = r.json()
-            return r_json['result']
+        r_json = r.json()
+        if r.status_code == requests.codes.ok and 'result' in r_json.get('response', {}):
+            return r_json['response']['result']
+        elif 'error' in r_json.get('response', {}):
+            log.error("HTTP Error {}".format(r.status_code))
+            log.error("RPC Error {}".format(r_json['response']['error']['code']))
+            log.error(r_json)
+            error_msg = r_json['response']['error']
+            raise SHRPCError(error_msg['code'], error_msg['message'], error_msg.get('data', {}))
         else:
             log.error("HTTP Error {}".format(r.status_code))
-            r_json = r.json()
-            log.error("RPC Error {}".format(r_json['error']['code']))
-            log.error(r_json)
-            error_msg = r_json['error']
-            raise SHRPCError(error_msg['code'], error_msg['message'], error_msg.get('data', {}))
+            r.raise_for_status()
 
     def __getattr__(self, iface_name):
         return IFaceCall(self, iface_name)
