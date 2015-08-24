@@ -437,27 +437,28 @@ class DeployCmd(HutCmd, UserCmd):
             import tempfile
             import requests
             import os.path
-            from stackhut_common import client
+            from stackhut_common import client, utils
             log.info("Starting Remote build, this may take a while...")
-
-            # get the upload url
-            r_file = stackhut_api_user_call('file', dict(), self.usercfg)
 
             # compress and upload the service
             with tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False) as f:
                 f.close()
+
+            # get the upload url
+            r_file = stackhut_api_user_call('file', dict(filename=os.path.basename(f.name)), self.usercfg)
+
             sh.tar('-cavf', f.name, '--exclude', ".git", '--exclude', "__pycache__", '--exclude', "run_result", '--exclude', ".stackhut", '.')
             log.debug("Uploading file {} ({:.2f} Kb)...".format(f.name, os.path.getsize(f.name)/1024))
             with open(f.name, 'rb') as f1:
-                requests.post(r_file['url'], files=dict(file=f1))
+                r = requests.put(r_file['url'], data=f1)
+                r.raise_for_status()
             # remove temp file
             os.unlink(f.name)
 
             # call the remote build service
-
             auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
-            sh_client = client.SHService('stackhut', 'stackhut', auth=auth)
-            r = sh_client.remoteBuild(r_file['key'])
+            sh_client = client.SHService('stackhut', 'stackhut', auth=auth, host_url=utils.SERVER_URL)
+            r = sh_client.Default.remoteBuild(r_file['key'], True)
             log.debug(r['cmdOutput'])
             log.info("...completed Remote build")
 
