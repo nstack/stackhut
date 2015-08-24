@@ -73,10 +73,8 @@ class AbstractBackend:
     # First-stage processing of request/response
     def _process_request(self, data):
         try:
-            x = json.loads(data.decode('utf-8'))
-            log.debug("Initial req - {}".format(x))
-            log.debug("Adding id {}".format(rpc.add_get_id(x)))
-            self.request = x
+            self.request = json.loads(data.decode('utf-8'))
+            rpc.add_get_id(self.request)
             log.info("Request - {}".format(self.request))
         except Exception as e:
             _e = rpc.exc_to_json_error(rpc.ParseError(dict(exception=repr(e))))
@@ -98,7 +96,6 @@ class AbstractBackend:
 
     @property
     def task_id(self):
-        log.debug("in task_id, request - {}".format(self.request))
         return self.request.get('id', None)
 
     def create_request_dir(self, req_id):
