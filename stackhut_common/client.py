@@ -35,26 +35,27 @@ class SHRPCError(Exception):
 
 
 class SHAuth:
-    def __init__(self, user, hash=None, token=None):
+    def __init__(self, username, hash=None, token=None):
         if hash is None and token is None:
             raise ValueError("Must provide either password or api token to auth")
-        self.user = user
+        self.username = username
         self.hash = hash
         self.token = token
 
     @property
     def msg(self):
         if self.hash:
-            return dict(user=self.user, hash=self.hash)
+            return dict(username=self.username, hash=self.hash)
         else:
-            return dict(user=self.user, token=self.token)
+            return dict(username=self.username, token=self.token)
 
 
 class SHService:
     json_header = {'content-type': 'application/json'}
 
     def __init__(self, author, name, version='latest', auth=None, host_url='https://api.stackhut.com/run'):
-        self.service_short_name = "{}/{}:{}".format(author, name, version)
+        # self.service_short_name = "{}/{}:{}".format(author, name, version)
+        self.service_short_name = "{}/{}".format(author, name)
         self.auth = auth
         self.host_url = host_url
 
@@ -104,10 +105,16 @@ class IFaceCall:
 
 
 if __name__ == '__main__':
+    import argparse
+
     # Simple test code
     log.basicConfig(level=log.INFO)
-    sh_auth = SHAuth('mands', )
-    sh_client = SHService('mands', 'test-service', host_url='http://localhost:6000')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('hash', help='foo help')
+    args = parser.parse_args()
+
+    sh_auth = SHAuth('mands', hash=args.hash)
+    sh_client = SHService('mands', 'internal-new-python', host_url='http://localhost:8083/run', auth=sh_auth)
     log.info("Result - {}".format(sh_client.Default.add(1, 2)))
 
     try:
