@@ -77,11 +77,13 @@ class SHService:
             msg['auth'] = self.auth.msg
 
         r = requests.post(self.host_url, data=json.dumps(msg), headers=self.json_header)
-        r_json = r.json()
         if r.status_code == requests.codes.ok:
+            r_json = r.json()
             return r_json['result']
         else:
-            log.error("RPC Error {}, HTTP Error".format(r_json['error']['code'], r.status_code))
+            log.error("HTTP Error {}".format(r.status_code))
+            r_json = r.json()
+            log.error("RPC Error {}".format(r_json['error']['code']))
             log.error(r_json)
             error_msg = r_json['error']
             raise SHRPCError(error_msg['code'], error_msg['message'], error_msg.get('data', {}))
@@ -104,7 +106,8 @@ class IFaceCall:
 if __name__ == '__main__':
     # Simple test code
     log.basicConfig(level=log.INFO)
-    sh_client = SHService('mands', 'test-service', host='http://localhost:6000')
+    sh_auth = SHAuth('mands', )
+    sh_client = SHService('mands', 'test-service', host_url='http://localhost:6000')
     log.info("Result - {}".format(sh_client.Default.add(1, 2)))
 
     try:
