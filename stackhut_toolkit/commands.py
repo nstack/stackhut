@@ -378,12 +378,14 @@ class DeployCmd(HutCmd, UserCmd):
         sp.add_argument("--no-build", '-n', action='store_true', help="Deploy without re-building & pushing the image")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
         sp.add_argument("--local", '-l', action='store_true', help="Perform image build & push locally rather than remote")
+        sp.add_argument("--dev", default=False, action='store_true', help="Install dev version of StackHut Runner")
 
     def __init__(self, args):
         super().__init__(args)
         self.no_build = args.no_build
         self.force = args.force
         self.local = args.local
+        self.dev = args.dev
 
     def create_methods(self):
         with open(CONTRACTFILE, 'r') as f:
@@ -432,7 +434,7 @@ class DeployCmd(HutCmd, UserCmd):
         if self.local:
             # call build+push first using Docker builder
             if not self.no_build:
-                service.build_push(force=self.force, push=True)
+                service.build_push(force=self.force, push=True, dev=self.dev)
         else:
             import tempfile
             import requests
@@ -458,8 +460,10 @@ class DeployCmd(HutCmd, UserCmd):
             # call the remote build service
             auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
             sh_client = client.SHService('stackhut', 'stackhut', auth=auth, host_url=utils.SERVER_URL)
-            r = sh_client.Default.remoteBuild(r_file['key'], True)
+            r = sh_client.Default.remoteBuild(r_file['key'], self.dev)
             log.debug("Remote build output...\n" + r['cmdOutput'])
+            if not r['success']:
+                raise RuntimeError("Build failed")
             log.info("...completed Remote build")
 
         # Inform the SH server re the new/updated service
