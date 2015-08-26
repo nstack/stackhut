@@ -24,7 +24,7 @@ from stackhut_common import utils
 # names to export
 __all__ = ['stackhut_api_call', 'stackhut_api_user_call', 'keen_client', 'get_res_path']
 
-# Setup app paths
+# Setup app paths - this is unique for each stackhut package
 sys_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
 res_dir = os.path.normpath(os.path.join(sys_dir, './res'))
 

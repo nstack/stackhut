@@ -15,6 +15,7 @@
 # limitations under the License.
 import sys
 from stackhut_common.commands import CmdRunner
+from stackhut_common import utils
 from . import __version__, COMMANDS
 from .utils import keen_client
 from .builder import get_docker
@@ -36,6 +37,9 @@ class ToolkitRunner(CmdRunner):
                               os=sys.platform,
                               python_version=sys.version,
                               traceback=traceback.format_exc()))
+
+        utils.log.info("Something bad happened - sorry! :|")
+        utils.log.info("Please send us an email at toolkit@stackhut.com or open an issue at http://www.github.com/StackHut/stackhut-toolkit - thanks!")
 
     def custom_shutdown(self):
         keen_client.shutdown()

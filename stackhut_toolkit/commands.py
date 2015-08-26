@@ -447,7 +447,7 @@ class DeployCmd(HutCmd, UserCmd):
             # get the upload url
             r_file = stackhut_api_user_call('file', dict(filename=os.path.basename(f.name)), self.usercfg)
 
-            sh.tar('-cavf', f.name, '--exclude', ".git", '--exclude', "__pycache__", '--exclude', "run_result", '--exclude', ".stackhut", '.')
+            sh.tar('-czvf', f.name, '--exclude', ".git", '--exclude', "__pycache__", '--exclude', "run_result", '--exclude', ".stackhut", '.')
             log.debug("Uploading file {} ({:.2f} Kb)...".format(f.name, os.path.getsize(f.name)/1024))
             with open(f.name, 'rb') as f1:
                 r = requests.put(r_file['url'], data=f1)
@@ -459,7 +459,7 @@ class DeployCmd(HutCmd, UserCmd):
             auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
             sh_client = client.SHService('stackhut', 'stackhut', auth=auth, host_url=utils.SERVER_URL)
             r = sh_client.Default.remoteBuild(r_file['key'], True)
-            log.debug(r['cmdOutput'])
+            log.debug("Remote build output...\n" + r['cmdOutput'])
             log.info("...completed Remote build")
 
         # Inform the SH server re the new/updated service
