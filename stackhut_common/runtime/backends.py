@@ -20,7 +20,6 @@ import json
 import shutil
 import threading
 from queue import Queue
-import urlparse
 
 import sh
 from werkzeug.wrappers import Request, Response
