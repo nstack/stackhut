@@ -78,7 +78,13 @@ class SHService:
             msg['auth'] = self.auth.msg
 
         r = requests.post(self.host_url, data=json.dumps(msg), headers=self.json_header)
-        r_json = r.json()
+
+        try:
+            r_json = r.json()
+        except:
+            # TODO - fix error logic when hosted platform sends correct HTTP status codes
+            r_json = {}
+
         if r.status_code == requests.codes.ok and 'result' in r_json.get('response', {}):
             return r_json['response']['result']
         elif 'error' in r_json.get('response', {}):
