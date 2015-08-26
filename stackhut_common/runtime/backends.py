@@ -20,10 +20,14 @@ import json
 import shutil
 import threading
 from queue import Queue
+import urlparse
 
 import sh
 from werkzeug.wrappers import Request, Response
 from werkzeug.serving import run_simple
+from werkzeug.routing import Map, Rule
+from werkzeug.exceptions import HTTPException, NotFound, ImATeapot
+from werkzeug.utils import redirect
 
 from stackhut_common.utils import log
 from . import rpc
@@ -120,6 +124,12 @@ class LocalRequestServer(threading.Thread):
         # self.got_req = threading.Event()
         self.start()
 
+        # routing
+        self.url_map = Map([
+            Rule('/run', endpoint='run_request'),
+            Rule('/files', endpoint='run_files'),
+        ])
+
     def run(self):
         # start in a new thread
         log.info("Started StackHut Request Server - press Ctrl-C to quit")
@@ -130,6 +140,17 @@ class LocalRequestServer(threading.Thread):
         """
         Local webserver running on separate thread for dev usage
         Sends msgs to LocalBackend over a pair of shared queues
+        """
+        adapter = self.url_map.bind_to_environ(request.environ)
+        try:
+            endpoint, values = adapter.match()
+            return getattr(self, 'on_' + endpoint)(request, **values)
+        except HTTPException as e:
+            return e
+
+    def on_run_request(self, request):
+        """
+        Sends run requests to LocalBackend over a pair of shared queues
         """
         (rpc_error, data) = self.backend._process_request(request.data)
         if rpc_error:
@@ -147,6 +168,13 @@ class LocalRequestServer(threading.Thread):
     def return_reponse(self, data):
         return Response(self.backend._process_response(data),
                         status=http_status_code(data), mimetype='application/json')
+
+    def on_run_files(self, request):
+        log.debug("In run_files endpoint")
+        raise ImATeapot()
+
+
+
 
 class LocalBackend(AbstractBackend):
     """Mock storage and server system for local testing"""

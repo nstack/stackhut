@@ -116,11 +116,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     sh_auth = SHAuth('mands', hash=args.hash)
-    sh_client = SHService('mands', 'internal-new-python', host_url='http://localhost:8083/run', auth=sh_auth)
-    log.info("Result - {}".format(sh_client.Default.add(1, 2)))
+    sh_client = SHService('stackhut', 'stackhut', host_url='http://localhost:8083/run', auth=sh_auth)
+    log.info("Result - {}".format(sh_client.Default.getEnvVar('PATH')))
 
     try:
-        log.info("Result - {}".format(sh_client.sub(1, 2)))
+        log.info("Result - {}".format(sh_client.Default.sub(1, 2)))
     except SHRPCError as e:
         log.error("Caught error - {}".format(repr(e)))
 
