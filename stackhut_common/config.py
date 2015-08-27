@@ -105,14 +105,13 @@ class UserCfg(dict):
             return None
 
 class HutfileCfg:
-    hutfile_fname = 'Hutfile'
-
     re_check_name = re.compile('^[a-z0-9-_]+$')
 
     """Hutfile configuration file handling"""
     def __init__(self):
         # import the hutfile
-        with open(self.hutfile_fname, 'r') as f:
+        hutfile_fname = 'Hutfile.yaml' if os.path.exists('Hutfile.yaml') else 'Hutfile'
+        with open(hutfile_fname, 'r') as f:
             hutfile = yaml.safe_load(f)
 
         # TODO - validation

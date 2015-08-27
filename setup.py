@@ -41,6 +41,7 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     keywords='stackhut',
+    platforms=['POSIX'],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
@@ -52,7 +53,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Topic :: Software Development',
-        'Private :: Do Not Upload',  # hack to force invalid package for upload
+        # 'Private :: Do Not Upload',  # hack to force invalid package for upload
     ],
 )
 
