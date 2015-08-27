@@ -14,10 +14,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 # put package test requirements here
 requirements = [
     "sh",
-    "boto",
     "requests",
     "jinja2",
-    "PyYaml",
     "multipledispatch",
     "docker-py",
     "arrow",
