@@ -1,4 +1,4 @@
-# Service name (use lower case letters, numbers, and dashes)
+# Service name (a combination of lower case letters, numbers, and dashes)
 name: {{ scaffold.name }}
 
 # Service description
