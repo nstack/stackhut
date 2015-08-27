@@ -174,7 +174,7 @@ class TestToolkit3Service(SHToolkitTest):
     def test_1_init(self):
         out = self.run_toolkit('init', ['debian', 'python'], verbose=True)
         # check files copied across
-        files = ['Hutfile', 'api.idl', 'README.md', 'app.py']
+        files = ['Hutfile.yaml', 'api.idl', 'README.md', 'app.py']
         [self.assertTrue(os.path.exists(f)) for f in files]
 
     def test_2_build(self):

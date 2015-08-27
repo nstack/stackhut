@@ -31,7 +31,7 @@ RUN {{ service.stack.install_service_packages() }}
 {% endif %}
 
 # copy all source files and dirs across
-COPY Hutfile .api.json {{ service.stack.entrypoint }} {{ service.stack.shim_files|join(' ') }} {{ service.hutcfg.files|join(' ') }} ./
+COPY Hutfile.yaml .api.json {{ service.stack.entrypoint }} {{ service.stack.shim_files|join(' ') }} {{ service.hutcfg.files|join(' ') }} ./
 {% for d in service.hutcfg.dirs -%}
 COPY {{ d }} ./{{ d }}
 {% endfor -%}

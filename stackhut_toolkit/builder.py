@@ -464,7 +464,7 @@ class Service:
                 return max_mtime(dirpath, fnames)
 
         stack = stacks[self.hutcfg.stack]
-        default_files = [stack.entrypoint, stack.package_file, 'api.idl', 'Hutfile']
+        default_files = [stack.entrypoint, stack.package_file, 'api.idl', 'Hutfile.yaml']
 
         # find the max - from default files, hut file and hut dirs
         max_mtime_default_files = max_mtime(os.getcwd(), default_files)

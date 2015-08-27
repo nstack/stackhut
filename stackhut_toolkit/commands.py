@@ -188,7 +188,7 @@ class InitCmd(UserCmd):
         # validation checks
         self.usercfg.assert_logged_in()
 
-        if os.path.exists('.git') or os.path.exists('Hutfile'):
+        if os.path.exists('.git') or os.path.exists('Hutfile.yaml'):
             raise RuntimeError('Found existing project, cancelling')
 
         if not is_stack_supported(self.baseos, self.stack):
@@ -462,11 +462,18 @@ class DeployCmd(HutCmd, UserCmd):
             # call the remote build service
             auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
             sh_client = client.SHService('stackhut', 'stackhut', auth=auth, host_url=utils.SERVER_URL)
-            r = sh_client.Default.remoteBuild(r_file['key'], self.dev)
-            log.debug("Remote build output...\n" + r['cmdOutput'])
-            if not r['success']:
-                raise RuntimeError("Build failed")
-            log.info("...completed Remote build")
+            try:
+                r = sh_client.Default.remoteBuild(r_file['key'], self.dev)
+            except client.SHRPCError as e:
+                log.error("Build error, remote build output below...")
+                log.error(e.data['output'])
+                return 1
+            else:
+
+                log.debug("Remote build output...\n" + r['cmdOutput'])
+                if not r['success']:
+                    raise RuntimeError("Build failed")
+                log.info("...completed Remote build")
 
         # Inform the SH server re the new/updated service
         # build up the deploy message body
