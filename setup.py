@@ -19,7 +19,7 @@ requirements = [
     "multipledispatch",
     "docker-py",
     "arrow",
-    "stackhut-common",
+    "stackhut-common >= 0.5.1",
 ]
 
 # put package test requirements here
