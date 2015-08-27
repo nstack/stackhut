@@ -34,6 +34,8 @@ from .utils import *
 from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
 
 
+import setuptools
+
 class UserCmd(BaseCmd):
     """User commands require the userconfig file"""
     def __init__(self, args):
