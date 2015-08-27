@@ -14,10 +14,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 # put package test requirements here
 requirements = [
     "sh",
-    "boto",
     "requests",
     "PyYaml",
-    "colorlog"
+    "colorlog",
+    "werkzeug",
+    "json-rpc",
 ]
 
 # put package test requirements here
