@@ -88,9 +88,9 @@ class SHService:
         if r.status_code == requests.codes.ok and 'result' in r_json.get('response', {}):
             return r_json['response']['result']
         elif 'error' in r_json.get('response', {}):
-            log.error("HTTP Error {}".format(r.status_code))
-            log.error("RPC Error {}".format(r_json['response']['error']['code']))
-            log.error(r_json)
+            # log.error("HTTP Error {}".format(r.status_code))
+            # log.error("RPC Error {}".format(r_json['response']['error']['code']))
+            # log.error(r_json)
             error_msg = r_json['response']['error']
             raise SHRPCError(error_msg['code'], error_msg['message'], error_msg.get('data', {}))
         else:
