@@ -323,7 +323,8 @@ class RunContainerCmd(HutCmd, UserCmd):
                 '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalBackend.local_store, res_flag),
                 '--rm=true', '--name={}'.format(name),
                 '--privileged' if self.args.privileged else None,
-                '--entrypoint=/usr/bin/env', service.full_name, 'stackhut-runner', verbose_mode, 'runcontainer', '--uid', uid_gid]
+                '--entrypoint=/usr/bin/env', service.full_name, 'stackhut-runner', verbose_mode,
+                'runcontainer', '--uid', uid_gid, '--author', self.usercfg.username]
         args = [x for x in args if x is not None]
 
         log.info("**** START SERVICE LOG ****")
@@ -361,9 +362,10 @@ class RunHostCmd(HutCmd, UserCmd):
         toolkit_stack.copy_shim()
         rpc.generate_contract()
 
-        log.info("Running service '{}' on http://127.0.0.1:{}".format(self.hutcfg.service_short_name(self.usercfg.username), self.port))
         try:
-            with ServiceRunner(LocalBackend(port=self.port), self.hutcfg) as runner:
+            backend = LocalBackend(self.hutcfg, self.usercfg.username, port=self.port)
+            with ServiceRunner(backend, self.hutcfg) as runner:
+                log.info("Running service '{}' on http://127.0.0.1:{}".format(backend.service_short_name, self.port))
                 runner.run()
         finally:
             toolkit_stack.del_shim()
