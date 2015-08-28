@@ -20,6 +20,7 @@ requirements = [
     "docker-py",
     "arrow",
     "stackhut-common >= 0.5.1",
+    "stackhut-client >= 0.1.1",
 ]
 
 # put package test requirements here

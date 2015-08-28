@@ -198,7 +198,7 @@ class TestToolkit3Service(SHToolkitTest):
             res = sh_client.sub(1,2)
         except client.SHRPCError as e:
             self.assertEqual(e.code, rpc.ERR_METHOD_NOT_FOUND)
-            self.assertIn('sub', e.msg)
+            self.assertIn('sub', e.message)
 
         out.process.signal(2)
         out.wait()

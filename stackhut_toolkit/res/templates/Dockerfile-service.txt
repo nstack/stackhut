@@ -17,7 +17,7 @@ WORKDIR /workdir
 # install stackhut-runner from dev branch
 RUN echo "Starting..." && \
     pip3 install --no-cache-dir --compile https://github.com/StackHut/stackhut-common/archive/master.zip && \
-    pip3 install --no-cache-dir --compile https://s3-eu-west-1.amazonaws.com/stackhut-releases/dev_stackhut_runner-1.0.dev0-py3-none-any.whl && \
+    pip3 install --no-cache-dir --compile https://s3-eu-west-1.amazonaws.com/stackhut-releases/dev/stackhut_runner-1.0.dev0-py3-none-any.whl && \
     echo "...done" && exit
 {% else %}
 # install stackhut-runner from release branch

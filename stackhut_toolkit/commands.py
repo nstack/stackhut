@@ -443,7 +443,8 @@ class DeployCmd(HutCmd, UserCmd):
             import tempfile
             import requests
             import os.path
-            from stackhut_common import client, utils
+            from stackhut_common import utils
+            from stackhut_client import client
             log.info("Starting Remote build, this may take a while...")
 
             # compress and upload the service
@@ -463,7 +464,7 @@ class DeployCmd(HutCmd, UserCmd):
 
             # call the remote build service
             auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
-            sh_client = client.SHService('stackhut', 'stackhut', auth=auth, host_url=utils.SERVER_URL)
+            sh_client = client.SHService('stackhut', 'stackhut', auth=auth, host=utils.SERVER_URL)
             try:
                 r = sh_client.Default.remoteBuild(r_file['key'], self.dev)
             except client.SHRPCError as e:
