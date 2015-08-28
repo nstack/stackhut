@@ -1,3 +1,5 @@
+.. _usage_runtime:
+
 StackHut Runtime Library
 ========================
 
