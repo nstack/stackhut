@@ -12,6 +12,10 @@ Requirements
 ^^^^^^^^^^^^
 
 * `Python 3.4 <http://www.python.org>`_
+* Unix-based OS (tested on Linux and OSX, others should work)
+
+.. note:: We are adding Windows support soon. Email us at hi@stackhut.com if this is a blocker so we can plan as needed.
+
 
 Install Steps
 ^^^^^^^^^^^^^
@@ -20,15 +24,18 @@ Install Steps
 #. Install StackHut - ``sudo pip3 install stackhut``
 #. There is no Step 3 - but try out the walkthrough in :ref:`tutorial_create`
 
-.. Having installed the Toolkit you can go through the walk-through in :ref:`tutorial_create`.
+Upgrading
+^^^^^^^^^
 
-.. The StackHut Toolkit is written in Python 3 and requires a few dependencies to get going.
+Development on the StackHut Toolkit moves pretty fast, so if you find a bug it may be worth updating first before reporting an issue. Using ``pip`` this is easy
+
+* ``sudo pip3 install --upgrade stackhut``
 
 
 Linux Install Instructions
 --------------------------
 
-* Install Docker and Python 3 (including the Pip installer) from your OS repository, e.g.
+* Install and Python 3 (including the Pip installer) from your OS repository, e.g.
 
   * Fedora - ``sudo dnf install python3 python3-pip``
   * Debian/Ubuntu - ``sudo apt-get install python3 python3-pip``
@@ -51,18 +58,5 @@ OSX Install Instructions
 
   * ``sudo pip3 install stackhut``
 
-.. note:: As with Linux, ``pip`` installs globally and requires root access. You can again using the ``--user`` flag to install to the user ``$HOME`` directory, however on OSX you'll have to manually add the binary to your PATH.
-
-
-Windows Install Instructions
-----------------------------
-
-We are adding Windows support soon. Email us at hi@stackhut.com, if it's a blocker for you.
-
-Upgrading
----------
-
-Development on the StackHut Toolkit moves pretty fast, so if you find a bug it may be worth updating first before reporting an issue. Using ``pip`` this is easy
-
-* ``pip3 install --upgrade stackhut``
+.. note:: As with Linux, ``pip`` installs globally and requires root access. You can again using the ``--user`` flag to install to the user ``$HOME`` directory, however on OSX you'll have to manually add ``~\Libraries\Python\3.4\bin`` to your ``$PATH``.
 

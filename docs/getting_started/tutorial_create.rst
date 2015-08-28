@@ -118,7 +118,7 @@ Having defined our interface, we can now write the code for ``multiply``. Your a
             return x + y
 
     # export the services
-    SERVICES = {"Default": Default()}⏎   
+    SERVICES = {"Default": Default()}
 
 As seen, the service is a plain old Python class with a function for each entrypoint. The ``add`` function has already been implemented and is simple enough. Now let's add the ``multiply`` function: no surprises here. 
 
@@ -140,7 +140,7 @@ As seen, the service is a plain old Python class with a function for each entryp
             return x * y
 
     # export the services
-    SERVICES = {"Default": Default()}⏎   
+    SERVICES = {"Default": Default()}
 
 
 
@@ -149,11 +149,9 @@ Build, Run, and Test
 
 Now we're done coding, and because we're all responsible developers, let's run, and test our service before we deploy. 
 
-To run our service locally, we have two options. Firstly, we can
-``stackhut runhost``
-which will run the code with our own Operating System and version of Python/Node.
+To run our service locally, we have two options. Firstly, we can use ``stackhut runhost`` which will run the code with our own Operating System and version of Python/Node.
 
-Secondly, we can ``stackhut runcontainer``. This will do a full test by building a Docker container which will be exactly the same as the one that runs on the StackHut platform. It will package up the OS and dependencies you specified and run it with Docker.
+Secondly, we can use ``stackhut runcontainer``. This will do a full test by building a Docker container which will be exactly the same as the one that runs on the StackHut platform. It will package up the OS and dependencies you specified and run it with Docker.
 
 .. note:: This requires Docker to be up and running.
 

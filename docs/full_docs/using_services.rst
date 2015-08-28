@@ -5,10 +5,40 @@ Using Services
 
 Please read :ref:`tutorial_use` for basic information on how to access a service via JSON-RPC.
 
+
+Access a service using client-side libraries
+--------------------------------------------
+
+Client-side libraries are have been/or are under development for the following platforms, please feel free to add support for your favourite langauge if not present, it's quite easy!
+
+=============       ==============================  ===========   
+Langauge            Install                         Source Code
+=============       ==============================  ===========
+Python              pip3 install stackhut-client    www.github.com/StackHut/client-python
+JavaScript          npm install stackhut-client     www.github.com/StackHut/client-node
+Ruby                *under development*
+PHP                 *under development*
+Java/JVM            *under development*
+C#/.NET             *under development*
+=============       ==============================  ===========
+
+
+These libraries abstract away the entire JSON-RPC mechanism and make it as easy as calling a function to utilise a StackHut service. They marshal the data, collect the response, handling error messages along the way, and check the validity of the message before it's sent. For example, in Python,
+
+.. code-block:: python
+
+    import stackhut_client as client
+    service = client.SHService('stackhut', 'web-tools')
+    result = service.Default.renderWebpage('http://www.stackhut.com', 1024, 768)
+    print(result)
+    >> http://stackhut-files.s3.amazonaws.com/stackhut/downloads/a77d49f6-af7d-4007-8630-f6f443de7680/5c77d73b-9c8c-4850-84eb-9196b19fb545/screen.png
+  
+
+
 Access a service directly
 -------------------------
 
-See :ref:`tutorial_use` for basic info.
+This involes creating JSON-RPC compatible requests on demand, thanksfully this is very simple and so it's easy to call your StackHut services from anywhere. See :ref:`tutorial_use` for basic info.
 
 
 .. Login into StackHut
@@ -16,27 +46,6 @@ See :ref:`tutorial_use` for basic info.
 .. __Coming Soon__ - all services are curently free to use and can be accessed anonymously.
 
 
-Access a service using client-side libraries
---------------------------------------------
-
-Client-side libraries are under-development for the following platforms
-
- * Python
- * Ruby
- * JavaScript
- * PHP
- * Java/JVM
- * C#/.NET
-
-These libraries abstract away the entire JSON-RPC mechanism and make it as easy as calling a function to utilise a StackHut service. They marshal the data, collect the response, handling error messages along the way, and check the validity of the message before it's sent. For example usage, in Ruby,
-
-.. code-block:: ruby
-
-    example = Stackhut('example-python')
-    result = example.helloName('StackHut :)')
-    puts result
-    >> Hello StackHut :)
-  
 
 
 Notes
