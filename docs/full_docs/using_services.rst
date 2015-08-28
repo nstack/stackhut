@@ -82,7 +82,7 @@ One of `hash` or `token` must be present in the `auth` object to authorise a req
 SHError
 """""""
 
-Returned in the event of a remote service error in the catch block of a rejected promise.
+Returned in the event of a remote service error as an exception/error depending on the specific client library.
 
 The object has 3 parameters,
 
