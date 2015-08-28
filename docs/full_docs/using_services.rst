@@ -40,12 +40,9 @@ Access a service directly
 
 This involes creating JSON-RPC compatible requests on demand, thanksfully this is very simple and so it's easy to call your StackHut services from anywhere. See :ref:`tutorial_use` for basic info.
 
-
 .. Login into StackHut
 .. -------------------
 .. __Coming Soon__ - all services are curently free to use and can be accessed anonymously.
-
-
 
 
 Notes
@@ -73,21 +70,21 @@ We have currently only described StackHut as performing a single request per cal
 .. code-block:: JSON
 
     {
-        "serviceName" : "example-python",
+        "serviceName" : "stackhut/demo-nodejs-persistent",
         "req" : [
             {
-                "method" : "helloName",
-                "params" : ["StackHut"]        
+                "method" : "inc",
+                "params" : [10]        
                 "id" : 1
             },
             {
-                "method" : "helloName",
-                "params" : ["World"]        
+                "method" : "inc",
+                "params" : [20]        
                 "id" : 2
             },
             {
-                "method" : "add",
-                "params" : [1, 2]        
+                "method" : "getCur",
+                "params" : []        
                 "id" : 3
             }
         ]
@@ -95,6 +92,5 @@ We have currently only described StackHut as performing a single request per cal
 
 These request will all be performed within a single service-call, great for increasing throughput and keeping your external calls over the cloud to StackHut to a minimum.
 We have some exciting features planned involving batching that will allow you to setup complex cloud-based processing pipelines easily.
-
 
 
