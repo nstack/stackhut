@@ -3,9 +3,7 @@
 Platform Installation
 =====================
 
-StackHut is comprised of 2 major parts - the hosting platform full of live APIs that you can call from your code, and the development platform with which to create and deploy your own APIs.
-
-This page describes installing the command-line StackHut Toolkit so you can rapidly develop, test, and deploy your services rapidly from your computer to StackHut.
+This page describes installing the command-line StackHut Toolkit so you can rapidly develop, test, and deploy your services.
 
 Quick Instructions
 ------------------
@@ -14,7 +12,6 @@ Requirements
 ^^^^^^^^^^^^
 
 * `Python 3.4 <http://www.python.org>`_
-* `Docker <http://www.docker.com>`_
 
 Install Steps
 ^^^^^^^^^^^^^
@@ -33,8 +30,8 @@ Linux Install Instructions
 
 * Install Docker and Python 3 (including the Pip installer) from your OS repository, e.g.
 
-  * Fedora - ``sudo dnf install docker python3 python3-pip``
-  * Debian/Ubuntu - ``sudo apt-get install docker.io python3 python3-pip``
+  * Fedora - ``sudo dnf install python3 python3-pip``
+  * Debian/Ubuntu - ``sudo apt-get install python3 python3-pip``
   
 * Install the StackHut Toolkit
 
@@ -46,10 +43,6 @@ Linux Install Instructions
 OSX Install Instructions
 ------------------------
 
-* Install Docker
-
-  * We have tested StackHut using `Boot2docker <http://boot2docker.io/>`_ and recommend this method
-  
 * Install Python 3 using `Brew <http://brew.sh/>`_
   
   * ``brew install python3``
@@ -60,14 +53,11 @@ OSX Install Instructions
 
 .. note:: As with Linux, ``pip`` installs globally and requires root access. You can again using the ``--user`` flag to install to the user ``$HOME`` directory, however on OSX you'll have to manually add the binary to your PATH.
 
-.. note:: Remember to run ``boot2docker up`` on OSX to initialise Docker before using the Toolkit.
 
 Windows Install Instructions
 ----------------------------
 
-We haven't tested StackHut on Windows yet, however the code-base is cross-platform and it should work as long as you install the dependencies. As with OSX you'll have to install  `Boot2docker <http://boot2docker.io/>`_ and obtain Python 3 before ``pip``-installing StackHut.
-
-Please let us know how it goes at hi@stackhut.com, we'd love to get Windows support working.
+We are adding Windows support soon. Email us at hi@stackhut.com, if it's a blocker for you.
 
 Upgrading
 ---------
