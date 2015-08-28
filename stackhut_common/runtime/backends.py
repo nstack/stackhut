@@ -40,10 +40,13 @@ def get_req_file(req_id, fname):
     return os.path.join(STACKHUT_DIR, req_id, fname)
 
 def http_status_code(data):
-    if 'error' not in data:
+    if type(data) == list:
+        log.debug("Shit, HTTP status code incorrect")
+
+    if 'error' not in data.get('response', {}):
         return 200
 
-    code = data['error']['code']
+    code = data['response']['error']['code']
 
     if code == -32600:
         return 400
@@ -54,9 +57,12 @@ def http_status_code(data):
 
 class AbstractBackend:
     """A base wrapper wrapper around common IO task state"""
-    def __init__(self):
+    def __init__(self, hutcfg, author):
+        self.author = author
+        self.service_short_name = hutcfg.service_short_name(self.author)
         os.mkdir(STACKHUT_DIR) if not os.path.exists(STACKHUT_DIR) else None
         self.request = {}
+        log.debug("Starting service {}".format(self.service_short_name))
 
     def __enter__(self):
         return self
@@ -79,6 +85,8 @@ class AbstractBackend:
             self.request = json.loads(data.decode('utf-8'))
             rpc.add_get_id(self.request)
             log.info("Request - {}".format(self.request))
+            if ((self.request['service'] != self.service_short_name) and ((self.request['service']+':latest') != self.service_short_name)):
+                log.warn("Service request ({}) sent to wrong service ({})".format(self.request['service'], self.service_short_name))
         except Exception as e:
             _e = rpc.exc_to_json_error(rpc.ParseError(dict(exception=repr(e))))
             return True, _e
@@ -174,7 +182,6 @@ class LocalRequestServer(threading.Thread):
 
 
 
-
 class LocalBackend(AbstractBackend):
     """Mock storage and server system for local testing"""
     local_store = "run_result"
@@ -182,8 +189,8 @@ class LocalBackend(AbstractBackend):
     def _get_path(self, name):
         return "{}/{}".format(self.local_store, name)
 
-    def __init__(self, port, uid_gid=None):
-        super().__init__()
+    def __init__(self, hutcfg, author, port, uid_gid=None):
+        super().__init__(hutcfg, author)
         self.uid_gid = uid_gid
 
         # delete and recreate local_store
@@ -211,6 +218,11 @@ class LocalBackend(AbstractBackend):
 
     def put_response(self, data):
         self.resp_q.put(data)
+
+    def _process_response(self, _data):
+        """For local wrap up in a response dict"""
+        data = dict(response=_data)
+        return super()._process_response(data)
 
     def put_file(self, fname, req_id='', make_public=True):
         """Put file into a subdir keyed by req_id in local store"""
