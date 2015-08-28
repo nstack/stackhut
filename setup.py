@@ -26,7 +26,7 @@ test_requirements = []
 
 setup(
     name='stackhut-common',
-    version='0.5.1',
+    version='0.5.2',
     description="Run your software in the cloud",
     long_description=(read('README.rst') + '\n\n' +
                       read('AUTHORS.rst')),
