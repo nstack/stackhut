@@ -10,7 +10,7 @@ To create your own service, sign-up for an account and install the StackHut CLI,
 
 .. toctree::
    
-   tutorial_use
    installation
+   tutorial_use
    tutorial_create
 

@@ -5,8 +5,8 @@ Platform Installation
 
 This page describes installing the command-line StackHut Toolkit so you can rapidly develop, test, and deploy your services.
 
-Quick Instructions
-------------------
+Quick Install
+-------------
 
 Requirements
 ^^^^^^^^^^^^
@@ -15,7 +15,6 @@ Requirements
 * Unix-based OS (tested on Linux and OSX, others should work)
 
 .. note:: We are adding Windows support soon. Email us at hi@stackhut.com if this is a blocker so we can plan as needed.
-
 
 Install Steps
 ^^^^^^^^^^^^^
@@ -44,7 +43,7 @@ Linux Install Instructions
 
   * ``sudo pip3 install stackhut``
 
-.. note:: By default ``pip`` installs globally and requires root access, however passing the ``--user`` flag will install to the user's' ``$HOME`` directory, e.g. ``pip3 install --user stackhut``
+.. note:: By default ``pip`` installs globally and requires root access, however passing the ``--user`` flag will install to the user's ``$HOME`` directory, e.g. ``pip3 install --user stackhut``
 
 
 OSX Install Instructions
@@ -58,5 +57,5 @@ OSX Install Instructions
 
   * ``sudo pip3 install stackhut``
 
-.. note:: As with Linux, ``pip`` installs globally and requires root access. You can again using the ``--user`` flag to install to the user ``$HOME`` directory, however on OSX you'll have to manually add ``~\Libraries\Python\3.4\bin`` to your ``$PATH``.
+.. note:: As with Linux, ``pip`` installs globally and requires root access. You can again using the ``--user`` flag to install to the user ``$HOME`` directory, however on OSX you'll have to manually add ``~/Libraries/Python/3.4/bin`` to your ``$PATH``.
 
