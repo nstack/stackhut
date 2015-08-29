@@ -3,7 +3,7 @@
 StackHut Runtime Library
 ========================
 
-When running a StackHut service there are many common functions you may wish to perform and interact with the host environment, be t running locally on your machine or when hosted on the StackHut platform.
+When running a StackHut service there are many common functions you may wish to perform and interact with the host environment, be it running locally on your machine or when hosted on the StackHut platform.
 
 In this section we describe the StackHut library full of common functionality you can use in your service to make the process a lot easier.
 
@@ -77,5 +77,6 @@ Function waits for the subprocess to complete and returns STDOUT as a string.
 General Notes
 -------------
 
-All functions are blocking by default, however each call runs in a separate thread so you may make multiple calls without blocking the runtime library itself. However dealing with the associate blocking on the client side is a matter for your particular service and language stack. This issue is described further in xref.
+All functions are blocking by default, however each call runs in a separate thread so you may make multiple calls without blocking the runtime library itself. However dealing with the associate blocking on the client side is a matter for your particular service and language stack. This issue is described further in :ref:`creating_app`.
+
 

@@ -43,13 +43,6 @@ Let's go through all the fields.
 
 The name of the service - this does not need to be unique. We recommend keeping this the same as your project-s name in source control (e.g. on GitHub) and using snake-case.
 
-``author``
-^^^^^^^^^^
-
-*Required*
-
-The author of the service, this should be the username of a valid StackHut that you have access too. If you have multiple accounts you may need to run ``stackhut logout`` and ``stackhut login`` again to build and push services for multiple authors.
-
 
 ``github_url``
 ^^^^^^^^^^^^^^
@@ -94,13 +87,27 @@ The base language stack to use when creating an image. Currently we support,
 Name        Description    
 =======     ===========
 python      `Python 3 <http://python.org/>`_ 
-python2     `Python 2 <http://python.org/>`_ 
 nodejs      `Node.js <http://nodejs.org/>`_  (implemented using `io.js <http://iojs.org/>`_)
 =======     ===========
 
 .. note:: Currently we only support one language stack per service (although you could use this to call anothor language you've bundled into the image)
 
 .. note:: If your chosen language stack has a package manager, e.g. ``pip``, ``npm``, etc., you can fill out the package file, e.g. ``requirements.txt``, ``package.json``, etc., and it will be installed automatically within your image.
+
+
+``private``
+^^^^^^^^^^^
+
+*Required*
+
+Boolean indicating if the service is private. If true only requests by an authenticated StackHut user are permitted. If false the service is public and requests to the service can be made by anyone.
+
+``persistent``
+^^^^^^^^^^^^^^
+
+*Required*
+
+Indicates whether the service persists between request or is terminated and restart on demand on each new request. Setting a service as persistent decreases response times and can hold state between requests, however will require more resources.
 
 ``files``
 ^^^^^^^^^

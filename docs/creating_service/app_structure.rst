@@ -3,10 +3,10 @@
 Service App Code
 ================
 
-When running a StackHut service there are many common functions you may wish to perform and interact with the host environment, be it running locally on your machine or when hosted on the StackHut platform.
+In this section we exaplin how to write you code to deploy it as a microservice - we have endeavoured to make this part as simple as possible, so you can get on with the business of writing your business logic normally and not worry about infrastructure, servers, or hosting.
 
-In this section we describe the StackHut library full of common functionality you can use in your service to make the process a lot easier.
 
+.. _creating_app_idl:
 
 Interface Definition (``api.idl``)
 ----------------------------------
@@ -24,6 +24,7 @@ App Code
 **TODO**
 
 
+.. _creating_app_lang:
 
 Language Specific Notes
 -----------------------

@@ -234,12 +234,10 @@ Further Information
 
 Thanks for reading this tutorial - you can find more information on calling services in :ref:`using_index`. 
 
-This was a super simple example, but you can build anything you can in Python or Node: we've been using StackHut to create web-scrapers, image processing tools, video conversion APIs and more. Several of these are hosted publically at the `StackHut repository <https://stackhut.com/#/services>`_. 
-.. , and in :ref:`examples` we decribing how we built them.
+This was a super simple example, but you can build anything you can in Python or Node: we've been using StackHut to create web-scrapers, image processing tools, video conversion APIs and more. Several of these are hosted publicly at the `StackHut repository <https://stackhut.com/#/services>`_. 
+.. , and in :ref:`examples_index` we decribing how we built them.
 
 .. You can find all kinds of services, for instance, video encoding, compression, compilation, web scraping, and more, 
-
-
 
 
 We'd love to see what you come up with. 

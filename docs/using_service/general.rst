@@ -3,7 +3,7 @@
 General Usage Notes
 ===================
 
-StackHut services can be accesed easily either through client side libraries, or direcrly using the underlying JSON+HTTP protocol. Either way there are several pints to note to make communticating with your services as easy and efficent as possible.
+StackHut services can be accessed easily either through client side libraries, or directly using the underlying JSON+HTTP protocol. Either way there are several pints to note to make communicating with your services as easy and efficient as possible.
 
 
 .. _using_general_files:

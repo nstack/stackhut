@@ -9,7 +9,7 @@ Please read :ref:`tutorial_use` for basic information on how to access a service
 Access a service using client-side libraries
 --------------------------------------------
 
-Client-side libraries are have been/or are under development for the following platforms, please feel free to add support for your favourite langauge if not present, it's quite easy!
+Client-side libraries are have been/or are under development for the following platforms, please feel free to add support for your favourite language if not present, it's quite easy!
 
 =============       ==============================  ===========   
 Langauge            Install                         Source Code
@@ -35,10 +35,10 @@ These libraries abstract away the entire JSON-RPC mechanism and make it as easy 
     >> http://stackhut-files.s3.amazonaws.com/stackhut/downloads/a77d49f6-af7d-4007-8630-f6f443de7680/5c77d73b-9c8c-4850-84eb-9196b19fb545/screen.png
   
 
-Client-side Library API
-^^^^^^^^^^^^^^^^^^^^^^^
+Client libraries API
+^^^^^^^^^^^^^^^^^^^^
 
-The the gneeral behvous of the client libraries is similar in all lanauges and we describe it below using the Python client-library as a reference. 
+The the general behaviour of the client libraries is similar in all languages and we describe it below using the Python client-library as a reference. 
 There are 3 main classes in the library,
 
 SHService
@@ -53,7 +53,7 @@ The main class representing a single StackHut service. It takes several paramete
 
 * author - The author of the service
 * service_name - The service name
-* version - The specific verion of the service (is `latest` if left blank)
+* version - The specific version of the service (is `latest` if left blank)
 * auth - An `SHAuth` object used to authenticate requests for private services
 * host - URL for the StackHut API server, can be set to point to local servers during development, is `https://api.stackhut.com` if left blank
 

@@ -48,6 +48,7 @@ You can find the list of commands and options available by running,
 
     $ stackhut --help
 
+.. note:: Enable verbose mode to view more debug output using ``stackhut -v``.
 
 Commands
 --------
@@ -69,11 +70,10 @@ Help for any command can be displayed by running,
     $ stackhut login
 
 This command logins you into the StackHut platform using your GitHub username and StackHut password.
-You need to be logged to build and deploy service (this is so we know how to correctly name the image when passing the build to Docker),
+You need to be logged to build and deploy service (this is so we know how to correctly name the image when building the service),
 
 .. note:: Your details are stored in a user-only readable file at ``$HOME/.stackhut.cfg``.
 
-.. note:: The login system currently also requires that you log in to Docker first also. We're working on removing this requirement.
 
 ``logout``
 ^^^^^^^^^^
@@ -111,8 +111,8 @@ Initialises a new StackHut project in the current directory using the specified 
 
 By default it creates a service in your stack that has a single ``add`` function already specified. The initial project is comprised of the following files,
 
-* a minimal ``Hutfile``,
-* an ``api.idl`` inteface definition file,
+* a minimal ``Hutfile`` (see :ref:`creating_structure_hutfile`),
+* an ``api.idl`` inteface definition file (see :ref:`creating_app_idl`),
 * an ``app.py`` application file (or app.js, etc.),
 * a ``README.md`` markdown file,
 * a ``test_request.json`` test file to simulate requests to your service,
@@ -146,33 +146,23 @@ Building a service involves,
 Building can be time-consuming so is performed on an as-needed basis by detecting changes to the files referenced from the `Hutfile`. If this fails, or perhaps you're installing software from across the network as part of the build, you may wish to force the build to occur by passing the ``--force`` flag.
 
 
-``run``
-^^^^^^^
+``runcontainer``
+^^^^^^^^^^^^^^^^
 
 .. code:: bash
 
-    $ stackhut run [--force] request_file
+    $ stackhut runcontainer [--force]
 
 ================    ===========    
 Option              Description
 ================    ===========
-``request_file``    The test file containing a sample request JSON object
 ``--force``         Forces build before run 
 ================    ===========
 
-Builds the image and simulates a request to the service within the container using the JSON object stored in ``request_file``. This should be a JSON-RPC request and is briefly shown below,
 
-.. code:: json
+Builds the image and and hosts the service locally on ``http://localhost:4001``. You can test the service either using the client-libaries or by ``curl``-ing the ``test_request.json`` file to the local server, as described in :ref:`using_index`.
 
-    {
-        "service": "mands/demo-python",
-        "req": {
-            "method": "add",
-            "params": [2, 2]
-        }    
-    }
-
-Upon running this command the Toolkit will build the image (if required) and run the service within the container using the specified input file. This is exactly the same code as will be run on the hosted StackHut platform so you can be sure that if it works locally it will work in the cloud. Output from running this request is placed in the ``run_result`` directory, with the JSON response object in ``run_result\response.json``.
+Upon running this command the Toolkit will build the image (if required) and run the service within the container. This is exactly the same code as will be run on the hosted StackHut platform so you can be sure that if it works locally it will work in the cloud. Output from running this request is placed in the ``run_result`` directory, with the JSON response object in ``run_result\response.json``.
 
 
 ``runhost``
@@ -183,12 +173,12 @@ Upon running this command the Toolkit will build the image (if required) and run
     $ stackhut runhost request_file
 
 
-The ``run`` command builds and runs an full image - we make every effort to cache and reduce the time this process takes but you may find it still imposes a delay when testing quick changes. 
+The ``runcontainer`` command builds and runs an full image - we make every effort to cache and reduce the time this process takes but you may find it still imposes a delay when testing quick changes. 
 To this end we provide the ``runhost`` command - it runs your service immediately using your host operating system and installed dependencies instead.
 
-As with the ``run`` command it simulates the request found in ``request_file`` and writes the response into ``run_result``.
+As with the ``run`` command it hosts the service locally for use with the client-libraries and writes the response into ``run_result``.
 
-This can be a useful way to setup a quick feedback loop, but we recommend using the ``run`` command in most cases as it will test your entire service and dependencies using the same code as on the server.
+This can be a useful way to setup a quick feedback loop, but we recommend using the ``runcontainer`` command in most cases as it will test your entire service and dependencies using the same code as on the server.
 Furthermore it can be easier to setup the dependencies for the service in the container and they'll be isolated from the main host OS.
 
 .. note:: ``runhost`` will not install any dependencies from the `Hutfile` for you and you will have to manually set these up if needed.
@@ -198,19 +188,18 @@ Furthermore it can be easier to setup the dependencies for the service in the co
 
 .. code:: bash
 
-    $ stackhut deploy [--force] [--no-build]
+    $ stackhut deploy [--force]
 
 ================    ===========
 Option              Description
 ================    ===========
-``--no-builder``    Deploy only, do not build or push image first
 ``--force``         Forces build before deploy
 ================    ===========
 
-The deploy command takes your project, builds it if necessary, and uploads it to the StackHut platform where it will be live under the service address ``username/servicename`` and can be called from ``https://api.stackhut.com/run``. 
+.. ``--no-build``      Deploy only, do not build or push image first
+
+The deploy command packages and uploads your project to the StackHut platform where it's build remotely and then deployed live under the service address ``username/servicename`` and can be called from ``https://api.stackhut.com/run``. 
 Deployment requires that you have an account at StackHut and are logged in using the command line tool.
 
-.. note:: Currently it also requires an active Docker Hub account and login, as it stores the service images on `Docker Hub <http://hub.docker.com/>`_.
-
-If you've already deployed the image and just want to update the service metadata, e.g. the description, README, API docs, etc., you can run ``deploy`` with the ``--no-build`` flag and it will skip the full deploy - a much quicker operation.
+.. If you've already deployed the image and just want to update the service metadata, e.g. the description, README, API docs, etc., you can run ``deploy`` with the ``--no-build`` flag and it will skip the full deploy - a much quicker operation.
 

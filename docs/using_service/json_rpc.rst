@@ -8,9 +8,9 @@ Access a service directly
 
 This involves creating JSON-RPC compatible requests on demand, thankfully this is very simple and so it's easy to call your StackHut services from anywhere.
 It can then be accessed in the cloud via `JSON-RPC <http://www.jsonrpc.org/>`_ transported over a HTTP(S) POST request.
-To make it easier to call and use StackHut services we have started building client-libraries in several lanauges. They are described further in :ref:`using_client_libs`, and currently exist for Python and JavaScript. 
+To make it easier to call and use StackHut services we have started building client-libraries in several languages. They are described further in :ref:`using_client_libs`, and currently exist for Python and JavaScript. 
 
-However it's always possible to contsruct the JSON-RPC request yourself in any lanauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc`, and this is much simpler than it sounds! 
+However it's always possible to construct the JSON-RPC request yourself in any langauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc`, and this is much simpler than it sounds! 
 
 Request:
 
@@ -84,7 +84,9 @@ returning,
     }
 
 
-As before we receive a JSON-RPC response object, however this time the ``result`` field has been replaced with an ``error`` field, an object with an error code, a human readable text message, and an optional ``data`` sub-object with further information. You can use this data to handle the error as required within your code. (*NOTE* - the error codes are as those defined by the `JSON-RPC spec <http://www.jsonrpc.org/specification#error_object>`_.).
+As before we receive a JSON-RPC response object, however this time the ``result`` field has been replaced with an ``error`` field, an object with an error code, a human readable text message, and an optional ``data`` sub-object with further information. You can use this data to handle the error as required within your code 
+
+.. note:: The error codes are as those defined by the `JSON-RPC spec <http://www.jsonrpc.org/specification#error_object>`_.
 
 We hope this shows how you can call any StackHut service from your code - you may either use an existing JSON-RPC library or roll your own functions to make the request and handle the response respectively.
 
