@@ -146,7 +146,7 @@ Hosting your Service
 
 Now you've developed your service you can host it locally to test it further, or you can go straight ahead and deploy live to the StackHut hosting platform. 
 
-.. note:: We're also working hard to provide a priavte, self-hosting solution that runs on the cloud and on-prem.
+.. note:: We're also working hard to provide a private, self-hosted solution that runs on any cloud-provider and on-prem.
 
 Hosting locally
 ^^^^^^^^^^^^^^^
@@ -160,13 +160,13 @@ Secondly, we can use ``stackhut runcontainer``. This will do a full test by buil
 
 .. note:: ``stackhut runcontainer`` requires `Docker <https://www.docker.com/>`_ to be installed and running.
 
-When you do either, StackHut will run a local HTTP server on port 4001 which you can use to call and teset your service, as described in the below section.
+When you do either, StackHut will run a local HTTP server on port 4001 which you can use to call and test your service, as described in the below section.
 
 
 Hosting on StackHut
 ^^^^^^^^^^^^^^^^^^^
 
-This couldn't be simpler to deploy your code to our hosted, high-performance, StackHut platform for general availabilty. Just run,
+This couldn't be simpler: your code will be deployed and hosted on the high-availability StackHut platform. Just run,
 
 .. code-block:: bash
 
@@ -175,7 +175,7 @@ This couldn't be simpler to deploy your code to our hosted, high-performance, St
 This will upload your code, package it, build your service, and then deploy it to StackHut. The first time you run ``deploy`` it may take a couple of minutes to build, however subsequent builds will be faster.
 
 The service is live and ready to receive requests right now in the browser or from anywhere else via HTTP or our client libraries. 
-You can view your new API on the StackHut homepage,  <www.stackhut.com/#/u/user/demo-python>`_ (replace ``user`` with your stackhut username).
+You can view your new API on your StackHut account, where you can test it and see your functions <www.stackhut.com/#/u/user/demo-python>`_ (replace ``user`` with your stackhut username).
 
 
 Using your Service
@@ -186,9 +186,9 @@ The whole StackHut infrastructure is abstracted away from your service code, fro
 
 .. It can then be accessed locally or in the cloud via `JSON-RPC <http://www.jsonrpc.org/>`_ transported over a HTTP(S) POST request.
 
-To make it easier to use local and hosted StackHut services we have built client-libraries. They are described further in :ref:`using_client_libs`, and are currently available for Python and JavaScript. 
+To make it easier to use local and hosted StackHut services, we have built client-libraries. They are described further in :ref:`using_client_libs`, and are currently available for Python and JavaScript. 
 
-.. note:: However it's always possible to contsruct the JSON-RPC request yourself in any lanauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc`, and this is much simpler than it sounds! 
+.. note:: It's always possible to construct the JSON-RPC request yourself and send it over HTTP. JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc`, and this is much simpler than it sounds! 
 
 
 
