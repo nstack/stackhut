@@ -20,16 +20,22 @@ Here's a sample,
 
     # Name for the service - we recommend using snake-case
     name: demo-python
-    
-    # Public GitHub repo
-    github_url: http://www.github.com/StackHut/demo-python
 
-    # description of the service
+    # Service description
     description: Awesome service in python
 
-    # stack we use, in terms of the OS and language runtime
+    # GitHub source repo link (optional)
+    github_url: www.github.com/StackHut/demo-python
+
+    # The service dependencies, in terms of the base OS and language runtime
     baseos: fedora
     stack: python
+
+    # Persist the service between requests
+    persistent: False
+
+    # Restrict service access to authenticated users
+    private: False
 
 Let's go through all the fields.
 
