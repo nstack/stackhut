@@ -20,9 +20,6 @@ Here's a sample,
 
     # Name for the service - we recommend using snake-case
     name: demo-python
-
-    # Service author - must be a valid StackHut user
-    author: mands
     
     # Public GitHub repo
     github_url: http://www.github.com/StackHut/demo-python
@@ -31,7 +28,7 @@ Here's a sample,
     description: Awesome service in python
 
     # stack we use, in terms of the OS and language runtime
-    baseos: alpine
+    baseos: fedora
     stack: python
 
 Let's go through all the fields.
