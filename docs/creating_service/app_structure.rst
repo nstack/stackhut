@@ -1,4 +1,4 @@
-.. _usage_runtime:
+.. _creating_app:
 
 Service App Code
 ================

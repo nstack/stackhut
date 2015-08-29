@@ -1,7 +1,7 @@
-.. _tutorial_create:
+.. _getting_started_tutorial:
 
-Tutorial - Creating a Service
-=============================
+Tutorial
+========
 
 StackHut turns classes into cloud APIs, so you can call your functions over HTTP or natively using our client libraries.
 
@@ -10,12 +10,15 @@ This tutorial briefly describes how you can develop, test and deploy a simple se
 Further information on creating a service can be found in :ref:`usage_cli` and :ref:`usage_project`.
 
 
+Creating a Service
+------------------
+
 Create an Account
------------------
+^^^^^^^^^^^^^^^^^
 
 Go to the `StackHut website <www.stackhut.com>`_ and click the link on the front-page that says *Sign up with GitHub*. This will use *OAuth* to authenticate and create a user on StackHut using your GitHub username and email. 
 
-.. note:: We only request access to your GitHub email address to set up the StackHut account and have no access to your repositories.
+.. note:: We only request access to your GitHub email address to set up the StackHut account and have no access to your repositories or SSH keys.
 
 Upon completion you'll be asked to enter a password for your StackHut account. Thus your StackHut credentials will be,
 
@@ -42,24 +45,24 @@ To logout just run ``stackhut logout``.
 
 
 Initialise a Project
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 We start by initialising a StackHut project, let's call this one ``demo-python``,
 
 .. code-block:: bash
 
     # create and cd into the project directory
-    [mands@laptop ~]$ mkdir demo-python
-    [mands@laptop ~]$ cd demo-python
+    [~]$ mkdir demo-python
+    [~]$ cd demo-python
     # run stackhut init to initialise the project
-    [mands@laptop demo-python]$ stackhut init fedora python
+    [demo-python]$ stackhut init fedora python
 
 The ``stackhut init`` command takes two parameters: the base operating system, in this case `Fedora Linux <http://getfedora.org/>`_, and the language stack to use, here Python (short for Python 3). When run, StackHut will create a working skeleton project for you to quickly get started with, including an initial Git commit.
 This contains all the files a StackHut service needs, already configured using sensible defaults for the chosen system.
 
 .. code-block:: bash
 
-    [mands@laptop demo-python]$ ls
+    [demo-python]$ ls
     api.idl  app.py  Hutfile.yaml  README.md  requirements.txt  test_request.json
 
 There are several files here - and we'll cover the important ones in the following sections. They are all discussed further in :ref:`usage_project_hutfile`.
@@ -69,7 +72,7 @@ The ``Hutfile.yaml`` is a *YAML* file containing configuration regarding our sta
 
 
 Signature
----------
+^^^^^^^^^
 
 The ``api.idl`` interface-definition (IDL) file describes our service interface. After you deploy your service, these functions will act as 'entry-points' into your code: i.e., you will be able to call them over HTTP, and they will run the corresponding function in your code.
 
@@ -99,17 +102,14 @@ By default we are exposing a single function, ``add``, that takes two ``ints``, 
 
 
 Code
-----
+^^^^
 
 Having defined our interface, we can now write the code for ``multiply``. Your app code lives in ``app.py`` (or ``app.js`` for JS, and so on), as follows:
 
 .. code-block:: python
 
     #!/usr/bin/env python3
-    # -*- coding: utf-8 -*-
-    """
-    Demo Service
-    """
+    """Demo Service"""
     import stackhut
 
     class Default(stackhut.Service):
@@ -125,10 +125,7 @@ As seen, the service is a plain old Python class with a function for each entryp
 .. code-block:: python
 
     #!/usr/bin/env python3
-    # -*- coding: utf-8 -*-
-    """
-    Demo Service
-    """
+    """Demo Service"""
     import stackhut
 
     class Default(stackhut.Service):
@@ -144,108 +141,107 @@ As seen, the service is a plain old Python class with a function for each entryp
 
 
 
-Build, Run, and Test
+Hosting your Service
 --------------------
 
-Now we're done coding, and because we're all responsible developers, let's run, and test our service before we deploy. 
+Now you've developed your service you can host it locally to test it further, or you can go straight ahead and deploy live to the StackHut hosting platform. 
+
+.. info:: We're also working hard to provide a priavte, self-hosting solution that runs on the cloud and on-prem.
+
+Hosting locally
+^^^^^^^^^^^^^^^
+
+.. Now we're done coding, and because we're all responsible developers, let's run, and test our service before we deploy. 
 
 To run our service locally, we have two options. Firstly, we can use ``stackhut runhost`` which will run the code with our own Operating System and version of Python/Node.
 
 Secondly, we can use ``stackhut runcontainer``. This will do a full test by building a Docker container which will be exactly the same as the one that runs on the StackHut platform. It will package up the OS and dependencies you specified and run it with Docker.
 
-.. note:: This requires `Docker <https://www.docker.com/>`_ to be installed and running.
 
-When you do either, StackHut will run a local HTTP server on port 4001 which you can use to simulate a request to StackHut.
+.. note:: ``stackhut runcontainer`` requires `Docker <https://www.docker.com/>`_ to be installed and running.
 
-By default there is a file called ``test_request.json`` that represents a HTTP request to our service. This file specifies the ``service``, the ``method``, and ``parameters`` already configured for the ``add`` endpoint,
+When you do either, StackHut will run a local HTTP server on port 4001 which you can use to call and teset your service, as described in the below section.
 
-.. code-block:: json
 
-    {
-        "service": "mands/demo-python",
-        "request": {
-            "method": "add",
-            "params": [2, 2]
-        }
-    }
+Hosting on StackHut
+^^^^^^^^^^^^^^^^^^^
 
-.. note:: This format is actually `JSON-RPC <www.json-rpc.org>`_ - described further in :ref:`tutorial_use`
-
-Let's pipe this request into our server using ``curl``.
+This couldn't be simpler to deploy your code to our hosted, high-performance, StackHut platform for general availabilty. Just run,
 
 .. code-block:: bash
 
-    [mands@laptop demo-python]$ curl -H "Content-Type: application/json" -X POST -d @test_request.json http://127.0.0.1:4001
+    [demo-python]$ stackhut deploy
 
-This gives us the output:
-
-.. code-block:: json
-
-    {
-        "jsonrpc": "2.0", 
-        "id": "7fad6810-35ef-4891-b6b3-769aeb3c1d25"
-        "result": 4
-    }
-
-
-We can modify the ``test_request.json`` as follows to test our ``multiply`` function, and run it again,
-
-.. code-block:: json
-
-    {
-        "service": "mands/demo-python",
-        "request": {
-            "method": "multiply",
-            "params": [3, 2]
-        }
-    }
-
-.. code-block:: bash
-
-    [mands@laptop demo-python]$ curl -H "Content-Type: application/json" -X POST -d @test_request.json http://127.0.0.1:4001
-
-.. code-block:: json
-
-    {
-        "jsonrpc": "2.0", 
-        "id": "73a04803-ff37-4f7a-9763-349d57e54123"
-        "result": 6
-    }
-
-Having ran our tests, we're now ready to deploy and host the service on the StackHut platform.
-
-Deploy
-------
-
-This couldn't be simpler,
-
-.. code-block:: bash
-
-    [mands@laptop demo-python]$ stackhut deploy
-
-This uploads your code, packages it up, builds your service, and then deploys it to StackHut. The first time you run this, it may be take a couple of minutes to build. Subsequent builds will be faster.
-
- 
-Use
----
+This will upload your code, package it, build your service, and then deploy it to StackHut. The first time you run ``deploy`` it may take a couple of minutes to build, however subsequent builds will be faster.
 
 The service is live and ready to receive requests right now in the browser or from anywhere else via HTTP or our client libraries. 
-
-.. code-block:: bash
-
-    [mands@laptop demo-python]$ curl -H "Content-Type: application/json" -X POST -d @test_request.json https://api.stackhut.com/run
-
-.. code-block:: json
-
-    {
-        "jsonrpc": "2.0", 
-        "id": "73a04803-ff37-4f7a-9763-349d57e54123"
-        "result": 6
-    }
+You can view your new API on the StackHut homepage,  <www.stackhut.com/#/u/user/demo-python>`_ (replace ``user`` with your stackhut username).
 
 
-You can view your new API on your StackHut homepage. 
+Using your Service
+------------------
 
-Further documentation on how to call and make use of a StackHut from your code can be found in :ref:`tutorial_use`.
-This is a super simple example, but you can build anything you can in Python or Node: we've been using StackHut to create web-scrapers, image processing tools, video conversion APIs and more. We'd love to see what you come up with. 
+All local and hosted StackHut services can be accessed and consumed via a direct HTTP POST request. On receiving a request, StackHut will route the request on-demand to the required service to complete it. 
+The whole StackHut infrastructure is abstracted away from your service code, from its point of view it's simply executing a function call.
+
+.. It can then be accessed locally or in the cloud via `JSON-RPC <http://www.jsonrpc.org/>`_ transported over a HTTP(S) POST request.
+
+To make it easier to use local and hosted StackHut services we have built client-libraries. They are described further in :ref:`using_client_libs_`, and are currently available for Python and JavaScript. 
+
+.. note:: However it's always possible to contsruct the JSON-RPC request yourself in any lanauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc_`, and this is much simpler than it sounds! 
+
+
+
+Calling a service
+^^^^^^^^^^^^^^^^^
+
+
+Services are prefixed by their author, such as ``stackhut/demo-python``. We can view the documentation and API for this service on its `homepage <https://stackhut.com/#/u/stackhut/demo-python>`_, it has 2 methods, ``add`` and ``multiply``. 
+
+For this tutorial we'll use the ``demo-python`` service created in above (if you didn't create one you can use ``stackhut/demo-python`` instead). We'll use the Python 3.x client library (described in :ref:`using_client_libs_`) to call this service.
+
+First we'll create a ``SHService`` object to reference the service,
+
+.. code-block:: python
+
+    import stackhut_client as client
+    service = client.SHService('stackhut', 'demo-python')
+
+where ``stackhut`` is the service author (replace with your own username), and ``demo-python`` is the service name. 
+Now we have the service we can just call the methods on the ``Default`` interface,
+
+.. code-block:: python
+
+    service.Default.add(1, 2)
+    >> 3
+    service.Default.multiply(2, 3)
+    >> 6
+
+We can use the same client libraries to call local services for testing, e.g. a service started using ``stackhut runcontainer``, just by passing the local service URL to the service constructor,
+
+.. code-block:: python
+
+    service = client.SHService('stackhut', 'demo-python', host='localhost:4001')
+    service.Default.add(1, 2)
+    >> 3
+
+This makes it much easier to integrate StackHut into your client code whilst developing and testing a service.
+
+
+Further Information
+-------------------
+
+
+Thanks for reading this tutorial - you can find more information on calling services in :ref:`using`. 
+
+This was a super simple example, but you can build anything you can in Python or Node: we've been using StackHut to create web-scrapers, image processing tools, video conversion APIs and more. Several of these are hosted publically at the `StackHut repository <https://stackhut.com/#/services>`_, and in :ref:`examples` we decribing how we built them.
+
+.. You can find all kinds of services, for instance, video encoding, compression, compilation, web scraping, and more, 
+
+
+
+
+We'd love to see what you come up with. 
+
+
 

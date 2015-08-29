@@ -1,7 +1,7 @@
-.. _usage_project:
+.. _creating_structure:
 
-Project Structure
-=================
+Service Project Structure
+=========================
 
 Introduction
 ------------

@@ -1,4 +1,4 @@
-.. _usage_cli:
+.. _creating_toolkit:
 
 StackHut Toolkit
 ================

@@ -1,4 +1,4 @@
-.. _usage_your_code:
+.. _using_general:
 
 General Usage Notes
 ===================
@@ -8,7 +8,7 @@ StackHut services can be accesed easily either through client side libraries, or
 
 Files
 -----
-.. _usage_your_code_files:
+.. _using_general_files:
 
 Often you will want to pass a file from your code to be processed by a StackHut service, for instance when processing a video or converting a PDF.
 
