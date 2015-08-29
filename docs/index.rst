@@ -17,7 +17,7 @@ Contents:
 
     introduction
     getting_started/index
-    full_docs/index
+    detailed_docs/index
     misc/index
 
 

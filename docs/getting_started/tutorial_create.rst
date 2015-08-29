@@ -153,7 +153,7 @@ To run our service locally, we have two options. Firstly, we can use ``stackhut 
 
 Secondly, we can use ``stackhut runcontainer``. This will do a full test by building a Docker container which will be exactly the same as the one that runs on the StackHut platform. It will package up the OS and dependencies you specified and run it with Docker.
 
-.. note:: This requires Docker to be up and running.
+.. note:: This requires `Docker <https://www.docker.com/>`_ to be installed and running.
 
 When you do either, StackHut will run a local HTTP server on port 4001 which you can use to simulate a request to StackHut.
 

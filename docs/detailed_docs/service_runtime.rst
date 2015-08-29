@@ -30,6 +30,15 @@ Downloads a file from the given ``url`` into the working directory. If ``fname``
 
 Returns the filename of the downloaded file.
 
+get_file
+^^^^^^^^
+
+.. code-block:: python
+
+    stackhut.get_file(key)
+
+This function is used to download files uploaded using the ``/files`` endpoint (see :ref:`usage_your_code_files`). It securly downloads the file refernced by the given ``key`` into the working directory and returns the filename.
+
 
 put_file
 ^^^^^^^^
@@ -43,6 +52,15 @@ This function uploads the file referenced by ``fname`` in the service working di
 
 Returns the URL of the uploaded file.
 
+
+get_stackhut_user
+^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    stackhut.get_stackhut_user()
+
+Returns the authenticated StackHut username of the request originator as a string, or ``null`` if not present. This has been authenticated by the server and can be used securely to know who made the request. 
 
 run_command
 ^^^^^^^^^^^
