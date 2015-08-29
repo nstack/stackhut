@@ -107,6 +107,7 @@ Notes
 
 Files
 ^^^^^
+.. _usage_your_code_files:
 
 Often you will want to pass a file from your code to be processed by a StackHut service, for instance when processing a video or converting a PDF.
 
