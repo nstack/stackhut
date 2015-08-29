@@ -1,13 +1,13 @@
 .. _usage_cli:
 
-The StackHut Toolkit
-====================
+StackHut Toolkit
+================
 
 
 .. Introduction
 .. ------------
 
-The Toolkit is used to create, test, deploy, and maintain your services hosted on StackHut.
+The StackHut Toolkit is used to create, test, deploy, and maintain your services hosted on StackHut.
 It provides a range of commands used to interact with your code and the StackHut servers.
 
 Getting Started
@@ -37,7 +37,7 @@ Having installed the Toolkit just make sure it's accessible from your path
 .. code:: bash
     
     $ stackhut -V
-    > stackhut 0.3.12
+    > stackhut 0.5.4
 
 Now that's done, you may wish to run through the tutorial at :ref:`tutorial_create`.
 

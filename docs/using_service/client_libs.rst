@@ -1,7 +1,7 @@
 .. _usage_your_code:
 
-Using Services
-==============
+Client-side Libraries
+=====================
 
 Please read :ref:`tutorial_use` for basic information on how to access a service via JSON-RPC.
 
@@ -89,17 +89,6 @@ The object has 3 parameters,
 * code - A JSON-RPC error code
 * message - A string describing the error
 * data - An optional object that may contain additional structured data for handling the error
-
-
-
-Access a service directly
--------------------------
-
-This involves creating JSON-RPC compatible requests on demand, thankfully this is very simple and so it's easy to call your StackHut services from anywhere. See :ref:`tutorial_use` for basic info.
-
-.. Login into StackHut
-.. -------------------
-.. __Coming Soon__ - all services are curently free to use and can be accessed anonymously.
 
 
 Notes

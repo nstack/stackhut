@@ -132,24 +132,3 @@ If the default workflow is not flexible enough, you can specify any additional s
 
 See `<http://www.github.com/StackHut/browser>`_ for an example.
 
-Interface Definition (``api.idl``)
-----------------------------------
-
-**TODO**
-
-See :ref:`tutorial_create`.
-
-This is based on the `Barrister RPC project <http://barrister.bitmechanic.com/>`_, the format of which is described in the `project documentation <http://barrister.bitmechanic.com/docs.html>`_.
-
-
-App Code
---------
-
-**TODO**
-
-
-Notes
------
-
-**TODO**
-

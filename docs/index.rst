@@ -17,7 +17,9 @@ Contents:
 
     introduction
     getting_started/index
-    detailed_docs/index
+    using_service/index
+    creating_service/index
+    service_mgmt/index
     misc/index
 
 
