@@ -37,7 +37,7 @@ get_file
 
     stackhut.get_file(key)
 
-This function is used to download files uploaded using the ``/files`` endpoint (see :ref:`usage_your_code_files`). It securly downloads the file refernced by the given ``key`` into the working directory and returns the filename.
+This function is used to download files uploaded using the ``/files`` endpoint (see :ref:`using_general_files`). It securly downloads the file refernced by the given ``key`` into the working directory and returns the filename.
 
 
 put_file

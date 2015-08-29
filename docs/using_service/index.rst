@@ -1,3 +1,5 @@
+.. _using_index:
+
 ***************
 Using a Service
 ***************

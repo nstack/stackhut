@@ -8,9 +8,9 @@ Access a service directly
 
 This involves creating JSON-RPC compatible requests on demand, thankfully this is very simple and so it's easy to call your StackHut services from anywhere.
 It can then be accessed in the cloud via `JSON-RPC <http://www.jsonrpc.org/>`_ transported over a HTTP(S) POST request.
-To make it easier to call and use StackHut services we have started building client-libraries in several lanauges. They are described further in :ref:`using_client_libs_`, and currently exist for Python and JavaScript. 
+To make it easier to call and use StackHut services we have started building client-libraries in several lanauges. They are described further in :ref:`using_client_libs`, and currently exist for Python and JavaScript. 
 
-However it's always possible to contsruct the JSON-RPC request yourself in any lanauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc_`, and this is much simpler than it sounds! 
+However it's always possible to contsruct the JSON-RPC request yourself in any lanauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc`, and this is much simpler than it sounds! 
 
 Request:
 

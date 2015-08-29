@@ -1,3 +1,5 @@
+.. _mgmt_index:
+
 ******************
 Service Management
 ******************

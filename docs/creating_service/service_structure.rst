@@ -7,7 +7,7 @@ Introduction
 ------------
 In this section we describe the files created when you initialise a StackHut project using ``stackhut init baseos language`` (e.g. ``stackhut init fedora python``).
 
-.. _usage_project_hutfile:
+.. _creating_structure_hutfile:
 
 Hutfile
 -------
@@ -80,7 +80,7 @@ alpine  `Alpine Linux <http://alpinelinux.org/>`_
 ======  ===========
 
 
-.. _usage_project_hutfile_stack:
+.. _creating_structure_hutfile_stack:
 
 ``stack``
 ^^^^^^^^^
@@ -118,7 +118,7 @@ See `<http://www.github.com/StackHut/image-process>`_ for an example.
 
 A list of OS packages you wish to bundle with your service, i.e. those installable via ``yum``, or ``apt-get``, depending on your ``baseos``. You may need to check with your choosing base OS repository to find the names of the packages and their versions.
 
-.. note:: you can also install language specific packages using your language package manager as described in the :ref:`usage_project_hutfile_stack` subsection above.
+.. note:: you can also install language specific packages using your language package manager as described in the :ref:`creating_structure_hutfile_stack` subsection above.
 
 See `<http://www.github.com/StackHut/pdf-tools>`_ for an example.
 

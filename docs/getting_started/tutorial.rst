@@ -5,9 +5,9 @@ Tutorial
 
 StackHut turns classes into cloud APIs, so you can call your functions over HTTP or natively using our client libraries.
 
-This tutorial briefly describes how you can develop, test and deploy a simple service on StackHut. This one will only take a few minutes, but services can be as complex as you like. Firstly, check you've installed the StackHut dependencies as described in :ref:`installation`. 
+This tutorial briefly describes how you can develop, test and deploy a simple service on StackHut. This one will only take a few minutes, but services can be as complex as you like. Firstly, check you've installed the StackHut dependencies as described in :ref:`getting_started_installation`. 
 
-Further information on creating a service can be found in :ref:`usage_cli` and :ref:`usage_project`.
+Further information on creating a service can be found in :ref:`creating_toolkit` and :ref:`creating_structure`.
 
 
 Creating a Service
@@ -34,9 +34,9 @@ Now that is done, we can login in to StackHut from the Toolkit. In your console,
 
 .. code-block:: bash
 
-    [mands@laptop ~]$ stackhut login
+    [~]$ stackhut login
     >> Username: mands
-    >> Password: *****
+    >> Password: **********
     >> User mands logged in successfully
 
 and enter your username and password as created earlier. This will securely connect to StackHut and validate your login.
@@ -65,8 +65,8 @@ This contains all the files a StackHut service needs, already configured using s
     [demo-python]$ ls
     api.idl  app.py  Hutfile.yaml  README.md  requirements.txt  test_request.json
 
-There are several files here - and we'll cover the important ones in the following sections. They are all discussed further in :ref:`usage_project_hutfile`.
-The ``Hutfile.yaml`` is a *YAML* file containing configuration regarding our stack and dependencies - more information regarding its parameters can be found in :ref:`usage_project_hutfile`.
+There are several files here - and we'll cover the important ones in the following sections. They are all discussed further in :ref:`creating_structure_hutfile`.
+The ``Hutfile.yaml`` is a *YAML* file containing configuration regarding our stack and dependencies - more information regarding its parameters can be found in :ref:`creating_structure_hutfile`.
 
 .. There is a README.md markdown file to further describe your service.
 
@@ -146,7 +146,7 @@ Hosting your Service
 
 Now you've developed your service you can host it locally to test it further, or you can go straight ahead and deploy live to the StackHut hosting platform. 
 
-.. info:: We're also working hard to provide a priavte, self-hosting solution that runs on the cloud and on-prem.
+.. note:: We're also working hard to provide a priavte, self-hosting solution that runs on the cloud and on-prem.
 
 Hosting locally
 ^^^^^^^^^^^^^^^
@@ -186,9 +186,9 @@ The whole StackHut infrastructure is abstracted away from your service code, fro
 
 .. It can then be accessed locally or in the cloud via `JSON-RPC <http://www.jsonrpc.org/>`_ transported over a HTTP(S) POST request.
 
-To make it easier to use local and hosted StackHut services we have built client-libraries. They are described further in :ref:`using_client_libs_`, and are currently available for Python and JavaScript. 
+To make it easier to use local and hosted StackHut services we have built client-libraries. They are described further in :ref:`using_client_libs`, and are currently available for Python and JavaScript. 
 
-.. note:: However it's always possible to contsruct the JSON-RPC request yourself in any lanauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc_`, and this is much simpler than it sounds! 
+.. note:: However it's always possible to contsruct the JSON-RPC request yourself in any lanauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc`, and this is much simpler than it sounds! 
 
 
 
@@ -198,7 +198,7 @@ Calling a service
 
 Services are prefixed by their author, such as ``stackhut/demo-python``. We can view the documentation and API for this service on its `homepage <https://stackhut.com/#/u/stackhut/demo-python>`_, it has 2 methods, ``add`` and ``multiply``. 
 
-For this tutorial we'll use the ``demo-python`` service created in above (if you didn't create one you can use ``stackhut/demo-python`` instead). We'll use the Python 3.x client library (described in :ref:`using_client_libs_`) to call this service.
+For this tutorial we'll use the ``demo-python`` service created in above (if you didn't create one you can use ``stackhut/demo-python`` instead). We'll use the Python 3.x client library (described in :ref:`using_client_libs`) to call this service.
 
 First we'll create a ``SHService`` object to reference the service,
 
@@ -232,9 +232,10 @@ Further Information
 -------------------
 
 
-Thanks for reading this tutorial - you can find more information on calling services in :ref:`using`. 
+Thanks for reading this tutorial - you can find more information on calling services in :ref:`using_index`. 
 
-This was a super simple example, but you can build anything you can in Python or Node: we've been using StackHut to create web-scrapers, image processing tools, video conversion APIs and more. Several of these are hosted publically at the `StackHut repository <https://stackhut.com/#/services>`_, and in :ref:`examples` we decribing how we built them.
+This was a super simple example, but you can build anything you can in Python or Node: we've been using StackHut to create web-scrapers, image processing tools, video conversion APIs and more. Several of these are hosted publically at the `StackHut repository <https://stackhut.com/#/services>`_. 
+.. , and in :ref:`examples` we decribing how we built them.
 
 .. You can find all kinds of services, for instance, video encoding, compression, compilation, web scraping, and more, 
 

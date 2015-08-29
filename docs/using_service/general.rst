@@ -6,9 +6,10 @@ General Usage Notes
 StackHut services can be accesed easily either through client side libraries, or direcrly using the underlying JSON+HTTP protocol. Either way there are several pints to note to make communticating with your services as easy and efficent as possible.
 
 
+.. _using_general_files:
+
 Files
 -----
-.. _using_general_files:
 
 Often you will want to pass a file from your code to be processed by a StackHut service, for instance when processing a video or converting a PDF.
 
@@ -26,7 +27,7 @@ To aid this we provide an endpoint, ``https://api.stackhut.com/files``, that you
     }
 
 
-The request returns a single object containing both, ``key``, a signed URL to which you may ``PUT`` a resource, and ``key``, a key to be passed to the StackHut service identifying the file. Within the StackHut service, a service author can call `stackhut.get_file(key)` from the StackHut runtime library (see :ref:`usage_runtime`) to download the file to the working directory.
+The request returns a single object containing both, ``key``, a signed URL to which you may ``PUT`` a resource, and ``key``, a key to be passed to the StackHut service identifying the file. Within the StackHut service, a service author can call `stackhut.get_file(key)` from the StackHut runtime library (see :ref:`creating_runtime`) to download the file to the working directory.
 We recognise this is an extra step and are working hard to remove this limitation. File handling using this endpoint is not supported in the client libraries at present.
 
 Result files can are automatically placed onto S3 for easy retrieval by clients although can be uploaded elsewhere if required.

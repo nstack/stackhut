@@ -1,3 +1,5 @@
+.. _creating_index:
+
 ******************
 Creating a Service
 ******************

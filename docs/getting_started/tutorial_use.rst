@@ -13,9 +13,9 @@ The whole StackHut infrastructure is abstracted away from your service code, fro
 
 
 It can then be accessed in the cloud via `JSON-RPC <http://www.jsonrpc.org/>`_ transported over a HTTP(S) POST request.
-To make it easier to call and use StackHut services we have started building client-libraries in several lanauges. They are described further in :ref:`using_client_libs_`, and currently exist for Python and JavaScript. 
+To make it easier to call and use StackHut services we have started building client-libraries in several lanauges. They are described further in :ref:`using_client_libs`, and currently exist for Python and JavaScript. 
 
-However it's always possible to contsruct the JSON-RPC request yourself in any lanauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc_`, and this is much simpler than it sounds! 
+However it's always possible to contsruct the JSON-RPC request yourself in any lanauge to consume a StackHut service - thankfully JSON-RPC is a very simple protocol, as shown in :ref:`using_json_rpc`, and this is much simpler than it sounds! 
 
 
 Selecting a service
@@ -29,7 +29,7 @@ Sercices are prefixed by their author, such as ``stackhut/demo-python``. We can 
 Calling a service
 -----------------
 
-For this tutorial we'll use the ``demo-python`` service created in above (if you didn't create one you can use ``stackhut/demo-python`` instead). We'll use the Python 3.x client library (described in :ref:`using_client_libs_`) to call this service.
+For this tutorial we'll use the ``demo-python`` service created in above (if you didn't create one you can use ``stackhut/demo-python`` instead). We'll use the Python 3.x client library (described in :ref:`using_client_libs`) to call this service.
 
 First we'll create a ``SHService`` object to reference the service,
 
@@ -48,6 +48,6 @@ where ``stackhut`` is the service author (replace with your own service name), a
     >> 6
 
 
-Thanks for reading this tutorial - you can find more information on calling services in :ref:`using`. Further detailes decribed how we built and can call more complex services, such as a web-scraper, or an image-processor, can be found in :ref:`examples`.
+Thanks for reading this tutorial - you can find more information on calling services in :ref:`using_index`. Further detailes decribed how we built and can call more complex services, such as a web-scraper, or an image-processor, can be found in :ref:`examples`.
 
 .. Want to develop a StackHut cloud API or fork an existing service? Read :ref:`tutorial_create` to get going - we can't wait to see what you come up with.

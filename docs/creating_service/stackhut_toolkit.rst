@@ -13,7 +13,7 @@ It provides a range of commands used to interact with your code and the StackHut
 Getting Started
 ^^^^^^^^^^^^^^^
 
-Firstly, install the Toolkit and requirements by following the instructions in :ref:`installation`. 
+Firstly, install the Toolkit and requirements by following the instructions in :ref:`getting_started_installation`. 
 
 **Quick Install**
 
@@ -160,7 +160,7 @@ Option              Description
 ``--force``         Forces build before run 
 ================    ===========
 
-Builds the image and simulates a request to the service within the container using the JSON object stored in ``request_file``. This should be a JSON-RPC request, as described in :ref:`_tutorial_use`, and briefly shown below,
+Builds the image and simulates a request to the service within the container using the JSON object stored in ``request_file``. This should be a JSON-RPC request and is briefly shown below,
 
 .. code:: json
 
