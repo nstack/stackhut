@@ -8,8 +8,8 @@ Client-side libraries are have been/or are under development for the following p
 =============       ==============================  ===========   
 Langauge            Install                         Source Code
 =============       ==============================  ===========
-Python              pip3 install stackhut-client    www.github.com/StackHut/client-python
-JavaScript          npm install stackhut-client     www.github.com/StackHut/client-node
+Python              pip3 install stackhut-client    http://www.github.com/StackHut/client-python
+JavaScript          npm install stackhut-client     http://www.github.com/StackHut/client-node
 Ruby                *under development*
 PHP                 *under development*
 Java/JVM            *under development*
