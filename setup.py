@@ -19,7 +19,7 @@ requirements = [
     "multipledispatch",
     "docker-py",
     "arrow",
-    "stackhut-common >= 0.5.4",
+    "stackhut-common >= 0.5.5",
     "stackhut-client >= 0.1.1",
 ]
 
@@ -28,7 +28,7 @@ test_requirements = []
 
 setup(
     name='stackhut',
-    version='0.5.4',
+    version='0.5.5',
     description="Run your software in the cloud",
     long_description=(read('README.rst') + '\n\n' +
                       read('HISTORY.rst').replace('.. :changelog:', '') + '\n\n' +
