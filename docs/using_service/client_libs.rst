@@ -3,12 +3,6 @@
 Client-side Libraries
 =====================
 
-Please read :ref:`tutorial_use` for basic information on how to access a service via JSON-RPC.
-
-
-Access a service using client-side libraries
---------------------------------------------
-
 Client-side libraries are have been/or are under development for the following platforms, please feel free to add support for your favourite language if not present, it's quite easy!
 
 =============       ==============================  ===========   
@@ -36,13 +30,13 @@ These libraries abstract away the entire JSON-RPC mechanism and make it as easy 
   
 
 Client libraries API
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 The the general behaviour of the client libraries is similar in all languages and we describe it below using the Python client-library as a reference. 
 There are 3 main classes in the library,
 
 SHService
-"""""""""
+^^^^^^^^^
 
 The main class representing a single StackHut service. It takes several parameters on construction, where those in square brackets are optional,
 
@@ -65,7 +59,7 @@ To make a remote call, just call the interface and method name on the service ob
 
 
 SHAuth
-""""""
+^^^^^^
 
 An optional class used to authenticate requests to a service, passed to a service on construction,
 
@@ -80,7 +74,7 @@ An optional class used to authenticate requests to a service, passed to a servic
 One of `hash` or `token` must be present in the `auth` object to authorise a request by the given user.
 
 SHError
-"""""""
+^^^^^^^
 
 Returned in the event of a remote service error as an exception/error depending on the specific client library.
 
