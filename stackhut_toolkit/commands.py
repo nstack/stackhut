@@ -34,8 +34,6 @@ from .utils import *
 from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
 
 
-import setuptools
-
 class UserCmd(BaseCmd):
     """User commands require the userconfig file"""
     def __init__(self, args):
@@ -110,6 +108,7 @@ class InfoCmd(UserCmd):
 
         # log sys info
         log.info("StackHut version {}".format(__version__))
+
         # docker info
         docker = get_docker(_exit=False, verbose=False)
         if docker:
@@ -445,7 +444,7 @@ class DeployCmd(HutCmd, UserCmd):
             import os.path
             from stackhut_common import utils
             from stackhut_client import client
-            log.info("Starting Remote build, this may take a while...")
+            log.info("Starting Remote build, this may take a while (especially the first time), please wait...")
 
             # compress and upload the service
             with tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False) as f:
@@ -457,7 +456,8 @@ class DeployCmd(HutCmd, UserCmd):
             sh.tar('-czvf', f.name, '--exclude', ".git", '--exclude', "__pycache__", '--exclude', "run_result", '--exclude', ".stackhut", '.')
             log.debug("Uploading file {} ({:.2f} Kb)...".format(f.name, os.path.getsize(f.name)/1024))
             with open(f.name, 'rb') as f1:
-                r = requests.put(r_file['url'], data=f1)
+                with Spinner():
+                    r = requests.put(r_file['url'], data=f1)
                 r.raise_for_status()
             # remove temp file
             os.unlink(f.name)
@@ -466,7 +466,9 @@ class DeployCmd(HutCmd, UserCmd):
             auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
             sh_client = client.SHService('stackhut', 'stackhut', auth=auth, host=utils.SERVER_URL)
             try:
-                r = sh_client.Default.remoteBuild(r_file['key'], self.dev)
+                with Spinner():
+                    r = sh_client.Default.remoteBuild(r_file['key'], self.dev)
+
             except client.SHRPCError as e:
                 log.error("Build error, remote build output below...")
                 log.error(e.data['output'])
@@ -495,8 +497,10 @@ class DeployCmd(HutCmd, UserCmd):
 
         log.info("Deploying image '{}' to StackHut".format(service.short_name))
         r = stackhut_api_user_call('add', data, self.usercfg)
-        log.info("Service {} has been {}".format(service.short_name, r['message']))
+        log.info("Service {} has been {} and is live".format(service.short_name, r['message']))
+        log.info("You can now call this service with our client-libs or directly over JSON+HTTP")
         return 0
+
 
 
 # StackHut primary toolkit commands

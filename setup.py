@@ -19,7 +19,7 @@ requirements = [
     "multipledispatch",
     "docker-py",
     "arrow",
-    "stackhut-common >= 0.5.5",
+    "stackhut-common >= 0.5.4",
     "stackhut-client >= 0.1.1",
 ]
 

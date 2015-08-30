@@ -15,14 +15,17 @@ import threading
 import sys
 import os
 import json
+import itertools
+import time
 from queue import Queue
 import urllib.parse
 import requests
 from stackhut_common.utils import log
 from stackhut_common import utils
 
+
 # names to export
-__all__ = ['stackhut_api_call', 'stackhut_api_user_call', 'keen_client', 'get_res_path']
+__all__ = ['stackhut_api_call', 'stackhut_api_user_call', 'keen_client', 'get_res_path', 'Spinner']
 
 # Setup app paths - this is unique for each stackhut package
 sys_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
@@ -105,3 +108,27 @@ class KeenClient(threading.Thread):
             self.queue.join()
 
 keen_client = KeenClient(daemon=True)
+
+
+class Spinner(threading.Thread):
+    def __init__(self):
+        super().__init__(daemon=True)
+        self.spinning = threading.Event()
+        self.spinner = itertools.cycle(['-', '\\', '|', '/'])
+
+    def __enter__(self):
+        self.spinning.set()
+        self.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.spinning.clear()
+
+    def run(self):
+        while self.spinning.is_set():
+            sys.stdout.write(next(self.spinner))  # write the next character
+            sys.stdout.flush()                # flush stdout buffer (actual character display)
+            sys.stdout.write('\b')            # erase the last written char
+            time.sleep(0.5)
+
+    def stop(self):
+        self.spinning.clear()
