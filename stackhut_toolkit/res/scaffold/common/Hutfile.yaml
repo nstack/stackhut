@@ -15,4 +15,5 @@ stack: {{ scaffold.stack.name }}
 persistent: True
 
 # Restrict service access to authenticated users
-private: True
+private: False
+
