@@ -111,6 +111,7 @@ keen_client = KeenClient(daemon=True)
 
 
 class Spinner(threading.Thread):
+    """A simple console spinner to use with long-running tasks"""
     def __init__(self):
         super().__init__(daemon=True)
         self.spinning = threading.Event()

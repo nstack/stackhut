@@ -27,8 +27,8 @@ let stackhut = require('./stackhut');
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utils
-const REQ_JSON = 'req.json';
-const RESP_JSON = 'resp.json';
+const REQ_JSON = '.req.json';
+const RESP_JSON = '.resp.json';
 
 // simple error handling
 function gen_error(code, msg, _data) {

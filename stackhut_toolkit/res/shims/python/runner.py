@@ -64,7 +64,7 @@ if __name__ == "__main__":
     try:
         while True:
             # open the input
-            with open("req.json", "r") as f:
+            with open(".req.json", "r") as f:
                 req = json.loads(f.read())
 
             os.chdir(os.path.join('.stackhut', req['req_id']))
@@ -78,7 +78,7 @@ if __name__ == "__main__":
             os.chdir(stackhut.root_dir)
 
             # save the output
-            with open("resp.json", "w") as f:
+            with open(".resp.json", "w") as f:
                 f.write(json.dumps(resp))
 
     except Exception as e:
