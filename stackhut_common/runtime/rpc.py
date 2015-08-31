@@ -27,8 +27,8 @@ from ..utils import log
 
 CONTRACTFILE = '.api.json'
 IDLFILE = 'api.idl'
-REQ_FIFO = 'req.json'
-RESP_FIFO = 'resp.json'
+REQ_FIFO = '.req.json'
+RESP_FIFO = '.resp.json'
 
 def generate_contract():
     """
