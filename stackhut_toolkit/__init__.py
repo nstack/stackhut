@@ -13,5 +13,5 @@
 # limitations under the License.
 
 # -*- coding: utf-8 -*-
-__version__ = '0.5.6'
+__version__ = '0.5.7'
 from .commands import COMMANDS
