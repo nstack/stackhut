@@ -87,7 +87,8 @@ class DockerClient:
             if _exit:
                 raise e
 
-    def run_docker_sh(self, docker_cmd, docker_args=None, **kwargs):
+    @staticmethod
+    def run_docker_sh(docker_cmd, docker_args=None, **kwargs):
         _docker_args = docker_args if docker_args is not None else []
         _docker_args.insert(0, docker_cmd)
         log.debug("Running 'docker {}' with args {}".format(docker_cmd, _docker_args[1:]))
@@ -97,7 +98,9 @@ docker_client = None
 
 def get_docker(_exit=True, verbose=True):
     global docker_client
-    docker_client = docker_client if docker_client is not None else DockerClient(_exit, verbose)
+    if docker_client is None:
+        x = DockerClient(_exit, verbose)
+        docker_client = x if x.client is not None else None
     return docker_client
 
 

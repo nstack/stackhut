@@ -111,6 +111,7 @@ class InfoCmd(UserCmd):
 
         # docker info
         docker = get_docker(_exit=False, verbose=False)
+
         if docker:
             log.info("Docker version {}".format(docker.client.version().get('Version')))
         else:
@@ -429,6 +430,10 @@ class DeployCmd(HutCmd, UserCmd):
 
     def run(self):
         super().run()
+
+        # validation checks
+        self.usercfg.assert_logged_in()
+
         service = Service(self.hutcfg, self.usercfg.username)
 
         # run the contract regardless

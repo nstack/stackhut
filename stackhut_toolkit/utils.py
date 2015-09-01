@@ -112,6 +112,11 @@ keen_client = KeenClient(daemon=True)
 
 class Spinner(threading.Thread):
     """A simple console spinner to use with long-running tasks"""
+
+    spin_interval = 0.5
+    dot_interval = 10
+    dot_max = int(dot_interval / spin_interval)
+
     def __init__(self):
         super().__init__(daemon=True)
         self.spinning = threading.Event()
@@ -126,11 +131,19 @@ class Spinner(threading.Thread):
         self.spinning.clear()
 
     def run(self):
+        dot_count = 0
+
         while self.spinning.is_set():
             sys.stdout.write(next(self.spinner))  # write the next character
             sys.stdout.flush()                # flush stdout buffer (actual character display)
             sys.stdout.write('\b')            # erase the last written char
-            time.sleep(0.5)
+            time.sleep(self.spin_interval)
+            dot_count += 1
+            if dot_count >= self.dot_max:
+                sys.stdout.write('.')  # write the next character
+                dot_count = 0
+
+        sys.stdout.write('\n')
 
     def stop(self):
         self.spinning.clear()
