@@ -454,7 +454,7 @@ class DeployCmd(HutCmd, UserCmd):
             r_file = stackhut_api_user_call('file', dict(filename=os.path.basename(f.name)), self.usercfg)
 
             sh.tar('-czvf', f.name, '--exclude', ".git", '--exclude', "__pycache__", '--exclude', "run_result", '--exclude', ".stackhut", '.')
-            log.debug("Uploading file {} ({:.2f} Kb)...".format(f.name, os.path.getsize(f.name)/1024))
+            log.debug("Uploading package {} ({:.2f} Kb)...".format(f.name, os.path.getsize(f.name)/1024))
             with open(f.name, 'rb') as f1:
                 with Spinner():
                     r = requests.put(r_file['url'], data=f1)
@@ -465,6 +465,7 @@ class DeployCmd(HutCmd, UserCmd):
             # call the remote build service
             auth = client.SHAuth(self.usercfg.username, hash=self.usercfg['hash'])
             sh_client = client.SHService('stackhut', 'stackhut', auth=auth, host=utils.SERVER_URL)
+            log.debug("Uploaded package, calling remote build...")
             try:
                 with Spinner():
                     r = sh_client.Default.remoteBuild(r_file['key'], self.dev)

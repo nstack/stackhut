@@ -133,8 +133,9 @@ class DockerBuild:
     def push_image(self, tag):
         if self.push:
             log.info("Uploading image {} - this may take a while...".format(tag))
-            r = self.docker.client.push(tag, stream=True)
-            r_summary = [json.loads(x.decode('utf-8')) for x in r][-1]
+            with t_utils.Spinner():
+                r = self.docker.client.push(tag, stream=True)
+                r_summary = [json.loads(x.decode('utf-8')) for x in r][-1]
 
             if 'error' in r_summary:
                 log.error(r_summary['error'])

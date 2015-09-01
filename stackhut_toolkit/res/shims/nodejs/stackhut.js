@@ -90,6 +90,10 @@ module.exports.get_service_author = function() {
     return make_call('get_service_author')
 };
 
+module.exports.is_author = function() {
+    return make_call('is_author')
+};
+
 module.exports.put_file = function(fname, make_public) {
     let _make_public = typeof make_public !== 'undefined' ? make_public : true;
     return make_call('put_file', fname, _make_public)

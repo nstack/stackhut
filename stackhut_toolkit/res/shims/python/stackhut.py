@@ -83,6 +83,9 @@ def get_stackhut_user():
 def get_service_author():
     return make_call('get_service_author')
 
+def is_author():
+    return make_call('is_author')
+
 def put_file(fname, make_public=True):
     return make_call('put_file', fname, make_public)
 

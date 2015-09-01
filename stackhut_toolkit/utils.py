@@ -120,6 +120,7 @@ class Spinner(threading.Thread):
     def __enter__(self):
         self.spinning.set()
         self.start()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.spinning.clear()
