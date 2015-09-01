@@ -64,6 +64,11 @@ def get_stackhut_user(req_id):
 def get_service_author(req_id):
     return backend.author
 
+
+@dispatcher.add_method
+def is_author(req_id):
+    return get_stackhut_user(req_id) == get_service_author(req_id)
+
 @dispatcher.add_method
 def put_file(req_id, fname, make_public=True):
     return backend.put_file(fname, req_id, make_public)
