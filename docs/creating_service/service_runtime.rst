@@ -62,6 +62,17 @@ get_stackhut_user
 
 Returns the authenticated StackHut username of the request originator as a string, or ``null`` if not present. This has been authenticated by the server and can be used securely to know who made the request. 
 
+
+is_author
+^^^^^^^^^
+
+.. code-block:: python
+
+    stackhut.is_author()
+
+Returns ``True`` if the authenticated StackHut user who made the request is the service author, authenticated either using the author hash or via a valid token tied to that account (see :ref:`using_general_auth`).
+
+
 run_command
 ^^^^^^^^^^^
 

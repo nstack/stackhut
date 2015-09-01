@@ -18,11 +18,30 @@ See :ref:`tutorial_create`.
 This is based on the `Barrister RPC project <http://barrister.bitmechanic.com/>`_, the format of which is described in the `project documentation <http://barrister.bitmechanic.com/docs.html>`_.
 
 
+
 App Code
 --------
 
 **TODO**
 
+
+
+
+.. _creating_app_auth:
+
+Authorisation
+^^^^^^^^^^^^^
+
+By default if an ``auth`` object exists in the request (see :ref:`using_general_auth`) it's checked by the API layer and only routed to the service if it's valid for **any** StackHut user, regardless if the service is public or private. Authentication is handled at the API layer.
+
+A service must determine if the authenticated request should be allowed or not, and the StackHut runtime (see :ref:`creating_runtime`) has several functions to aid this authorisation,
+
+ * ``stackhut.get_stackhut_user()`` returns the username user to make the request,
+ * ``stackhut.is_author()`` returns a boolean indicating if the author's Stackhut account was used to make the request. This can help to restrict a private service's interfaces to the service author only and any associated API tokens.
+
+We have separated authentication from authorisation is to aid deploying internal StackHut clusters where there will be many users owning services, in this case we believe that individual service authorisation is better handled within the service itself according to internal policies. 
+
+.. note:: However we are working on simplying this scheme of users on the hosted platform
 
 .. _creating_app_lang:
 

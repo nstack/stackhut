@@ -32,11 +32,42 @@ We recognise this is an extra step and are working hard to remove this limitatio
 
 Result files can are automatically placed onto S3 for easy retrieval by clients although can be uploaded elsewhere if required.
 
+.. _using_general_auth:
+
+Authentication
+--------------
+
+Authentication is provided within StackHut - this is used restrict service requests to the service author and explicitly allowed clients only. This can be enabled or disabled on a per-service basis by setting ``private`` to ``True`` or ``False`` respectively within the ``Hutfile.yaml``.
+
+Authentication requires specifying both the StackHut ``username`` and either the user ``hash`` or a generatated API token that can be shared with clients. A registered StackHut user's ``hash`` can be found by running ``stackhut info`` and can used with private services to authenticate the user.
+
+.. note:: Do not share your hash or use it directly within code that is run on untrusted devices, e.g. client-side JS. Generate and use an API token instead (however, API Tokens are currently in development. sorry!)
+
+Authentication is supported within the client-side libs - create an ``SHAuth`` object and pass it to the ``SHService``, as shown in :ref:`using_client_libs`.
+This ``auth`` object is added at the top-level to service message, in accordance with the JSON-RPC protocol described in :ref:`using_json_rpc`. You may need to do this manually if creating JSON-RPC messages directly,
+
+.. code-block:: JSON
+
+    {
+        "auth" : {
+            "username" : "$USERNAME",
+            "hash" : "$HASH"
+        }
+    }
+
+
+By default if an ``auth`` object exists in the request it is check by the API layer and only allowed through to the service if the auth object is valid for **any** StackHut user, regardless if the service is public or private. Authorisation is handled within services themselves, as described in :ref:`creating_app_auth`.
+
+.. note:: To call a public service anonymously it's easiest to just not add an ``auth`` object to the request. We're aware that this can be confusing and are working on a simpler API. 
+
 State
 -----
 
-Similar to files, we are currently hard at work on providing a standardised solution to handling state within a service - at the moment all services are state-less by default. 
-However a service may be programmed in such a sway to store data on an external platform, e.g. a hosted database, on an individual service basis.
+Similar to files, we are currently hard at work on providing a standardised solution to handling state within a service - services are generally state-less by default and are fully destroyed and reconstructed between requests.
+
+However, setting ``persistent: True`` in the ``Hutfile.yaml`` with keep the service alive between calls, and can be used to store state within application memory/local filesystem during the life-cycle of a service. This can be used, for instance, to cache long-running/complex computations or to keep database connections open. However due to the nature of the platform services may be restarted at anytime without warning and we recommend  treating this state as ephemeral.
+
+To store state persistently, outside of the service life-cycle, it's possible to call and store data on an external platform, e.g. a hosted database, on an individual service basis. This is currently outside of StackHut's scope and you'll have to refer to your favourite hosted database documentation to integrate it with your chosen service language.
 
 Batching
 --------
