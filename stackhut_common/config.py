@@ -27,7 +27,7 @@ class UserCfg(dict):
     UserConfig configuration handling
     Wrapper class around dict that uses a json backing store
     """
-    show_keys = ['username', 'send_analytics']
+    show_keys = ['username', 'hash', 'send_analytics']
     keep_keys = ['send_analytics', 'm_id']
     config_version = 1
     config_fpath = os.path.expanduser(os.path.join('~', '.stackhut.cfg'))
