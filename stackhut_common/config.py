@@ -110,7 +110,13 @@ class HutfileCfg:
     """Hutfile configuration file handling"""
     def __init__(self):
         # import the hutfile
-        hutfile_fname = 'Hutfile.yaml' if os.path.exists('Hutfile.yaml') else 'Hutfile'
+        if os.path.exists('Hutfile.yaml'):
+            hutfile_fname = 'Hutfile.yaml'
+        elif os.path.exists('Hutfile'):
+            hutfile_fname = 'Hutfile'
+        else:
+            raise AssertionError("Cannot find 'Hutfile.yaml', is this a StackHut project dir?")
+
         with open(hutfile_fname, 'r') as f:
             hutfile = yaml.safe_load(f)
 

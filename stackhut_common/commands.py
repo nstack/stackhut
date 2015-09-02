@@ -69,6 +69,11 @@ class CmdRunner:
             # dispatch to correct cmd class - i.e. build, compile, run, etc.
             subfunc = self.args.func(self.args)
             retval = subfunc.run()
+        except AssertionError as e:
+            if len(e.args) > 0:
+                [utils.log.error(x) for x in e.args]
+            return 1
+
         except Exception as e:
 
             if len(e.args) > 0:
