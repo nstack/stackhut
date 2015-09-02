@@ -112,7 +112,7 @@ class InfoCmd(UserCmd):
         # docker info
         docker = get_docker(_exit=False, verbose=False)
 
-        if docker:
+        if docker is not None:
             log.info("Docker version {}".format(docker.client.version().get('Version')))
         else:
             log.info("Docker not installed or connection error")
