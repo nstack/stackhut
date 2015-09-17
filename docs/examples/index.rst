@@ -21,6 +21,7 @@ PDF Tools
 * OS dependencies
 * *Shelling*-out to binary/command-line tools from within a service
 
+<!---
 
 Image Process
 =============
@@ -34,7 +35,7 @@ Image Process
 * OS dependencies
 * Embedding resource files within a service
 
-
+-->
 Web Tools
 =========
 
