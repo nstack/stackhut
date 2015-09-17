@@ -28,7 +28,7 @@ Image Process
 * Documented Source - http://www.github.com/StackHut/image-process
 * Service Homepage - http://www.stackhut.com/#/u/stackhut/image-process
 
-``image-process`` is a StackHut service that performs various image manipulation tasks and can be used to generate memes. This Python-based service demonstrates the following features,
+``image-process`` is a StackHut service that performs various image manipulation tasks and can be used to generate *memes*. This Python-based service demonstrates the following features,
 
 * File manipulation
 * OS dependencies
@@ -41,9 +41,9 @@ Web Tools
 * Documented Source - http://www.github.com/StackHut/web-tools
 * Service Homepage - http://www.stackhut.com/#/u/stackhut/web-tools
 
-``web-tools`` is a StackHut service that performs several web-developer related functions. Currently this includes wrapping up a version of `PhantomJS <http://phantomjs.org/>`_ along with `Selenium <http://www.seleniumhq.org/>`_ to provide a headless web-browser. 
+``web-tools`` is a StackHut service that performs several web-developer related functions. This service wraps up the `PhantomJS <http://phantomjs.org/>`_ and `Selenium <http://www.seleniumhq.org/>`_ libraries to provide a headless web-browser. 
 
-Currently it exposes a screen-shotting service that works for JS-heavy sites but will be expanded in the future. This Python-based service demonstrates the following features,
+It uses these to provide a screen-shotting service that works for JS-heavy sites but will be expanded in the future. This Python-based service demonstrates the following features,
 
 * OS dependencies
 * Embedding resource files within a service
