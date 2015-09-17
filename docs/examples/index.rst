@@ -21,7 +21,7 @@ PDF Tools
 * OS dependencies
 * *Shelling*-out to binary/command-line tools from within a service
 
-<!---
+<!--
 
 Image Process
 =============
