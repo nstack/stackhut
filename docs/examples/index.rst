@@ -21,21 +21,6 @@ PDF Tools
 * OS dependencies
 * *Shelling*-out to binary/command-line tools from within a service
 
-<!--
-
-Image Process
-=============
-
-* Documented Source - http://www.github.com/StackHut/image-process
-* Service Homepage - http://www.stackhut.com/#/u/stackhut/image-process
-
-``image-process`` is a StackHut service that performs various image manipulation tasks and can be used to generate *memes*. This Python-based service demonstrates the following features,
-
-* File manipulation
-* OS dependencies
-* Embedding resource files within a service
-
--->
 Web Tools
 =========
 
