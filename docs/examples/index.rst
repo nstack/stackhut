@@ -31,8 +31,8 @@ Image Process
 ``image-process`` is a StackHut service that performs various image manipulation tasks and can be used to generate *memes*. This Python-based service demonstrates the following features,
 
 * File manipulation
-* OS dependencies
-* Embedding resource files within a service
+* OS and language dependencies
+* Embedding and accessing resource files within a service
 
 
 Web Tools
@@ -46,7 +46,7 @@ Web Tools
 It uses these to provide a screen-shotting service that works for JS-heavy sites but will be expanded in the future. This Python-based service demonstrates the following features,
 
 * OS dependencies
-* Embedding resource files within a service
+* Embedding and accessing resource files within a service
 * Custom binaries and dependencies
-* Running arbitrary `Docker <http://www.docker.com>`_ build commands
+* Running arbitrary `Docker build <https://docs.docker.com/reference/builder/>`_ commands
 
