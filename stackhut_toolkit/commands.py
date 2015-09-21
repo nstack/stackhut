@@ -29,6 +29,7 @@ from stackhut_common.runtime.backends import LocalBackend
 from stackhut_common.runtime.runner import ServiceRunner
 from stackhut_common.commands import BaseCmd, HutCmd
 from stackhut_common.config import HutfileCfg, UserCfg
+from stackhut_common.exceptions import ConfigError
 from . import __version__
 from .utils import *
 from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
@@ -367,6 +368,9 @@ class RunHostCmd(HutCmd, UserCmd):
             with ServiceRunner(backend, self.hutcfg) as runner:
                 log.info("Running service '{}' on http://127.0.0.1:{}".format(backend.service_short_name, self.port))
                 runner.run()
+        # surface errors caused by service configuration
+        except ConfigError as err:
+            log.error('Exception while running service: %s', str(err))
         finally:
             toolkit_stack.del_shim()
             os.remove(rpc.REQ_FIFO)
