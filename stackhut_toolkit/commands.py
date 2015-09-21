@@ -373,8 +373,18 @@ class RunHostCmd(HutCmd, UserCmd):
             log.error('Exception while running service: %s', str(err))
         finally:
             toolkit_stack.del_shim()
-            os.remove(rpc.REQ_FIFO)
-            os.remove(rpc.RESP_FIFO)
+
+            # TODO: remove nested try blocks
+            if os.path.exists(rpc.REQ_FIFO):
+                try:
+                    os.remove(rpc.REQ_FIFO)
+                except:
+                    pass
+            if os.path.exists(rpc.RESP_FIFO):
+                try:
+                    os.remove(rpc.RESP_FIFO)
+                except:
+                    pass
 
 
 class DeployCmd(HutCmd, UserCmd):
