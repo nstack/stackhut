@@ -13,6 +13,7 @@ Requirements
 
 * `Python 3.4 <http://www.python.org>`_
 * Unix-based OS (tested on Linux and OSX, others should work)
+* (Optional) Docker (or boot2Docker on OSX) to run services locally for testing inside a container
 
 .. note:: We are adding Windows support soon. Email us at hi@stackhut.com if this is a blocker so we can plan as needed.
 
@@ -45,6 +46,11 @@ Linux Install Instructions
 
 .. note:: By default ``pip`` installs globally and requires root access, however passing the ``--user`` flag will install to the user's ``$HOME`` directory, e.g. ``pip3 install --user stackhut``
 
+* (Optional) Install Docker if you want to test your services locally within a container
+
+  * Fedora ``sudo dnf install docker``
+  * Debian/Ubuntu - ``sudo apt-get install docker-io``
+
 
 OSX Install Instructions
 ------------------------
@@ -58,4 +64,10 @@ OSX Install Instructions
   * ``sudo pip3 install stackhut``
 
 .. note:: As with Linux, ``pip`` installs globally and requires root access. You can again using the ``--user`` flag to install to the user ``$HOME`` directory, however on OSX you'll have to manually add ``~/Libraries/Python/3.4/bin`` to your ``$PATH``.
+
+* (Optional) Install Docker using `Boot2docker <http://boot2docker.io/>`_ if you want to test your services locally within a container
+
+.. note:: Remember to run ``boot2docker up`` on OSX to initialise Docker before using the Toolkit.
+
+
 
