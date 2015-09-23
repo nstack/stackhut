@@ -12,6 +12,8 @@ import itertools
 import logging
 import json
 
+from .exceptions import InvalidFunctionError
+
 
 # JSON-RPC standard error codes
 ERR_PARSE = -32700
@@ -1123,8 +1125,27 @@ class Function(object):
         self.params = []
         for p in f["params"]:
             self.params.append(Type(p))
-        self.returns = Type(f["returns"])
+        self.returns = Type(f["returns"]) if "returns" in f else None
         self.full_name = "%s.%s" % (iface_name, self.name)
+
+        self.validate_structure()
+
+    def validate_structure(self):
+        """
+        Sanity check of own properties. Raises InvaildFunctionErrors.
+        """
+
+        if self.name in [None, '']:
+            raise InvalidFunctionError(
+                'invalid function definition - name required'
+            )
+
+        if self.returns is None:
+            raise InvalidFunctionError(
+                'function definition "%s" is missing a return type' % (
+                    self.full_name
+                )
+            )
 
     def validate_params(self, params):
         """
