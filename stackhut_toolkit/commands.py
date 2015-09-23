@@ -368,9 +368,10 @@ class RunHostCmd(HutCmd, UserCmd):
                 log.info("Running service '{}' on http://127.0.0.1:{}".format(backend.service_short_name, self.port))
                 runner.run()
         finally:
+            # cleanup project directory before exit
             toolkit_stack.del_shim()
-            os.remove(rpc.REQ_FIFO)
-            os.remove(rpc.RESP_FIFO)
+            os.remove(rpc.REQ_FIFO) if os.path.exists(rpc.REQ_FIFO) else None
+            os.remove(rpc.RESP_FIFO) if os.path.exists(rpc.RESP_FIFO) else None
 
 
 class DeployCmd(HutCmd, UserCmd):
@@ -449,7 +450,7 @@ class DeployCmd(HutCmd, UserCmd):
             import os.path
             from stackhut_common import utils
             from stackhut_client import client
-            log.info("Starting Remote build, this may take a while (especially the first time), please wait...")
+            log.info("Starting Remote build, this may take a while (around 2-3m the first time), please wait...")
 
             # compress and upload the service
             with tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False) as f:
@@ -484,7 +485,7 @@ class DeployCmd(HutCmd, UserCmd):
                 log.debug("Remote build output...\n" + r['cmdOutput'])
                 if not r['success']:
                     raise RuntimeError("Build failed")
-                log.info("...completed Remote build")
+                log.info("Completed Remote build")
 
         # Inform the SH server re the new/updated service
         # build up the deploy message body
