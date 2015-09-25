@@ -22,17 +22,17 @@ PDF Tools
 * *Shelling*-out to binary/command-line tools from within a service
 
 
-.. Image Process
-.. =============
+Image Process
+=============
 
-.. * Documented Source - http://www.github.com/StackHut/image-process
-.. * Service Homepage - http://www.stackhut.com/#/u/stackhut/image-process
+* Documented Source - http://www.github.com/StackHut/image-process
+* Service Homepage - http://www.stackhut.com/#/u/stackhut/image-process
 
-.. ``image-process`` is a StackHut service that performs various image manipulation tasks and can be used to generate *memes*. This Python-based service demonstrates the following features,
+``image-process`` is a StackHut service that performs various image manipulation tasks and can be used to generate *memes*. This Python-based service demonstrates the following features,
 
-.. * File manipulation
-.. * OS and language dependencies
-.. * Embedding and accessing resource files within a service
+* File manipulation
+* OS and language dependencies
+* Embedding and accessing resource files within a service
 
 
 =========
