@@ -72,7 +72,9 @@ The base OS to use when creating an image. Currently we support,
 Name    Description    
 ======  ===========
 fedora  `Fedora 22 <http://getfedora.org/>`_ 
-alpine  `Alpine Linux <http://alpinelinux.org/>`_
+ubuntu  `Ubuntu Linux <http://ubuntu.com/>`_
+debian  `Debian Linux <https://www.debian.org//>`_
+
 ======  ===========
 
 
