@@ -70,21 +70,24 @@ class CmdRunner:
             subfunc = self.args.func(self.args)
             retval = subfunc.run()
         except AssertionError as e:
-            if len(e.args) > 0:
-                [utils.log.error(x) for x in e.args]
+            # if len(e.args) > 0:
+            #     [utils.log.error(x) for x in e.args]
+            utils.log.error(str(e))
             return 1
 
         except Exception as e:
+            # general / unhandled exceptions here
 
-            if len(e.args) > 0:
-                [utils.log.error(x) for x in e.args]
+            # if len(e.args) > 0:
+            #      [utils.log.error(x) for x in e.args]
+            utils.log.error("{}: {}".format(type(e).__name__, str(e)))
 
             self.custom_error(e)
 
             if self.args.verbose:
                 raise e
             else:
-                utils.log.info("Exiting (run in verbose mode for more information)")
+                utils.log.info("Exiting, run in verbose mode (stackhut -v ...) for more information")
             return 1
 
         finally:

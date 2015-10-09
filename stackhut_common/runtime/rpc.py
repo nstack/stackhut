@@ -35,10 +35,11 @@ def generate_contract():
     Generate the IDL -> JSON Contract file
     main interface into barrister parser
     """
-    with open(IDLFILE, 'r') as idl_file:
-        parsed = parse(idl_file, IDLFILE)
+    if not os.path.exists(IDLFILE):
+        raise AssertionError("Cannot find 'api.idl' interface definition file")
 
-    with open(CONTRACTFILE, "w") as contract_file:
+    with open(IDLFILE, 'r') as idl_file, open(CONTRACTFILE, "w") as contract_file:
+        parsed = parse(idl_file, IDLFILE)
         contract_file.write(json.dumps(parsed))
 
 
