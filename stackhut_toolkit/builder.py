@@ -385,29 +385,29 @@ def get_baseos_stack_pkgs(base_os, stack):
 @dispatch(Fedora, NodeJS)
 def get_baseos_stack_pkgs(base_os, stack):
     cmds = ['dnf -y install dnf-plugins-core',
-            'dnf -y copr enable nibbler/iojs',
+            'dnf -y copr enable nibbler/nodejs',
             ]
-    pkgs = ['iojs', 'iojs-npm']
+    pkgs = ['nodejs', 'npm']
     return cmds, pkgs
 
 @dispatch(Ubuntu, NodeJS)
 def get_baseos_stack_pkgs(base_os, stack):
     cmds = ['apt-get update',
             'apt-get install -y curl',
-            'curl -sL https://deb.nodesource.com/setup_iojs_3.x | bash -',
+            'curl -sL https://deb.nodesource.com/setup_4.x | bash -',
             'apt-get remove --purge -y curl',
             ]
-    pkgs = ['iojs']
+    pkgs = ['nodejs']
     return cmds, pkgs
 
 @dispatch(Debian, NodeJS)
 def get_baseos_stack_pkgs(base_os, stack):
     cmds = ['apt-get update',
             'apt-get install -y curl',
-            'curl -sL https://deb.nodesource.com/setup_iojs_3.x | bash -',
+            'curl -sL https://deb.nodesource.com/setup_4.x | bash -',
             'apt-get remove --purge -y curl',
             ]
-    pkgs = ['iojs']
+    pkgs = ['nodejs']
     return cmds, pkgs
 
 # @dispatch(Alpine, NodeJS)
@@ -422,6 +422,19 @@ def get_baseos_stack_pkgs(base_os, stack):
 bases = dict([(b.name, b) for b in [Debian(), Ubuntu(), Fedora()]])
 stacks = dict([(s.name, s) for s in [NodeJS(), Python()]])
 
+# def get_base(base_name):
+#     base = bases.get(base_name)
+#     if base is None:
+#         raise AssertionError("Base {} not supported".format(base_name))
+#     return base
+#
+#
+# def get_stack(stack_name):
+#     stack = stacks.get(stack_name)
+#     if stack is None:
+#         raise AssertionError("Stack {} not supported".format(stack_name))
+#     return stack
+
 # bases = dict([(b.name, b) for b in [Debian()]])
 # stacks = dict([(s.name, s) for s in [NodeJS()]])
 
@@ -435,7 +448,11 @@ class Service:
     def __init__(self, hutcfg, author):
         super().__init__()
         self.hutcfg = hutcfg
+
+
         self.baseos = bases[hutcfg.baseos]
+
+
         self.stack = stacks[hutcfg.stack]
 
         self.short_name = hutcfg.service_short_name(author)

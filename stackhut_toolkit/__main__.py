@@ -38,8 +38,9 @@ class ToolkitRunner(CmdRunner):
                               python_version=sys.version,
                               traceback=traceback.format_exc()))
 
-        # utils.log.info("Something bad happened - sorry! :|")
-        utils.log.info("Please send us an email at toolkit@stackhut.com or open an issue at http://www.github.com/StackHut/stackhut-toolkit - thanks!")
+        utils.log.info("Sorry :( If this reoccurs please reach out at http://forums.stackhut.com "
+                       "or open an issue at http://www.github.com/StackHut/stackhut-toolkit "
+                       "- thanks!")
 
     def custom_shutdown(self):
         keen_client.shutdown()
