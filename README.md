@@ -7,3 +7,5 @@ Common repo for StackHut issues and bugs - this repo is kept empty but we use it
 * [Main Documentation](http://stackhut.readthedocs.org)
 
 Happy hacking! :)
+
+[![Stories in Ready](https://badge.waffle.io/StackHut/StackHut.svg?label=ready&title=Ready)](http://waffle.io/StackHut/StackHut)
