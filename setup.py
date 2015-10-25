@@ -19,8 +19,11 @@ requirements = [
     "multipledispatch",
     "docker-py",
     "arrow",
-    "stackhut-common >= 0.5.6",
     "stackhut-client >= 0.1.1",
+    "PyYaml",
+    "colorlog",
+    "werkzeug",
+    "json-rpc",
 ]
 
 # put package test requirements here
@@ -50,6 +53,7 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     keywords='stackhut',
+    platforms=['POSIX'],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
