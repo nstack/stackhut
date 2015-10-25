@@ -19,11 +19,11 @@ requirements = [
     "multipledispatch",
     "docker-py",
     "arrow",
-    "stackhut-client >= 0.1.1",
     "PyYaml",
     "colorlog",
     "werkzeug",
     "json-rpc",
+    "stackhut-client >= 0.1.1",
 ]
 
 # put package test requirements here

@@ -27,6 +27,7 @@ from . import rpc, backends
 
 backend = None
 
+
 class RuntimeServer(threading.Thread):
     def __init__(self, _backend):
         super().__init__(daemon=True)
@@ -54,26 +55,32 @@ class RuntimeServer(threading.Thread):
 ###############################################################################
 # Runtime Functions
 
+
 @dispatcher.add_method
 def get_stackhut_user(req_id):
     auth = backend.request.get('auth', None)
     return auth['username'] if auth else ''
 
+
 @dispatcher.add_method
 def get_service_author(req_id):
     return backend.author
+
 
 @dispatcher.add_method
 def is_author(req_id):
     return (get_stackhut_user(req_id) == get_service_author(req_id))
 
+
 @dispatcher.add_method
 def put_file(req_id, fname, make_public=True):
     return backend.put_file(fname, req_id, make_public)
 
+
 @dispatcher.add_method
 def get_file(req_id, key):
      return backend.get_file(key)
+
 
 # File upload / download helpers
 @dispatcher.add_method
@@ -88,6 +95,7 @@ def download_file(req_id, url, fname=None):
             if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
     return fname
+
 
 @dispatcher.add_method
 def run_command(req_id, cmd, stdin=''):

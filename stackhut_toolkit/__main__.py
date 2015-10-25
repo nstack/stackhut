@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import sys
-from stackhut_common.commands import CmdRunner
-from stackhut_common import utils
 from . import __version__, COMMANDS
-from .utils import keen_client
+from .common.commands import CmdRunner
+from .common import utils
+from .toolkit_utils import keen_client
 from .builder import get_docker
 
 class ToolkitRunner(CmdRunner):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -12,20 +12,18 @@ import unittest
 import os
 import time
 import shutil
-
 import sh
 
-from stackhut_common import config
-from stackhut_common.runtime import rpc
+from stackhut_toolkit.common import config
+from stackhut_toolkit.common.runtime import rpc
 from stackhut_toolkit.builder import get_docker, bases, stacks
-import client
+from stackhut_client import client
 
 
 def copy_config(suffix):
     src = os.path.expanduser(os.path.join('~', '.stackhut.cfg.{}'.format(suffix)))
     dest = os.path.expanduser(os.path.join('~', '.stackhut.cfg'))
     shutil.copy(src, dest)
-
 
 
 class SHToolkitTest(unittest.TestCase):
@@ -96,7 +94,6 @@ class SHToolkitTest(unittest.TestCase):
         return True
 
 
-
 class TestToolkit1User(SHToolkitTest):
     backup_file = config.UserCfg.config_fpath + '.bak'
 
@@ -126,6 +123,7 @@ class TestToolkit1User(SHToolkitTest):
     @classmethod
     def tearDownClass(cls):
         pass
+
 
 class TestToolkit2StackBuild(SHToolkitTest):
     def setUp(self):

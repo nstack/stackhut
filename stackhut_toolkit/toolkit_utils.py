@@ -20,8 +20,8 @@ import time
 from queue import Queue
 import urllib.parse
 import requests
-from stackhut_common.utils import log
-from stackhut_common import utils
+from .common.utils import log
+from .common import utils
 
 
 # names to export

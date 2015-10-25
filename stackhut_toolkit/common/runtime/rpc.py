@@ -30,6 +30,7 @@ IDLFILE = 'api.idl'
 REQ_FIFO = '.req.json'
 RESP_FIFO = '.resp.json'
 
+
 def generate_contract():
     """
     Generate the IDL -> JSON Contract file

@@ -23,15 +23,15 @@ from distutils.dir_util import copy_tree
 import sh
 from jinja2 import Environment, FileSystemLoader
 
-from stackhut_common.utils import log, CONTRACTFILE
-from stackhut_common.runtime import rpc
-from stackhut_common.runtime.backends import LocalBackend
-from stackhut_common.runtime.runner import ServiceRunner
-from stackhut_common.commands import BaseCmd, HutCmd
-from stackhut_common.config import HutfileCfg, UserCfg
-from stackhut_common.exceptions import ConfigError
+from .common.utils import log, CONTRACTFILE
+from .common.runtime import rpc
+from .common.runtime.backends import LocalBackend
+from .common.runtime.runner import ServiceRunner
+from .common.commands import BaseCmd, HutCmd
+from .common.config import HutfileCfg, UserCfg
+from .common.exceptions import ConfigError
 from . import __version__
-from .utils import *
+from .toolkit_utils import *
 from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
 
 
@@ -452,7 +452,7 @@ class DeployCmd(HutCmd, UserCmd):
             import tempfile
             import requests
             import os.path
-            from stackhut_common import utils
+            from .common import utils
             from stackhut_client import client
             log.info("Starting Remote build, this may take a while (around 2-3m the first time), please wait...")
 

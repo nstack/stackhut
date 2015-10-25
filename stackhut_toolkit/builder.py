@@ -29,12 +29,12 @@ import docker as docker_py
 from docker.utils import kwargs_from_env
 from docker.errors import DockerException
 
-from stackhut_common import utils
-from stackhut_common.runtime import rpc
-from stackhut_common.utils import log
-from stackhut_toolkit import utils as t_utils
+from .common import utils
+from .common.runtime import rpc
+from .common.utils import log
+import toolkit_utils
 
-template_env = Environment(loader=FileSystemLoader(t_utils.get_res_path('templates')))
+template_env = Environment(loader=FileSystemLoader(toolkit_utils.get_res_path('templates')))
 
 # OS Types - for docker flags
 OS_TYPE = None
@@ -136,7 +136,7 @@ class DockerBuild:
     def push_image(self, tag):
         if self.push:
             log.info("Uploading image {} - this may take a while...".format(tag))
-            with t_utils.Spinner():
+            with toolkit_utils.Spinner():
                 r = self.docker.client.push(tag, stream=True)
                 r_summary = [json.loads(x.decode('utf-8')) for x in r][-1]
 
@@ -323,7 +323,7 @@ class Stack:
 
     # TODO - keep shim in project dir and only update on build/run if newer
     def copy_shim(self):
-        shim_dir = os.path.join(t_utils.get_res_path('shims'), self.name)
+        shim_dir = os.path.join(toolkit_utils.get_res_path('shims'), self.name)
         copy_tree(shim_dir, utils.ROOT_DIR)
 
     # def link_shim(self):

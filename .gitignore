@@ -4,9 +4,6 @@
 run_result
 .stackhut
 
-stackhut-common-repo
-stackhut_common
-
 # ide
 *.iml
 .idea
