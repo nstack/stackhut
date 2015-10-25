@@ -32,10 +32,8 @@ test_requirements = []
 setup(
     name='stackhut',
     version='0.5.8',
-    description="Run your software in the cloud",
-    long_description=(read('README.rst') + '\n\n' +
-                      read('HISTORY.rst').replace('.. :changelog:', '') + '\n\n' +
-                      read('AUTHORS.rst')),
+    description="Deploy classes as Microservices",
+    long_description=read('README.rst'),
     license='Apache',
     author="StackHut",
     author_email='stackhut@stackhut.com',
