@@ -1,17 +1,24 @@
 # StackHut Toolkit
 ## Deploy your classes as Microservices
 
-.. image:: https://img.shields.io/travis/stackhut/stackhut-toolkit.svg
-        :target: https://travis-ci.org/stackhut/stackhut-toolkit
+[![image](https://img.shields.io/travis/stackhut/stackhut-toolkit.svg)](https://travis-ci.org/stackhut/stackhut-toolkit)
 
-.. image:: https://img.shields.io/pypi/v/stackhut.svg
-        :target: https://pypi.python.org/pypi/stackhut
+[![image](https://img.shields.io/pypi/v/stackhut.svg)](https://pypi.python.org/pypi/stackhut)
 
 `stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. Runs on Python 3.4.
 
-* Homepage: <https://www.stackhut.com>
-* Documentation: <https://stackhut.readthedocs.org>.
+* Homepage: [https://www.stackhut.com]()
+* Documentation: [https://stackhut.readthedocs.org]()
 * Free software: Apache license
+
+---
+
+## Contributing
+
+Contributions are welcome, and they are greatly appreciated! Every
+little bit helps, and credit will always be given.
+
+Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for more info.
 
 ---
 
@@ -40,11 +47,3 @@
 
 * Alpha releases on PyPI.
 
----
-
-## Contributing
-
-Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given.
-
-Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for more info.
