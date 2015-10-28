@@ -33,7 +33,7 @@ setup(
     name='stackhut',
     version='0.5.8',
     description="Deploy classes as Microservices",
-    long_description=read('README.rst'),
+    long_description=read('readme_pip.rst'),
     license='Apache',
     author="StackHut",
     author_email='stackhut@stackhut.com',

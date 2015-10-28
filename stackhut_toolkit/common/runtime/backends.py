@@ -28,7 +28,7 @@ from werkzeug.routing import Map, Rule
 from werkzeug.exceptions import HTTPException, NotFound, ImATeapot
 from werkzeug.utils import redirect
 
-from stackhut_common.utils import log
+from ..utils import log
 from . import rpc
 
 STACKHUT_DIR = os.path.abspath('.stackhut')

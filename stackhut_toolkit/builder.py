@@ -32,7 +32,7 @@ from docker.errors import DockerException
 from .common import utils
 from .common.runtime import rpc
 from .common.utils import log
-import toolkit_utils
+from . import toolkit_utils
 
 template_env = Environment(loader=FileSystemLoader(toolkit_utils.get_res_path('templates')))
 
