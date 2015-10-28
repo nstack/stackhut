@@ -115,44 +115,17 @@ class DockerClient:
         if state != DockerMachineState.RUNNING:
             raise RuntimeError("Couldn't start StackHut's Docker Machine")
 
-        # get docker-machine ip - using default
-        ip = str(sh.docker_machine.ip(self.machine_name)).strip()
-        return ip
-
-    def _kwargs_from_machine(self, ssl_version=None, assert_hostname=None):
-        """Taken from docker-py.utils - need to upstream"""
-        from docker import tls
-
+        # setup machine env vars
         out = str(sh.docker_machine.env('--shell', "bash", self.machine_name))
         kwargs1 = [x.split("export ")[1].split('=')
                    for x in out.splitlines()
                    if x.startswith("export")]
         kwargs = {k: v.strip('\'"') for [k, v] in kwargs1}
+        os.environ.update(kwargs)
 
-        host = kwargs.get('DOCKER_HOST')
-        cert_path = kwargs.get('DOCKER_CERT_PATH')
-        tls_verify = kwargs.get('DOCKER_TLS_VERIFY')
-
-        params = {}
-
-        if host:
-            params['base_url'] = (host.replace('tcp://', 'https://')
-                                  if tls_verify else host)
-
-        if tls_verify and not cert_path:
-            cert_path = os.path.join(os.path.expanduser('~'), '.docker')
-
-        if tls_verify and cert_path:
-            params['tls'] = tls.TLSConfig(
-                client_cert=(os.path.join(cert_path, 'cert.pem'),
-                             os.path.join(cert_path, 'key.pem')),
-                ca_cert=os.path.join(cert_path, 'ca.pem'),
-                verify=True,
-                ssl_version=ssl_version,
-                assert_hostname=assert_hostname)
-
-        return params
-
+        # get docker-machine ip - using default
+        ip = str(sh.docker_machine.ip(self.machine_name)).strip()
+        return ip
 
     def setup_machine_client(self, verbose):
         try:
