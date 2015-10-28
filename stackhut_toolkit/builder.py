@@ -19,6 +19,7 @@ import os
 import sys
 import time
 import json
+from enum import Enum
 from distutils.dir_util import copy_tree
 
 from jinja2 import Environment, FileSystemLoader
@@ -48,46 +49,128 @@ except sh.CommandNotFound as e:
     OS_TYPE = 'UNKNOWN'
 
 
-# TODO - move to docker machine/toolkit instead
+class DockerMachineState(Enum):
+    NOTEXIST = 1
+    STOPPED = 2
+    RUNNING = 3
+    UNKNOWN = 4
+
 class DockerClient:
     client = None
-    ip = 'localhost'
-    x = "https://github.com/boot2docker/boot2docker/blob/master/doc/WORKAROUNDS.md"
+    machine_name = "stackhut"
 
     def __init__(self, _exit, verbose):
-        # setup_client
+        # setup machine & client
         try:
             # setup client depending if running on linux or using boot2docker (osx/win)
             if sys.platform == 'linux':
+                self.ip = 'localhost'
                 self.client = docker_py.Client(version='auto')
             else:
-                # get docker-machine ip - using default
-                machine = os.environ.get("DOCKER_MACHINE_NAME")
-                self.ip = str(sh.docker_machine.ip(machine)).strip()
+                self.ip = self.setup_machine()
+                self.client = self.setup_machine_client(verbose)
 
-                try:
-                    # try secure connection first
-                    kw = kwargs_from_env(assert_hostname=False)
-                    self.client = docker_py.Client(version='auto', **kw)
-                except docker_py.errors.DockerException as e:
-                    # shit - some weird boot2docker, python, docker-py, requests, and ssl error
-                    # https://github.com/docker/docker-py/issues/465
-                    if verbose:
-                        log.debug(e)
-                    log.warn("Cannot connect securely to Docker, trying insecurely")
-                    kw = kwargs_from_env(assert_hostname=False)
-                    if 'tls' in kw:
-                        kw['tls'].verify = False
-                    self.client = docker_py.Client(version='auto', **kw)
-
+        except sh.CommandNotFound as e:
+            log.error("Can't find Docker/Docker Machine - please ensure Docker/Docker Toolbox "
+                      "is installed (https://www.docker.com/docker-toolbox) and on your PATH")
+            raise e
         except Exception as e:
             if verbose:
                 log.error("Could not connect to Docker - try running 'docker info'")
-                if sys.platform != 'linux':
-                    log.error("OSX/Win Users - please ensure you've run 'docker-machine start default' and "
-                              "'docker-machine env default' first")
+                # if sys.platform != 'linux':
+                #     log.error("OSX/Win Users - please ensure you've run 'docker-machine start default' and "
+                #               "'docker-machine env default' first")
             if _exit:
                 raise e
+
+    def setup_machine(self):
+        """
+        Setup the StackHut Docker Machine, creating if neccessary
+        Can override if user creates DM with name 'stackhut' externally
+        """
+        def docker_machine_state():
+            try:
+                state = str(sh.docker_machine.status(self.machine_name))
+                if state.startswith('Running'):
+                    return DockerMachineState.RUNNING
+                elif state.startswith('Stopped'):
+                    return DockerMachineState.STOPPED
+                else:
+                    return DockerMachineState.UNKNOWN
+            except sh.ErrorReturnCode_1:
+                return DockerMachineState.NOTEXIST
+
+        state = docker_machine_state()
+
+        if state == DockerMachineState.NOTEXIST:
+            log.info("StackHut Docker Machine not found, creating for first time, please wait...")
+            # creating machine also starts it
+            sh.docker_machine.create("--driver", "virtualbox", self.machine_name)
+            state = docker_machine_state()
+        elif state == DockerMachineState.STOPPED:
+            log.info("Starting StackHut Docker Machine, please wait...")
+            sh.docker_machine.start(self.machine_name)
+            state = docker_machine_state()
+
+        if state != DockerMachineState.RUNNING:
+            raise RuntimeError("Couldn't start StackHut's Docker Machine")
+
+        # get docker-machine ip - using default
+        ip = str(sh.docker_machine.ip(self.machine_name)).strip()
+        return ip
+
+    def _kwargs_from_machine(self, ssl_version=None, assert_hostname=None):
+        """Taken from docker-py.utils - need to upstream"""
+        from docker import tls
+
+        out = str(sh.docker_machine.env('--shell', "bash", self.machine_name))
+        kwargs1 = [x.split("export ")[1].split('=')
+                   for x in out.splitlines()
+                   if x.startswith("export")]
+        kwargs = {k: v.strip('\'"') for [k, v] in kwargs1}
+
+        host = kwargs.get('DOCKER_HOST')
+        cert_path = kwargs.get('DOCKER_CERT_PATH')
+        tls_verify = kwargs.get('DOCKER_TLS_VERIFY')
+
+        params = {}
+
+        if host:
+            params['base_url'] = (host.replace('tcp://', 'https://')
+                                  if tls_verify else host)
+
+        if tls_verify and not cert_path:
+            cert_path = os.path.join(os.path.expanduser('~'), '.docker')
+
+        if tls_verify and cert_path:
+            params['tls'] = tls.TLSConfig(
+                client_cert=(os.path.join(cert_path, 'cert.pem'),
+                             os.path.join(cert_path, 'key.pem')),
+                ca_cert=os.path.join(cert_path, 'ca.pem'),
+                verify=True,
+                ssl_version=ssl_version,
+                assert_hostname=assert_hostname)
+
+        return params
+
+
+    def setup_machine_client(self, verbose):
+        try:
+            # try secure connection first
+            kw = kwargs_from_env(assert_hostname=False)
+            return docker_py.Client(version='auto', **kw)
+        except docker_py.errors.DockerException as e:
+            # shit - some weird boot2docker, python, docker-py, requests, and ssl error
+            # https://github.com/docker/docker-py/issues/465
+            if verbose:
+                log.debug(e)
+            log.warn("Cannot connect securely to Docker, trying insecurely")
+            kw = kwargs_from_env(assert_hostname=False)
+            if 'tls' in kw:
+                kw['tls'].verify = False
+            return docker_py.Client(version='auto', **kw)
+
+
 
     @staticmethod
     def run_docker_sh(docker_cmd, docker_args=None, **kwargs):
@@ -99,6 +182,7 @@ class DockerClient:
 docker_client = None
 
 def get_docker(_exit=True, verbose=True):
+    """Singleton docker client object"""
     global docker_client
     if docker_client is None:
         x = DockerClient(_exit, verbose)
