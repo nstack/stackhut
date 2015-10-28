@@ -82,9 +82,9 @@ class DockerClient:
 
         except Exception as e:
             if verbose:
-                log.error("Could not connect to Docker - try running 'docker info' first")
+                log.error("Could not connect to Docker - try running 'docker info'")
                 if sys.platform != 'linux':
-                    log.error("Please ensure you've run 'docker-machine start default' and "
+                    log.error("OSX/Win Users - please ensure you've run 'docker-machine start default' and "
                               "'docker-machine env default' first")
             if _exit:
                 raise e

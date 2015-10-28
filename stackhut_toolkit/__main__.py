@@ -38,7 +38,7 @@ class ToolkitRunner(CmdRunner):
                               python_version=sys.version,
                               traceback=traceback.format_exc()))
 
-        utils.log.info("Sorry :( If this reoccurs please reach out at http://forums.stackhut.com "
+        utils.log.info("Sorry :( If this reoccurs please reach out on toolkit@stackhut.com "
                        "or open an issue at http://www.github.com/StackHut/stackhut-toolkit "
                        "- thanks!")
 
