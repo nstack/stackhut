@@ -61,8 +61,9 @@ class DockerClient:
             if sys.platform == 'linux':
                 self.client = docker_py.Client(version='auto')
             else:
-                # get b2d ip
-                self.ip = str(sh.boot2docker.ip()).strip()
+                # get docker-machine ip - using default
+                machine = os.environ.get("DOCKER_MACHINE_NAME")
+                self.ip = str(sh.docker_machine.ip(machine)).strip()
 
                 try:
                     # try secure connection first
@@ -83,7 +84,8 @@ class DockerClient:
             if verbose:
                 log.error("Could not connect to Docker - try running 'docker info' first")
                 if sys.platform != 'linux':
-                    log.error("Please ensure you've run 'boot2docker up' and 'boot2docker shellinit' first and have added the ENV VARs it suggests")
+                    log.error("Please ensure you've run 'docker-machine start default' and "
+                              "'docker-machine env default' first")
             if _exit:
                 raise e
 
