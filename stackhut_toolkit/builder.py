@@ -85,7 +85,7 @@ class DockerClient:
 
     def setup_machine(self):
         """
-        Setup the StackHut Docker Machine, creating if neccessary
+        Setup the StackHut Docker Machine, creating if necessary
         Can override if user creates DM with name 'stackhut' externally
         """
         def docker_machine_state():

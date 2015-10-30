@@ -297,6 +297,10 @@ class RunContainerCmd(HutCmd, UserCmd):
         self.force = args.force
         self.privileged = args.privileged
 
+    def sigterm_handler(signo, frame):
+        log.debug("Got shutdown signal".format(signo))
+        raise KeyboardInterrupt
+
     def run(self):
         super().run()
 
@@ -329,6 +333,11 @@ class RunContainerCmd(HutCmd, UserCmd):
         args = [x for x in args if x is not None]
 
         log.info("**** START SERVICE LOG ****")
+
+        # setup shutdown handlers - needed for freeze?
+        import signal
+        signal.signal(signal.SIGTERM, self.sigterm_handler)
+        signal.signal(signal.SIGINT, self.sigterm_handler)
 
         try:
             out = docker.run_docker_sh('run', args, _out=lambda x: print(x, end=''))
