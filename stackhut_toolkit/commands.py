@@ -297,7 +297,7 @@ class RunContainerCmd(HutCmd, UserCmd):
         self.force = args.force
         self.privileged = args.privileged
 
-    def sigterm_handler(signo, frame):
+    def sigterm_handler(self, signo, frame):
         log.debug("Got shutdown signal".format(signo))
         raise KeyboardInterrupt
 

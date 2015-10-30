@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-from setuptools import setup, find_packages
+from setuptools import find_packages
+from cx_Freeze import setup, Executable
 
 def read(*paths):
     """Build a file path from *paths* and return the contents."""
@@ -13,6 +14,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 # put package test requirements here
 requirements = [
+    "wheel",
     "sh",
     "requests",
     "jinja2",
@@ -29,7 +31,34 @@ requirements = [
 # put package test requirements here
 test_requirements = []
 
+options = {
+    'build_exe': {
+        'compressed': True,
+        'optimize': 2,
+        'include_files': ['stackhut_toolkit/res']
+
+#        'init_script':'Console',
+#        'includes': [
+#            'testfreeze_1',
+#            'testfreeze_2'
+#        ],
+#        'path': sys.path + ['modules']
+    }
+}
+
+executables = [
+    Executable(
+#        script='stackhut/__main__.py',
+        script='stackhut.py',
+        initScript='Console',
+    )
+
+]
+
+
 setup(
+    executables=executables,
+    options=options,
     name='stackhut',
     version='0.5.8',
     description="Deploy classes as Microservices",
