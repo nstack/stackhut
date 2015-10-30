@@ -19,6 +19,8 @@ clean: clean-build clean-pyc clean-test
 clean-build:
 	rm -fr build/
 	rm -fr dist/
+	rm -fr stackhut.build/
+	rm -fr stackhut.dist/
 	rm -fr .eggs/
 	rm -fr *-wheel *-sdist
 	find . -name '*.egg-info' -exec rm -fr {} +

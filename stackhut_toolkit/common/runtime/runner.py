@@ -46,6 +46,7 @@ class ServiceRunner:
 
         assert threading.current_thread() == threading.main_thread()
         signal.signal(signal.SIGTERM, sigterm_handler)
+        signal.signal(signal.SIGINT, sigterm_handler)
 
     def __enter__(self):
         return self
