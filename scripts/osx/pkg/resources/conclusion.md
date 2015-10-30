@@ -4,10 +4,11 @@ The toolkit has been installed to `/usr/local/opt/stackhut` and you can now use 
 
 Any issues please reach out,
 
- * [Email](mailto:toolkit@stackhut.com)
- * [Twitter](https://twitter.com/StackHut)
- * [GitHub](https://github.com/StackHut)
- * [Documentation](https://docs.stackhut.com)
+ * Email - [toolkit@stackhut.com](mailto:toolkit@stackhut.com)
+ * Twitter - [@stackhut](https://twitter.com/StackHut)
+ * GitHub Repo - https://github.com/StackHut/toolkit
+ * Documentation - https://docs.stackhut.com
+
 
 Happy hacking! :)
 
