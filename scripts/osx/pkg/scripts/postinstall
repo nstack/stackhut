@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -e
+
+ln -s /usr/local/opt/stackhut/stackhut /usr/local/bin/stackhut
+
