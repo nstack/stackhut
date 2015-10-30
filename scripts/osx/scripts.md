@@ -1,4 +1,4 @@
-pkgbuild --root stackhut --identifier com.stackhut.toolkit --version 0.6.0 --ownership recommended pkg1/output.pkg  
+pkgbuild --root root --identifier com.stackhut.toolkit --version 0.6.0 --ownership recommended pkg1/output.pkg  
 
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <installer-gui-script minSpecVersion="1">

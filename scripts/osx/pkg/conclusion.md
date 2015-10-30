@@ -7,7 +7,7 @@ Any issues please reach out,
  * [Email](mailto:toolkit@stackhut.com)
  * [Twitter](https://twitter.com/StackHut)
  * [GitHub](https://github.com/StackHut)
- * [Documentation](https://stackhut.readthedocs.com)
+ * [Documentation](https://docs.stackhut.com)
 
 Happy hacking! :)
 
