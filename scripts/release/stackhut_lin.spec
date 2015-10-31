@@ -2,10 +2,10 @@
 
 block_cipher = None
 
-a = Analysis(['stackhut.py'],
+a = Analysis(['../../stackhut.py'],
              pathex=['/home/mandeep/Dev/Projects/StackHut/client/toolkit'],
              binaries=None,
-             datas=[('stackhut_toolkit/res', 'res')],
+             datas=[('../../stackhut_toolkit/res', 'res')],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None,
