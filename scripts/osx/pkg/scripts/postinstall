@@ -2,5 +2,6 @@
 
 set -e
 
-ln -s /usr/local/opt/stackhut/stackhut /usr/local/bin/stackhut
+# link binary to 3rd-party bin dir on PATH
+ln -sf /usr/local/opt/stackhut/stackhut /usr/local/bin/stackhut
 
