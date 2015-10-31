@@ -1,5 +1,5 @@
 https://github.com/uri-templates/uritemplate-py/archive/master.zip
-pyinsteller
+pyinstaller
 requests
 sh
 

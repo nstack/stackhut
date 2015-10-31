@@ -10,7 +10,7 @@ from sh import git, make, pyinstaller
 
 root_dir = os.getcwd()
 user = "mands"
-password = input("Enter password for github user {}: ".format(user))
+password = 'abc' # input("Enter password for github user {}: ".format(user))
 
 make.clean()
 
@@ -18,11 +18,15 @@ try:
     # update code to latest tag
     git.reset("--hard")
     git.clean("-f", "-d")
-    git.pull("--tags")
-    version = git.describe("--abbrev=0", "--tags")
+    git.pull("origin", "master", "--tags")
+    version = str(git.describe("--abbrev=0", "--tags")).strip()
     git.checkout(version)
 
     # run pyinstaller
+    sh.mkdir("-p", "./scripts/release")
+    sh.cp("../../toolkit/stackhut.py", "./")
+    sh.cp("../../toolkit/scripts/release/stackhut_lin.spec", "./scripts/release/")
+
     pyinstaller('-y', '--clean', "./scripts/release/stackhut_lin.spec")
 
     # TODO - run tests on bin version...
@@ -34,8 +38,6 @@ try:
 
     # upload to github releases
     header = {'Accept': 'application/vnd.github.v3+json'}
-
-    "GET /repos/:owner/:repo/releases/:id"
 
     # get the release info
     r = requests.get("https://api.github.com/repos/StackHut/stackhut-toolkit/releases/tags/{}".format(version),
@@ -49,12 +51,18 @@ try:
     # upload the asset
     with open(rel_name, 'rb') as rel_file:
         upload_url = expand(upload_url, {"name": rel_name})
-        r = requests.post(upload_url, headers=header, auth=(user, password), data=rel_file)
+
+        upload_header = {'Accept': 'application/vnd.github.v3+json',
+                         'Content-Type': 'application/octet-stream'
+                         }
+
+        r = requests.post(upload_url, headers=upload_header, auth=(user, password), data=rel_file)
         r.raise_for_status()
+
+    print("Uploaded linux64 binary release - {}".format(version))
 
 finally:
     os.chdir(root_dir)
     make.clean()
 
-
-print("Uploaded linux64 binary release - {}".format(version))
+exit(0)
