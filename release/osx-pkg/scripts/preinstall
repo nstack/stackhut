@@ -1,7 +1,0 @@
-#!/bin/sh
-
-set -e
-
-# delete old stackhut dir if exists for smooth upgrade
-rm -rf /usr/local/opt/stackhut
-
