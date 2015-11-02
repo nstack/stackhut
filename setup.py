@@ -31,7 +31,7 @@ test_requirements = []
 
 setup(
     name='stackhut',
-    version='0.5.8',
+    version='0.6.0',
     description="Deploy classes as Microservices",
     long_description=read('readme_pip.rst'),
     license='Apache',
