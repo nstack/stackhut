@@ -105,11 +105,13 @@ class DockerClient:
         if state == DockerMachineState.NOTEXIST:
             log.info("StackHut Docker Machine not found, creating for first time, please wait...")
             # creating machine also starts it
-            sh.docker_machine.create("--driver", "virtualbox", self.machine_name)
+            with toolkit_utils.Spinner():
+                sh.docker_machine.create("--driver", "virtualbox", self.machine_name)
             state = docker_machine_state()
         elif state == DockerMachineState.STOPPED:
             log.info("Starting StackHut Docker Machine, please wait...")
-            sh.docker_machine.start(self.machine_name)
+            with toolkit_utils.Spinner():
+                sh.docker_machine.start(self.machine_name)
             state = docker_machine_state()
 
         if state != DockerMachineState.RUNNING:
