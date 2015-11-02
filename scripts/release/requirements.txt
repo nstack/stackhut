@@ -1,5 +1,0 @@
-https://github.com/uri-templates/uritemplate-py/archive/master.zip
-pyinstaller
-requests
-sh
-
