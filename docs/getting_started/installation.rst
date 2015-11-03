@@ -11,11 +11,9 @@ Quick Install
 Requirements
 ^^^^^^^^^^^^
 
-* `Python 3.4 <http://www.python.org>`_
-* Unix-based OS (tested on Linux and OSX, others should work)
-* (Optional) Docker (or boot2Docker on OSX) to run services locally for testing inside a container
+* Docker (`Docker Toolbox <https://www.docker.com/docker-toolbox>`_ on OSX/Windows) to develop and test services locally
 
-.. note:: We are adding Windows support soon. Email us at hi@stackhut.com if this is a blocker so we can plan as needed.
+.. note:: Currently we support Linux and OSX - with Windows support launching shortly.
 
 Install Steps
 ^^^^^^^^^^^^^
