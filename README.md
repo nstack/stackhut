@@ -1,22 +1,22 @@
-# StackHut Platform Main Repo
+# StackHut Platform (Main Repo)
 ## Deploy classes as Microservices
 
 StackHut is a plaftorm for simply devloping your backend code and deploying it to the cooud as microservices that you can call from you front-end web and mobile applications.
 
 This is the main repo for StackHut, holding the main documention and tracking issues. It serves as a central point to coordinate development efforts.
 
+Happy hacking! :)
+
 ## Repos
 
 * [StackHut CLI Toolkit](https://github.com/StackHut/stackhut-toolkit) - Use this to develop and test your services locally and then deploy them to the cloud
 
-## Where to go
+## Useful Links
 
 * [Issues (on waffle.io Kanban Board)](http://waffle.io/StackHut/StackHut)
 * [Issues (on GitHub)](https://github.com/StackHut/StackHut/issues)
 * [Wiki](https://github.com/StackHut/StackHut/wiki)
-* [Main Documentation](http://stackhut.readthedocs.org)
-
-Happy hacking! :)
+* [User Manual / Main Docs](http://stackhut.readthedocs.org)
 
 [![Stories in Ready](https://badge.waffle.io/StackHut/StackHut.svg?label=ready&title=Ready)](http://waffle.io/StackHut/StackHut)
 
