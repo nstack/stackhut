@@ -5,7 +5,7 @@ StackHut is a plaftorm for simply devloping your backend code and deploying it t
 
 This is the main repo for StackHut, holding the main documention and tracking issues. It serves as a central point to coordinate development efforts.
 
-## Main Repos
+## Repos
 
 * [StackHut CLI Toolkit](https://github.com/StackHut/stackhut-toolkit) - Use this to develop and test your services locally and then deploy them to the cloud
 
