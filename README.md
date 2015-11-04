@@ -24,7 +24,7 @@ Happy hacking! :)
 
 ## Installing the toolkit
 
-### [Get the latest release now](https://github.com/StackHut/stackhut-toolkit/releases)
+All toolkit releases can be found on the toolkit repo's [releases page](https://github.com/StackHut/stackhut-toolkit/releases).
 
 ### Binary/Standalone Install
 
