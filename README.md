@@ -24,7 +24,7 @@ We now have a new build process that packages up toolkit with all dependent libr
     * Download and run the latest `.pkg` file from the [releases page](https://github.com/StackHut/stackhut-toolkit/releases) (standalone that you can remove simply by `sudo rm -rf /usr/local/bin/stackhut /usr/local/opt/stackhut`)
     * Download and unpack the portable `.txz`-archive from the [releases page](https://github.com/StackHut/stackhut-toolkit/releases)
  * Linux
-    * Download and unpack the portable `.txz`-archive [releases page](https://github.com/StackHut/stackhut-toolkit/releases)
+    * Download and unpack the portable `.txz`-archive from the [releases page](https://github.com/StackHut/stackhut-toolkit/releases)
 
 ### Source Install
 
