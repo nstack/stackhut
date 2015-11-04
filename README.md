@@ -24,7 +24,7 @@ Happy hacking! :)
 
 ## Installing the toolkit
 
-All toolkit releases can be found on the toolkit repo's [releases page](https://github.com/StackHut/stackhut-toolkit/releases).
+All toolkit releases can be found on the toolkit's repo [releases page](https://github.com/StackHut/stackhut-toolkit/releases).
 
 ### Binary/Standalone Install
 
@@ -44,3 +44,8 @@ Source builds are always available using `pip` and are the recommended way to in
  * On Linux, `pip3 install stackhut --user` (you may need to install Python 3 first - it's installed by default on newer distros).
 
 _Note_ - StackHut requires [Docker](www.docker.com) to be installed  - on OSX/Windows download [Docker Toolbox](https://www.docker.com/docker-toolbox) and on Linux we recommend using your distro version.
+
+### Follow the tutorial
+
+An in-depth tutorial showing how to create, call and deploy a simple service can be found in the [user manual](http://docs.stackhut.com/getting_started/tutorial.html).
+
