@@ -30,8 +30,8 @@ Happy hacking! :)
 
 We now have a new build process that packages up toolkit with all dependent libraries into a standalone executable (including an embedded Python 3) for Linux and OSX. It's now much easier for users to quickly get started using our binary installs for Linux and OSX,
  * On OSX there are several binary install methods,
-    * Using brew - `brew install stackhut/stackhut/toolkit`
-    * Download and run the latest `.pkg` file from the releases page
+    * Using brew - `brew install stackhut/stackhut/toolkit` (a 3rd-party tap you can also upgrade with `brew upgrade stackhut/stackhut/toolkit` - make sure you have an up-to-date brew with `brew update`)
+    * Download and run the latest `.pkg` file from the releases page (standalone that you can remove simply by `sudo rm -rf /usr/local/bin/stackhut /usr/local/opt/stackhut`)
     * Download and unpack the portable `.txz`-archive
  * Linux
     * Download and unpack the portable `.txz`-archive
@@ -40,7 +40,7 @@ We now have a new build process that packages up toolkit with all dependent libr
 
 Source builds are always available using `pip` and are the recommended way to install if you already have Python 3,
 
- * On OSX, `brew install python3; pip3 install stackhut --user` or install Python3 from elsewhere, and run `pip3 install stackhut --user` again,
- * On Linux, install Python 3 from you distribution (it's installed by default on newer distros) and `pip3 install stackhut --user`.
+ * On OSX, `brew install python3; pip3 install stackhut --user` (or just `pip3 install stackhut --user` if you already have Python 3),
+ * On Linux, `pip3 install stackhut --user` (you may need to install Python 3 first - it's installed by default on newer distros).
 
 _Note_ - StackHut requires [Docker](www.docker.com) to be installed  - on OSX/Windows download [Docker Toolbox](https://www.docker.com/docker-toolbox) and on Linux we recommend using your distro version.
