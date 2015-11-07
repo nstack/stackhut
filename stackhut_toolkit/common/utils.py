@@ -26,6 +26,11 @@ IN_CONTAINER = os.path.exists('/workdir')
 VERBOSE = False
 ROOT_DIR = os.getcwd()
 
+def change_root_dir(dir):
+    global ROOT_DIR
+    os.chdir(dir)
+    ROOT_DIR = os.getcwd()
+
 # Logging
 # LOGFILE = '.stackhut.log'
 logging.getLogger().disabled = True

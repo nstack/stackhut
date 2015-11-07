@@ -93,7 +93,7 @@ class DockerClient:
                 state = str(sh.docker_machine.status(self.machine_name))
                 if state.startswith('Running'):
                     return DockerMachineState.RUNNING
-                elif state.startswith('Stopped'):
+                elif state.startswith('Stopped') or state.startswith('Saved'):
                     return DockerMachineState.STOPPED
                 else:
                     return DockerMachineState.UNKNOWN
@@ -144,8 +144,6 @@ class DockerClient:
             if 'tls' in kw:
                 kw['tls'].verify = False
             return docker_py.Client(version='auto', **kw)
-
-
 
     @staticmethod
     def run_docker_sh(docker_cmd, docker_args=None, **kwargs):

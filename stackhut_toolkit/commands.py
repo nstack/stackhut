@@ -23,6 +23,7 @@ from distutils.dir_util import copy_tree
 import sh
 from jinja2 import Environment, FileSystemLoader
 
+from .common import utils
 from .common.utils import log, CONTRACTFILE
 from .common.runtime import rpc
 from .common.runtime.backends import LocalBackend
@@ -119,13 +120,8 @@ class InfoCmd(UserCmd):
             log.info("Docker not installed or connection error")
 
         # usercfg info
-        if self.usercfg.logged_in:
-            log.info("User logged in")
-
-            for x in self.usercfg.show_keys:
-                log.info("{}: {}".format(x, self.usercfg.get(x)))
-        else:
-            log.info("User not logged in")
+        for x in self.usercfg.show_keys:
+            log.info("{}: {}".format(x, self.usercfg.get(x)))
 
         return 0
 
@@ -185,9 +181,6 @@ class InitCmd(UserCmd):
 
     def run(self):
         super().run()
-
-        # validation checks
-        self.usercfg.assert_logged_in()
 
         if os.path.exists('.git') or os.path.exists('Hutfile.yaml'):
             raise RuntimeError('Found existing project, cancelling')
@@ -289,13 +282,32 @@ class RunContainerCmd(HutCmd, UserCmd):
         # sp.add_argument("--reqfile", '-r', help="Test request file")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
         sp.add_argument("--privileged", '-p', action='store_true', help="Run as a privileged service")
+        sp.add_argument("--clone", '-c', metavar='URL', help="Clone a remote service at URL and run locally")
 
     def __init__(self, args):
-        super().__init__(args)
         # self.reqfile = args.reqfile
         self.port = args.port
         self.force = args.force
         self.privileged = args.privileged
+        self.clone = args.clone
+
+        # if clone, clone first
+        if self.clone:
+            from posixpath import basename
+            from urllib.parse import urlparse
+            dir = basename(urlparse(self.clone).path)
+
+            try:
+                sh.git.clone(self.clone)
+            except sh.ErrorReturnCode_128:
+                raise RuntimeError("Service '{}' already exists, can't clone".format(dir))
+
+            log.debug("Cloned service from {} into {}".format(self.clone, dir))
+            # update root dir
+            utils.change_root_dir(dir)
+
+        self.dir = utils.ROOT_DIR
+        super().__init__(args)
 
     def sigterm_handler(self, signo, frame):
         log.debug("Got shutdown signal".format(signo))
@@ -314,7 +326,12 @@ class RunContainerCmd(HutCmd, UserCmd):
         # docker setup
         docker = get_docker()
 
-        log.info("Running service '{}' on http://{}:{}".format(self.hutcfg.service_short_name(self.usercfg.username), docker.ip, self.port))
+        from posixpath import basename
+        log.info("Running service '{}' on http://{}:{}".
+                 format(self.hutcfg.service_short_name(self.usercfg.username), docker.ip, self.port))
+        log.info("Test by running 'curl -H \"Content-Type: application/json\" -X POST -d @test_request.json "
+                 "http://{}:{}/run' from the '{}' dir".format(docker.ip, self.port, basename(utils.ROOT_DIR)))
+
         # call docker to run the same command but in the container
         # use data vols for response output files
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
@@ -330,6 +347,7 @@ class RunContainerCmd(HutCmd, UserCmd):
                 '--privileged' if self.args.privileged else None,
                 '--entrypoint=/usr/bin/env', service.full_name, 'stackhut-runner', verbose_mode,
                 'runcontainer', '--uid', uid_gid, '--author', self.usercfg.username]
+        # filter out None args
         args = [x for x in args if x is not None]
 
         log.info("**** START SERVICE LOG ****")
@@ -353,6 +371,20 @@ class RunContainerCmd(HutCmd, UserCmd):
         log.info("**** END SERVICE LOG ****")
         log.info("Run completed successfully")
         return 0
+
+
+class RunCmd(RunContainerCmd):
+    """"Alias for runcontainer"""
+    name = 'run'
+
+    # @staticmethod
+    # def register(sp):
+    #     sp.add_argument("port", nargs='?', default='4001', help="Port to host API on locally", type=int)
+    #     # sp.add_argument("--reqfile", '-r', help="Test request file")
+    #     sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
+    #     sp.add_argument("--privileged", '-p', action='store_true', help="Run as a privileged service")
+
+
 
 class RunHostCmd(HutCmd, UserCmd):
     """Concrete Run Command using Local system for dev on Host OS"""
@@ -446,7 +478,7 @@ class DeployCmd(HutCmd, UserCmd):
         super().run()
 
         # validation checks
-        self.usercfg.assert_logged_in()
+        self.usercfg.assert_valid_user()
 
         service = Service(self.hutcfg, self.usercfg.username)
 
@@ -529,7 +561,7 @@ COMMANDS = [
     # visible
     LoginCmd, LogoutCmd, InfoCmd,
     InitCmd,
-    HutBuildCmd, RunContainerCmd, RunHostCmd, DeployCmd,
+    HutBuildCmd, RunContainerCmd, RunCmd, RunHostCmd, DeployCmd,
     # hidden
     StackBuildCmd, RemoteBuildCmd
 ]
