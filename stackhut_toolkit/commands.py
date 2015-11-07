@@ -295,8 +295,13 @@ class RunContainerCmd(HutCmd, UserCmd):
         if self.clone:
             from posixpath import basename
             from urllib.parse import urlparse
-            sh.git.clone(self.clone)
             dir = basename(urlparse(self.clone).path)
+
+            try:
+                sh.git.clone(self.clone)
+            except sh.ErrorReturnCode_128:
+                raise RuntimeError("Service '{}' already exists, can't clone".format(dir))
+
             log.debug("Cloned service from {} into {}".format(self.clone, dir))
             # update root dir
             utils.change_root_dir(dir)
@@ -321,6 +326,8 @@ class RunContainerCmd(HutCmd, UserCmd):
         docker = get_docker()
 
         log.info("Running service '{}' on http://{}:{}".format(self.hutcfg.service_short_name(self.usercfg.username), docker.ip, self.port))
+        log.info("Test by running 'curl -H \"Content-Type: application/json\" -X POST -d @test_request.json http://{}:{}/run'".format(docker.ip, self.port))
+
         # call docker to run the same command but in the container
         # use data vols for response output files
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
