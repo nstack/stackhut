@@ -40,7 +40,7 @@ class UserCfg(dict):
                 self.update(json.load(f))
             if self.get('config_version', 0) < self.config_version:
                 self.wipe()
-                raise AssertionError("Config file version update, resetting config file, please rerun")
+                raise AssertionError("Resetting after config file version update, please rerun command")
         else:
             # create with correct file permissions
             open(self.config_fpath, 'w').close()

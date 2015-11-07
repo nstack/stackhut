@@ -306,6 +306,7 @@ class RunContainerCmd(HutCmd, UserCmd):
             # update root dir
             utils.change_root_dir(dir)
 
+        self.dir = utils.ROOT_DIR
         super().__init__(args)
 
     def sigterm_handler(self, signo, frame):
@@ -325,8 +326,11 @@ class RunContainerCmd(HutCmd, UserCmd):
         # docker setup
         docker = get_docker()
 
-        log.info("Running service '{}' on http://{}:{}".format(self.hutcfg.service_short_name(self.usercfg.username), docker.ip, self.port))
-        log.info("Test by running 'curl -H \"Content-Type: application/json\" -X POST -d @test_request.json http://{}:{}/run'".format(docker.ip, self.port))
+        from posixpath import basename
+        log.info("Running service '{}' on http://{}:{}".
+                 format(self.hutcfg.service_short_name(self.usercfg.username), docker.ip, self.port))
+        log.info("Test by running 'curl -H \"Content-Type: application/json\" -X POST -d @test_request.json "
+                 "http://{}:{}/run' from the '{}' dir".format(docker.ip, self.port, basename(utils.ROOT_DIR)))
 
         # call docker to run the same command but in the container
         # use data vols for response output files
