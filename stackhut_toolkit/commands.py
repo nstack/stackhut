@@ -119,13 +119,8 @@ class InfoCmd(UserCmd):
             log.info("Docker not installed or connection error")
 
         # usercfg info
-        if self.usercfg.logged_in:
-            log.info("User logged in")
-
-            for x in self.usercfg.show_keys:
-                log.info("{}: {}".format(x, self.usercfg.get(x)))
-        else:
-            log.info("User not logged in")
+        for x in self.usercfg.show_keys:
+            log.info("{}: {}".format(x, self.usercfg.get(x)))
 
         return 0
 
@@ -185,9 +180,6 @@ class InitCmd(UserCmd):
 
     def run(self):
         super().run()
-
-        # validation checks
-        self.usercfg.assert_logged_in()
 
         if os.path.exists('.git') or os.path.exists('Hutfile.yaml'):
             raise RuntimeError('Found existing project, cancelling')
@@ -354,6 +346,20 @@ class RunContainerCmd(HutCmd, UserCmd):
         log.info("Run completed successfully")
         return 0
 
+
+class RunCmd(RunContainerCmd):
+    """"Alias for runcontainer"""
+    name = 'run'
+
+    # @staticmethod
+    # def register(sp):
+    #     sp.add_argument("port", nargs='?', default='4001', help="Port to host API on locally", type=int)
+    #     # sp.add_argument("--reqfile", '-r', help="Test request file")
+    #     sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
+    #     sp.add_argument("--privileged", '-p', action='store_true', help="Run as a privileged service")
+
+
+
 class RunHostCmd(HutCmd, UserCmd):
     """Concrete Run Command using Local system for dev on Host OS"""
     name = 'runhost'
@@ -446,7 +452,7 @@ class DeployCmd(HutCmd, UserCmd):
         super().run()
 
         # validation checks
-        self.usercfg.assert_logged_in()
+        self.usercfg.assert_valid_user()
 
         service = Service(self.hutcfg, self.usercfg.username)
 
@@ -529,7 +535,7 @@ COMMANDS = [
     # visible
     LoginCmd, LogoutCmd, InfoCmd,
     InitCmd,
-    HutBuildCmd, RunContainerCmd, RunHostCmd, DeployCmd,
+    HutBuildCmd, RunContainerCmd, RunCmd, RunHostCmd, DeployCmd,
     # hidden
     StackBuildCmd, RemoteBuildCmd
 ]

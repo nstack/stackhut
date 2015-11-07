@@ -29,7 +29,8 @@ class UserCfg(dict):
     """
     show_keys = ['username', 'hash', 'send_analytics']
     keep_keys = ['send_analytics', 'm_id']
-    config_version = 1
+    config_version = 2
+    anon_username = 'anonymous'
     config_fpath = os.path.expanduser(os.path.join('~', '.stackhut.cfg'))
 
     def __init__(self):
@@ -39,7 +40,7 @@ class UserCfg(dict):
                 self.update(json.load(f))
             if self.get('config_version', 0) < self.config_version:
                 self.wipe()
-                raise AssertionError("Config file version mismatch, please run 'stackhut login' again")
+                raise AssertionError("Config file version update, resetting config file, please rerun")
         else:
             # create with correct file permissions
             open(self.config_fpath, 'w').close()
@@ -76,19 +77,17 @@ class UserCfg(dict):
         self.clear()
         self.update(x)
         self['config_version'] = self.config_version
+        self['username'] = self.anon_username
+        self['hash'] = None
         self.save()
 
-    @property
-    def logged_in(self):
-        return 'username' in self
-
-    def assert_logged_in(self):
-        if not self.logged_in:
-            raise AssertionError("Please login first - run 'stackhut login'")
+    def assert_valid_user(self):
+        """Make sure user has valid account to deploy"""
+        if self.username == self.anon_username:
+            raise AssertionError("Please login first using 'stackhut login' with your details from the StackHut website")
 
     @property
     def username(self):
-        self.assert_logged_in()
         return self['username']
 
     @property
