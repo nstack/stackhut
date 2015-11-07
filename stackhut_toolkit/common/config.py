@@ -84,7 +84,7 @@ class UserCfg(dict):
     def assert_valid_user(self):
         """Make sure user has valid account to deploy"""
         if self.username == self.anon_username:
-            raise AssertionError("Please login first using 'stackhut login' with your details from the StackHut website")
+            raise AssertionError("Please login first with 'stackhut login' using your credentials from the StackHut website")
 
     @property
     def username(self):

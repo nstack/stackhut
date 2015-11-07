@@ -23,6 +23,7 @@ from distutils.dir_util import copy_tree
 import sh
 from jinja2 import Environment, FileSystemLoader
 
+from .common import utils
 from .common.utils import log, CONTRACTFILE
 from .common.runtime import rpc
 from .common.runtime.backends import LocalBackend
@@ -281,13 +282,26 @@ class RunContainerCmd(HutCmd, UserCmd):
         # sp.add_argument("--reqfile", '-r', help="Test request file")
         sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
         sp.add_argument("--privileged", '-p', action='store_true', help="Run as a privileged service")
+        sp.add_argument("--clone", '-c', metavar='URL', help="Clone a remote service at URL and run locally")
 
     def __init__(self, args):
-        super().__init__(args)
         # self.reqfile = args.reqfile
         self.port = args.port
         self.force = args.force
         self.privileged = args.privileged
+        self.clone = args.clone
+
+        # if clone, clone first
+        if self.clone:
+            from posixpath import basename
+            from urllib.parse import urlparse
+            sh.git.clone(self.clone)
+            dir = basename(urlparse(self.clone).path)
+            log.debug("Cloned service from {} into {}".format(self.clone, dir))
+            # update root dir
+            utils.change_root_dir(dir)
+
+        super().__init__(args)
 
     def sigterm_handler(self, signo, frame):
         log.debug("Got shutdown signal".format(signo))
@@ -322,6 +336,7 @@ class RunContainerCmd(HutCmd, UserCmd):
                 '--privileged' if self.args.privileged else None,
                 '--entrypoint=/usr/bin/env', service.full_name, 'stackhut-runner', verbose_mode,
                 'runcontainer', '--uid', uid_gid, '--author', self.usercfg.username]
+        # filter out None args
         args = [x for x in args if x is not None]
 
         log.info("**** START SERVICE LOG ****")
