@@ -5,7 +5,7 @@
 
 `stackhut` is a platform to develop and deploy microservices without writing any server-logic. It takes a regular class (in Python or JavaScript for now), a YAML file describing your stack, and deploys a microservice whose functions can be called natively in other languages, or through REST.
 
-`stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. 
+The `stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. 
 
 Available to download in both source and binary form for Linux and OSX.
 
