@@ -3,7 +3,11 @@
 
 [![image](https://img.shields.io/pypi/v/stackhut.svg)](https://pypi.python.org/pypi/stackhut)
 
-`stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. Available to download in both source and binary form for Linux and OSX.
+`stackhut` is a platform to develop and deploy microservices without writing any server-logic. It takes a regular class (in Python or JavaScript for now), a YAML file describing your stack, and deploys a microservice whose functions can be called natively in other languages, or through REST.
+
+`stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. 
+
+Available to download in both source and binary form for Linux and OSX.
 
 More info found on the [main StackHut repo](https://github.com/StackHut/StackHut), download the toolkit from the [releases page](https://github.com/StackHut/stackhut-toolkit/releases).
 
