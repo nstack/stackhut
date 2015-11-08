@@ -3,6 +3,7 @@
 !test_request.json
 run_result
 .stackhut
+.DS_Store
 
 # ide
 *.iml
@@ -62,8 +63,9 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+api_docs/_build
 
 # PyBuilder
 target/
 
-.DS_Store
+
