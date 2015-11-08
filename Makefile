@@ -1,4 +1,4 @@
-.PHONY: clean-pyc clean-build docs clean
+.PHONY: clean-pyc clean-build api_docs clean
 
 help:
 	@echo "clean - remove all build, test, coverage and Python artifacts"
@@ -9,7 +9,7 @@ help:
 	@echo "test - run tests quickly with the default Python"
 	@echo "test-all - run tests on every Python version with tox"
 	@echo "coverage - check code coverage quickly with the default Python"
-	@echo "docs - generate Sphinx HTML documentation, including API docs"
+	@echo "api_docs - generate Sphinx HTML documentation, including API api_docs"
 	@echo "release - package and upload a release"
 	@echo "dist - package"
 	@echo "install - install the package to the active Python's site-packages"
@@ -52,13 +52,13 @@ coverage:
 	coverage html
 	xdg-open htmlcov/index.html
 
-docs:
-	rm -f docs/stackhut.rst
-	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ stackhut
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
-	xdg-open docs/_build/html/index.html
+api_docs:
+	rm -f api_docs/stackhut.rst
+	rm -f api_docs/modules.rst
+	sphinx-apidoc -o api_docs/ stackhut
+	$(MAKE) -C api_docs clean
+	$(MAKE) -C api_docs html
+	xdg-open api_docs/_build/html/index.html
 
 release: dist
 	git push
