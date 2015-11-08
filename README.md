@@ -1,4 +1,4 @@
-# StackHut Platform (Central Repo)
+# StackHut Platform
 ## Deploy classes as Microservices
 
 StackHut is a platform to develop and deploy microservices without writing any server-logic. It takes a regular class (in Python or JavaScript for now), a YAML file describing your stack, and deploys a microservice whose functions can be called natively in other languages, or through REST.
