@@ -337,6 +337,11 @@ class RunContainerCmd(HutCmd, UserCmd):
         # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
         import random
 
+        # Get port from kernel
+        # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # s.bind(('', 0))
+        # addr = s.getsockname()
+
         name = 'stackhut-{}'.format(random.randrange(10000))
         res_flag = 'z' if OS_TYPE == 'SELINUX' else 'rw'
         verbose_mode = '-v' if self.args.verbose else None
@@ -417,6 +422,35 @@ class RunHostCmd(HutCmd, UserCmd):
             toolkit_stack.del_shim()
             os.remove(rpc.REQ_FIFO) if os.path.exists(rpc.REQ_FIFO) else None
             os.remove(rpc.RESP_FIFO) if os.path.exists(rpc.RESP_FIFO) else None
+
+class TestRequestCmd(HutCmd, UserCmd):
+    """Concrete Run Command using Local system for dev on Host OS"""
+    name = 'test'
+    description = "Construct a test request to a running local/hosted service"
+
+    @staticmethod
+    def register(sp):
+        sp.add_argument("port", nargs='?', default='4001', help="Port to host API on locally", type=int)
+        sp.add_argument("--file", '-f', metavar='FILE', help="File containing sample json request (e.g. test_request.json")
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.port = args.port
+        self.fname = args.file
+
+    def run(self):
+        from pygments import highlight
+        from pygments.lexers import JsonLexer
+        from pygments.formatters import Terminal256Formatter
+
+        # set server url
+        utils.SERVER_URL = "http://localhost:{}/".format(self.port)
+
+        with open(self.fname, "r") as f:
+            msg = json.load(f)
+            r = stackhut_api_call('run', msg)
+            result = highlight(json.dumps(r, indent=4), JsonLexer(), Terminal256Formatter())
+            log.info("Service {} returned - \n{}".format(utils.SERVER_URL, result))
 
 
 class DeployCmd(HutCmd, UserCmd):
@@ -555,13 +589,17 @@ class DeployCmd(HutCmd, UserCmd):
 
 
 
+
+
+
 # StackHut primary toolkit commands
 # debug, push, pull, test, etc.
 COMMANDS = [
     # visible
     LoginCmd, LogoutCmd, InfoCmd,
     InitCmd,
-    HutBuildCmd, RunContainerCmd, RunCmd, RunHostCmd, DeployCmd,
+    HutBuildCmd, DeployCmd,
+    RunContainerCmd, RunCmd, RunHostCmd, TestRequestCmd,
     # hidden
     StackBuildCmd, RemoteBuildCmd
 ]

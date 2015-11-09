@@ -69,7 +69,7 @@ class UserCfg(dict):
 
     def save(self):
         with open(self.config_fpath, 'w') as f:
-            json.dump(self, f)
+            json.dump(self, f, indent=4)
 
     def wipe(self):
         """blank out the cfg file"""

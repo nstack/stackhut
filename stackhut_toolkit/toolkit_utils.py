@@ -38,13 +38,14 @@ def get_res_path(res_name):
 # StackHut server comms
 json_header = {'content-type': 'application/json'}
 
-def stackhut_api_call(endpoint, msg, secure=True):
+
+def stackhut_api_call(endpoint, msg, secure=True, return_json=True):
     url = urllib.parse.urljoin(utils.SERVER_URL, endpoint)
     log.debug("Calling Stackhut Server at {} with \n\t{}".format(url, json.dumps(msg)))
     r = requests.post(url, data=json.dumps(msg), headers=json_header)
 
     if r.status_code == requests.codes.ok:
-        return r.json()
+        return r.json() if return_json else r.text
     else:
         log.error("Error {} talking to Stackhut Server".format(r.status_code))
         log.error(r.text)
