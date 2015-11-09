@@ -57,10 +57,10 @@ _Note_ - StackHut requires [Docker](www.docker.com) to be installed  - on OSX/Wi
 You can download a standalone executable for Linux and OSX. 
  * On OSX there are three binary install methods:
     * Using brew - `brew install stackhut/stackhut/toolkit` (a 3rd-party tap you can also upgrade with `brew upgrade stackhut/stackhut/toolkit` - make sure you have an up-to-date brew with `brew update`)
-    * Download and run the latest `.pkg` file from the [releases page](https://github.com/StackHut/stackhut-toolkit/releases) (standalone that you can remove simply by `sudo rm -rf /usr/local/bin/stackhut /usr/local/opt/stackhut`)
-    * Download and unpack the portable `.txz`-archive from the [releases page](https://github.com/StackHut/stackhut-toolkit/releases)
+    * Download and run the latest `.pkg` file from the [releases page](https://github.com/stackhut/stackhut/releases) (standalone that you can remove simply by `sudo rm -rf /usr/local/bin/stackhut /usr/local/opt/stackhut`)
+    * Download and unpack the portable `.txz`-archive from the [releases page](https://github.com/stackhut/stackhut/releases)
  * Linux
-    * Download and unpack the portable `.txz`-archive from the [releases page](https://github.com/StackHut/stackhut-toolkit/releases)
+    * Download and unpack the portable `.txz`-archive from the [releases page](https://github.com/stackhut/stackhut/releases)
 
 ### Source Install
 
