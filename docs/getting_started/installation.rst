@@ -17,9 +17,7 @@ OSX
 
 On OSX there are three binary install methods:
 
-    *   Use brew,
-
-        ``brew install stackhut/stackhut/toolkit``
+    *   Use brew, ``brew install stackhut/stackhut/toolkit``
 
         This is a 3rd-party tap from which you can upgrade using ``brew upgrade stackhut/stackhut/toolkit``,
 
