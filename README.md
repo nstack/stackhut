@@ -3,25 +3,43 @@
 
 [![image](https://img.shields.io/pypi/v/stackhut.svg)](https://pypi.python.org/pypi/stackhut)
 
-StackHut is a platform to develop and deploy microservices without writing any server-logic. It takes a regular class (in Python or JavaScript for now), a YAML file describing your stack, and deploys a microservice whose functions can be called natively in other languages, or through REST.
+StackHut is a platform to develop and deploy microservices without writing any server-logic. It takes a regular class (in Python or JavaScript for now), a YAML file describing your stack, and deploys a microservice whose functions can be called natively in other languages, or through REST. StackHut is pure Software Defined Infrastructure, and abstracts away web-frameworks, servers, and infrastructure entirely.
 
-StackHut is pure Software Defined Infrastructure, and abstracts away web-frameworks, servers, and infrastructure entirely.
+The `stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. Available to download in both source and binary form for Linux and OSX (Win support on the way). Free software under the Apache license. 
 
-The `stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. 
-
-Available to download in both source and binary form for Linux and OSX (Win support on the way). Free software under the Apache license. Happy hacking! :)
+Happy hacking! :)
 
 ---
 
-## Other Repos
-TODO
+## Related Repos
+### Client Libraries
+* [NodeJS/ES6](https://github.com/stackhut/client-node)
+* [Python3](https://github.com/stackhut/client-python)
 
+### Samples
+
+#### Basic Examples
+ * [demo-python](https://github.com/stackhut/demo-python) - Basic Python 3 Example
+ * [demo-python-persistent](https://github.com/stackhut/demo-python-persistent) - Basic Python 3 Example with state
+ * [demo-nodejs](https://github.com/stackhut/demo-nodejs) - Basic NodeJS/ES6 Example
+ * [demo-nodejs-persistent](https://github.com/stackhut/demo-nodejs-persistent) - Basic NodeJS/ES6 Example with State
+
+#### More Complex Examples
+
+ * [pdf-tools](https://github.com/stackhut/pdf-tools) - PDF Rendering-as-a-Service
+ * [image-process](https://github.com/stackhut/image-process) - Image Processing-as-a-Service using ImageMagick
+ * [web-tools](https://github.com/stackhut/web-tools) - Remote Web-Rendering and tooling using PhantomJS
+ * [media-download](https://github.com/stackhut/media-download) - youtube-dl-as-Service to download media from online sites (may be blocked from services from time to time)
+ * [t-shirt-aaS](https://github.com/stackhut/t-shirt-aaS) - Not yet live
+
+All of these services are all live and running under the `stackhut` namespace, i.e. `stackhut/servicename`, and can be called and tried out.
+You can call them using any of the client libraries or `curl` as described in the [StackHut documentation](http://stackhut.readthedocs.org/).
 
 ## Useful Links
 
 * Homepage: https://www.stackhut.com
-* User Manual & Docs: https://stackhut.readthedocs.org
-* [GitHub Issues](https://github.com/stackHut/stackHut/issues)
+* User Manual & Docs: https://docs.stackhut.com
+* [GitHub Issues](https://github.com/stackhut/stackhut/issues)
 * [GitHub Wiki](https://github.com/stackhut/stackhut/wiki)
 
 ---
@@ -57,8 +75,6 @@ Want to run the latest code from Git? Awesome!
 * `cd stackhut-toolkit`
 * `pip3 install -r ./requirements.txt`
 * `python3 ./setup.py develop --user` (you may need to re-run this command occasionally after updating from git)
-
-
 
 ### Follow the tutorial
 
