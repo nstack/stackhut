@@ -9,13 +9,7 @@ StackHut is pure Software Defined Infrastructure, and abstracts away web-framewo
 
 The `stackhut` command tool provides CLI functionality into creating, running, and deploying StackHut images. 
 
-Happy hacking! :)
-
-* Homepage: [https://www.stackhut.com]()
-* Documentation: [https://stackhut.readthedocs.org]()
-* Free software: Apache license
-
-Available to download in both source and binary form for Linux and OSX. Free software under the Apache license.
+Available to download in both source and binary form for Linux and OSX (Win support on the way). Free software under the Apache license. Happy hacking! :)
 
 ---
 
