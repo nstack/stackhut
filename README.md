@@ -2,6 +2,7 @@
 ## Deploy classes as Microservices
 
 [![image](https://img.shields.io/pypi/v/stackhut.svg)](https://pypi.python.org/pypi/stackhut)
+[![Documentation Status](https://readthedocs.org/projects/stackhut/badge/?version=latest)](http://stackhut.readthedocs.org/?badge=latest)
 
 StackHut is a platform to develop and deploy microservices without writing any server-logic. It takes a regular class (in Python or JavaScript for now), a YAML file describing your stack, and deploys a microservice whose functions can be called natively in other languages, or through REST. StackHut is pure Software Defined Infrastructure, and abstracts away web-frameworks, servers, and infrastructure entirely.
 
