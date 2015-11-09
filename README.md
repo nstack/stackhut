@@ -35,7 +35,9 @@ TODO
 # Getting started
 ## Installing the toolkit
 
-All releases found on this repo's [release page](https://github.com/stackhut/stackhut/releases).
+All releases found on this repo's [release page](https://github.com/stackhut/stackhut/releases). Detailed install instructions can be found in the [User Manual](http://docs.stackhut.com/getting_started/installation.html).
+
+_Note_ - StackHut requires [Docker](www.docker.com) to be installed  - on OSX/Windows download [Docker Toolbox](https://www.docker.com/docker-toolbox) and on Linux we recommend using your distro version.
 
 ### Binary/Standalone Install
 
@@ -54,21 +56,19 @@ Alternatively, source builds are always available using `pip` and are the recomm
  * On OSX, `brew install python3; pip3 install stackhut --user` (or just `pip3 install stackhut --user` if you already have Python 3),
  * On Linux, `pip3 install stackhut --user` (you may need to install Python 3 first - it's installed by default on newer distros).
 
-_Note_ - StackHut requires [Docker](www.docker.com) to be installed  - on OSX/Windows download [Docker Toolbox](https://www.docker.com/docker-toolbox) and on Linux we recommend using your distro version.
-
 ### Developer Install
 
 Want to run the latest code from Git? Awesome! 
 * clone this repo - `git clone git@github.com:StackHut/stackhut-toolkit.git`
 * `cd stackhut-toolkit`
-* `pip3 install -r ./requirements.txt`
+* `pip3 install -r ./requirements.txt` (Install the dependencies)
 * `python3 ./setup.py develop --user` (you may need to re-run this command occasionally after updating from git)
 
 
 
 ### Follow the tutorial
 
-An in-depth tutorial showing how to create, call and deploy a simple service can be found in the [user manual](http://docs.stackhut.com/getting_started/tutorial.html).
+An in-depth tutorial showing how to create, call and deploy a simple service can be found in the [User Manual](http://docs.stackhut.com/getting_started/tutorial.html).
 
 ---
 

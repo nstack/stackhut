@@ -5,67 +5,92 @@ Platform Installation
 
 This page describes installing the command-line StackHut Toolkit so you can rapidly develop, test, and deploy your services.
 
-Quick Install
+All releases found on the stackhut repo's `release page <https://github.com/stackhut/stackhut/releases>`_.
+
+Binary/Standalone Install
+-------------------------
+
+You can download a standalone executable for Linux and OSX. 
+
+OSX
+^^^
+
+On OSX there are three binary install methods:
+
+    *   Using brew,
+
+        ``brew install stackhut/stackhut/toolkit``
+
+        This is a 3rd-party tap from which you can upgrade using ``brew upgrade stackhut/stackhut/toolkit``,
+
+        .. note:: Make sure you have an up-to-date brew with ``brew update``.
+
+    *   Download and run the latest ``.pkg`` file from the `release page <https://github.com/stackhut/stackhut/releases>`_ 
+
+        A standalone package you can remove with ``sudo rm -rf /usr/local/bin/stackhut /usr/local/opt/stackhut``,
+
+    *   Download and unpack the portable ``.txz``-archive from the `release page <https://github.com/stackhut/stackhut/releases>`_.
+
+Linux
+^^^^^
+
+    * Download and unpack the portable ``.txz``-archive from the `release page <https://github.com/stackhut/stackhut/releases>`_
+
+Source Install
+--------------
+
+Alternatively, source builds are always available using ``pip`` and are the recommended way to install if you already have Python 3:
+
+OSX
+^^^
+
+    ``brew install python3; pip3 install stackhut --user`` 
+
+    (or just ``pip3 install stackhut --user`` if you already have Python 3),
+
+Linux
+^^^^^
+
+    ``pip3 install stackhut --user`` 
+    
+    (you may need to install Python 3 first - it's installed by default on newer distros).
+
+.. note:: Using the ``--user`` flag will install ``stackhut`` to the user's ``$HOME`` directory. However on OSX you'll have to manually add ``~/Libraries/Python/3.4/bin`` to your ``$PATH``. Omitting the ``--user`` flag it will require ``sudo`` and install globally instead.
+
+
+Developer Install
+-----------------
+
+Want to run the latest code from Git? Awesome! 
+
+    #) clone this repo - ``git clone git@github.com:stackhut/stackhut.git``
+    #) ``cd stackhut``
+    #) ``pip3 install -r ./requirements.txt`` (Install the dependencies)
+    #) ``python3 ./setup.py develop --user`` 
+
+.. note:: You may need to re-run the last command occasionally after updating from ``git``.
+
+
+Install Notes
 -------------
+
 
 Requirements
 ^^^^^^^^^^^^
 
-* Docker (`Docker Toolbox <https://www.docker.com/docker-toolbox>`_ on OSX/Windows) to develop and test services locally
+    * `Docker <https://www.docker.com/>`_ to develop and test services locally. On OSX/Windows download `Docker Toolbox <https://www.docker.com/docker-toolbox>`_ and on Linux we recommend using your distro version.
 
 .. note:: Currently we support Linux and OSX - with Windows support launching shortly.
-
-Install Steps
-^^^^^^^^^^^^^
-
-#. Install above requirements
-#. Install StackHut - ``sudo pip3 install stackhut``
-#. There is no Step 3 - but try out the walkthrough in :ref:`tutorial_create`
 
 Upgrading
 ^^^^^^^^^
 
-Development on the StackHut Toolkit moves pretty fast, so if you find a bug it may be worth updating first before reporting an issue. Using ``pip`` this is easy
-
-* ``sudo pip3 install --upgrade stackhut``
+Development on the StackHut Toolkit moves pretty fast, so if you find a bug it may be worth updating first before reporting an issue. On the binary releases it's just as easy as re-installing the latest package. For the source releases, just run ``pip3 install --upgrade stackhut``.
 
 
-Linux Install Instructions
---------------------------
+Next Steps
+----------
 
-* Install and Python 3 (including the Pip installer) from your OS repository, e.g.
-
-  * Fedora - ``sudo dnf install python3 python3-pip``
-  * Debian/Ubuntu - ``sudo apt-get install python3 python3-pip``
-  
-* Install the StackHut Toolkit
-
-  * ``sudo pip3 install stackhut``
-
-.. note:: By default ``pip`` installs globally and requires root access, however passing the ``--user`` flag will install to the user's ``$HOME`` directory, e.g. ``pip3 install --user stackhut``
-
-* (Optional) Install Docker if you want to test your services locally within a container
-
-  * Fedora ``sudo dnf install docker``
-  * Debian/Ubuntu - ``sudo apt-get install docker-io``
-
-
-OSX Install Instructions
-------------------------
-
-* Install Python 3 using `Brew <http://brew.sh/>`_
-  
-  * ``brew install python3``
-
-* Install StackHut CLI
-
-  * ``sudo pip3 install stackhut``
-
-.. note:: As with Linux, ``pip`` installs globally and requires root access. You can again using the ``--user`` flag to install to the user ``$HOME`` directory, however on OSX you'll have to manually add ``~/Libraries/Python/3.4/bin`` to your ``$PATH``.
-
-* (Optional) Install Docker using `Boot2docker <http://boot2docker.io/>`_ if you want to test your services locally within a container
-
-.. note:: Remember to run ``boot2docker up`` on OSX to initialise Docker before using the Toolkit.
-
+An in-depth tutorial showing how to create, call and deploy a simple service can be found in the :ref:`getting_started_tutorial`.
 
 
