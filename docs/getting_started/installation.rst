@@ -5,7 +5,7 @@ Platform Installation
 
 This page describes installing the command-line StackHut Toolkit so you can rapidly develop, test, and deploy your services.
 
-All releases found on the stackhut repo's `release page <https://github.com/stackhut/stackhut/releases>`_.
+All releases can be found on the stackhut repo's `release page <https://github.com/stackhut/stackhut/releases>`_.
 
 Binary/Standalone Install
 -------------------------
@@ -17,7 +17,7 @@ OSX
 
 On OSX there are three binary install methods:
 
-    *   Using brew,
+    *   Use brew,
 
         ``brew install stackhut/stackhut/toolkit``
 
@@ -25,11 +25,9 @@ On OSX there are three binary install methods:
 
         .. note:: Make sure you have an up-to-date brew with ``brew update``.
 
-    *   Download and run the latest ``.pkg`` file from the `release page <https://github.com/stackhut/stackhut/releases>`_ 
+    *   OR - download and run the latest ``.pkg`` file from the `release page <https://github.com/stackhut/stackhut/releases>`_. This is a standalone package you can remove with ``sudo rm -rf /usr/local/bin/stackhut /usr/local/opt/stackhut``,
 
-        A standalone package you can remove with ``sudo rm -rf /usr/local/bin/stackhut /usr/local/opt/stackhut``,
-
-    *   Download and unpack the portable ``.txz``-archive from the `release page <https://github.com/stackhut/stackhut/releases>`_.
+    *   OR - download and unpack the portable ``.txz``-archive from the `release page <https://github.com/stackhut/stackhut/releases>`_.
 
 Linux
 ^^^^^
@@ -44,18 +42,14 @@ Alternatively, source builds are always available using ``pip`` and are the reco
 OSX
 ^^^
 
-    ``brew install python3; pip3 install stackhut --user`` 
-
-    (or just ``pip3 install stackhut --user`` if you already have Python 3),
+    ``brew install python3; pip3 install stackhut --user`` (or just ``pip3 install stackhut --user`` if you already have Python 3),
 
 Linux
 ^^^^^
 
-    ``pip3 install stackhut --user`` 
-    
-    (you may need to install Python 3 first - it's installed by default on newer distros).
+    ``pip3 install stackhut --user`` (you may need to install Python 3 first - it's installed by default on newer distros).
 
-.. note:: Using the ``--user`` flag will install ``stackhut`` to the user's ``$HOME`` directory. However on OSX you'll have to manually add ``~/Libraries/Python/3.4/bin`` to your ``$PATH``. Omitting the ``--user`` flag it will require ``sudo`` and install globally instead.
+.. note:: Using the ``--user`` flag will install in the user's ``$HOME`` directory. However on OSX you'll have to manually add ``~/Libraries/Python/3.4/bin`` to your ``$PATH``. Omitting the ``--user`` flag it will require ``sudo`` and install globally instead.
 
 
 Developer Install
@@ -63,7 +57,7 @@ Developer Install
 
 Want to run the latest code from Git? Awesome! 
 
-    #) clone this repo - ``git clone git@github.com:stackhut/stackhut.git``
+    #) ``git clone git@github.com:stackhut/stackhut.git`` (Clone the repo)
     #) ``cd stackhut``
     #) ``pip3 install -r ./requirements.txt`` (Install the dependencies)
     #) ``python3 ./setup.py develop --user`` 
