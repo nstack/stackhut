@@ -43,6 +43,20 @@ class ContactTypes(Enum):
     array   = 4
     obj     = 5
 
+
+def render_signature(func):
+    def render_params(p):
+        pp_p = "{} {}".format(p.type, p.name)
+        return '[]' + pp_p if p.is_array else pp_p
+
+    params_t = str.join(', ', [render_params(p) for p in func.params])
+    if func.returns is not None:
+        return "{}({}) {}".format(func.name, params_t, render_params(func.returns))
+    else:
+        return "{}({}) {}".format(func.name, params_t)
+
+
+
 def load_contract_file():
     return contract_from_file(CONTRACTFILE)
 

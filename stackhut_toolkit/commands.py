@@ -467,29 +467,17 @@ class TestRequestCmd(HutCmd, UserCmd):
             interfaces = contract.interfaces
             log.info("Service has {} interface(s) - {}".format(len(interfaces), list(interfaces.keys())))
 
-            for (iname, iface) in contract.interfaces.items():
-                log.info("Interface '{}' has {} function(s):".format(iname, len(iface.functions)))
-                for (fname, func) in iface.functions.items():
+            for i in contract.interfaces.values():
+                log.info("Interface '{}' has {} function(s):".
+                         format(i.name, len(i.functions)))
+                for f in i.functions.values():
+                    log.info("\t{}".format(rpc.render_signature(f)))
 
-                    def render_params(p):
-                        pp_p = "{} {}".format(p.type, p.name)
-                        return '[]' + pp_p if p.is_array else pp_p
-
-                    params_t = str.join(', ', [render_params(p) for p in func.params])
-                    if func.returns is not None:
-                        func_t = "{}({}) {}".format(fname, params_t, render_params(func.returns))
-                    else:
-                        func_t = "{}({}) {}".format(fname, params_t)
-
-                    log.info("\t{}".format(func_t))
-
-
-            iface_fname = prompt('Enter Interface.Function to test: ')
-            (iface, fname) = iface_fname.split('.')
-            func = contract.interface(iface).function(fname)
+            (iface, fname) = prompt('Enter Interface.Function to test: ').split('.')
+            f = contract.interface(iface).function(fname)
 
             values = [prompt('Enter "{}" value for {}: '.format(p.type, p.name))
-                      for p in func.params]
+                      for p in f.params]
             eval_values = [json.loads(x) for x in values]
 
             if utils.VERBOSE:
@@ -497,12 +485,12 @@ class TestRequestCmd(HutCmd, UserCmd):
                 from pygments.lexers import JsonLexer
                 from pygments.formatters import Terminal256Formatter
                 pp_values = highlight(json.dumps(eval_values, indent=4), JsonLexer(), Terminal256Formatter())
-                log.debug("Calling {} with {}".format(iface_fname, pp_values))
+                log.debug("Calling {} with {}".format(f.full_name, pp_values))
 
             msg = {
                 "service": self.hutcfg.service_short_name(self.usercfg.username),
                 "request": {
-                    "method": iface_fname,
+                    "method": f.full_name,
                     "params": eval_values
                 }
             }
@@ -534,32 +522,20 @@ class DeployCmd(HutCmd, UserCmd):
         self.dev = args.dev
 
     def create_methods(self):
+        # build the internal AST
+        contract = rpc.load_contract_file()
+        for i in contract.interfaces.values():
+            for f in i.functions.values():
+                f.signature = rpc.render_signature(f)
+                log.debug("Signature for {} is \"{}\"".format(f.full_name, f.signature))
+
+        # load JSON file and remove the common.barrister element
         with open(CONTRACTFILE, 'r') as f:
-            contract = json.load(f)
-
-        # remove the common.barrister element
-        interfaces = [x for x in contract if 'barrister_version' not in x and x['type'] == 'interface']
-
-        def render_param(param):
-            # main render function
-            array_t = "[]" if param.get('is_array') else ''
-            name_type_t = param_t = "{}{}".format(array_t, param['type'])
-            if 'name' in param:
-                return "{} {}".format(param['name'], name_type_t)
-            else:
-                return name_type_t
-
-        def render_params(params):
-            return [render_param(p) for p in params]
-
-        def render_signature(method):
-            params_t = str.join(', ', render_params(method['params']))
-            return "{}({}) {}".format(method['name'], params_t, render_param(method['returns']))
-
+            interfaces = [x for x in json.load(f) if x['type'] == 'interface']
+        # add sig to the JSON struct
         for i in interfaces:
             for f in i['functions']:
-                f['signature'] = render_signature(f)
-                log.debug("Signature for {}.{} is \"{}\"".format(i['name'], f['name'], f['signature']))
+                f['signature'] = contract.interface(i['name']).function(f['name']).signature
 
         return interfaces
 
@@ -648,9 +624,6 @@ class DeployCmd(HutCmd, UserCmd):
         log.info("Service {} has been {} and is live".format(service.short_name, r['message']))
         log.info("You can now call this service with our client-libs or directly over JSON+HTTP")
         return 0
-
-
-
 
 
 
