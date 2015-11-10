@@ -577,7 +577,7 @@ class Service:
         if force or not self.image_exists or self.image_stale():
             log.debug("Image not found or stale - building...")
             # run barrister and copy shim
-            rpc.generate_contract()
+            rpc.generate_contract_file()
             self.stack.copy_shim()
 
             try:

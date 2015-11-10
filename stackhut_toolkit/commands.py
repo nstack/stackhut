@@ -407,7 +407,7 @@ class RunHostCmd(HutCmd, UserCmd):
     def run(self):
         toolkit_stack = stacks[self.hutcfg.stack]
         toolkit_stack.copy_shim()
-        rpc.generate_contract()
+        rpc.generate_contract_file()
 
         try:
             backend = LocalBackend(self.hutcfg, self.usercfg.username, port=self.port)
@@ -432,25 +432,87 @@ class TestRequestCmd(HutCmd, UserCmd):
     def register(sp):
         sp.add_argument("port", nargs='?', default='4001', help="Port to host API on locally", type=int)
         sp.add_argument("--file", '-f', metavar='FILE', help="File containing sample json request (e.g. test_request.json")
+        sp.add_argument("--interactive", '-i', action='store_true', help="Run interactive requests to service")
+
 
     def __init__(self, args):
         super().__init__(args)
         self.port = args.port
         self.fname = args.file
+        self.interactive = args.interactive
 
-    def run(self):
+    def call_service(self, msg):
         from pygments import highlight
         from pygments.lexers import JsonLexer
         from pygments.formatters import Terminal256Formatter
 
+        r = stackhut_api_call('run', msg)
+        result = highlight(json.dumps(r, indent=4), JsonLexer(), Terminal256Formatter())
+        log.info("Service {} returned - \n{}".format(utils.SERVER_URL, result))
+
+
+    def run(self):
         # set server url
         utils.SERVER_URL = "http://localhost:{}/".format(self.port)
 
-        with open(self.fname, "r") as f:
-            msg = json.load(f)
-            r = stackhut_api_call('run', msg)
-            result = highlight(json.dumps(r, indent=4), JsonLexer(), Terminal256Formatter())
-            log.info("Service {} returned - \n{}".format(utils.SERVER_URL, result))
+        if self.fname is not None:
+            with open(self.fname, "r") as f:
+                msg = json.load(f)
+                self.call_service(msg)
+
+        elif self.interactive:
+            from prompt_toolkit import prompt
+            # get the contract
+            contract = rpc.load_contract_file()
+            interfaces = contract.interfaces
+            log.info("Service has {} interface(s) - {}".format(len(interfaces), list(interfaces.keys())))
+
+            for (iname, iface) in contract.interfaces.items():
+                log.info("Interface '{}' has {} function(s):".format(iname, len(iface.functions)))
+                for (fname, func) in iface.functions.items():
+
+                    def render_params(p):
+                        pp_p = "{} {}".format(p.type, p.name)
+                        return '[]' + pp_p if p.is_array else pp_p
+
+                    params_t = str.join(', ', [render_params(p) for p in func.params])
+                    if func.returns is not None:
+                        func_t = "{}({}) {}".format(fname, params_t, render_params(func.returns))
+                    else:
+                        func_t = "{}({}) {}".format(fname, params_t)
+
+                    log.info("\t{}".format(func_t))
+
+
+            iface_fname = prompt('Enter Interface.Function to test: ')
+            (iface, fname) = iface_fname.split('.')
+            func = contract.interface(iface).function(fname)
+
+            values = [prompt('Enter "{}" value for {}: '.format(p.type, p.name))
+                      for p in func.params]
+            eval_values = [json.loads(x) for x in values]
+
+            if utils.VERBOSE:
+                from pygments import highlight
+                from pygments.lexers import JsonLexer
+                from pygments.formatters import Terminal256Formatter
+                pp_values = highlight(json.dumps(eval_values, indent=4), JsonLexer(), Terminal256Formatter())
+                log.debug("Calling {} with {}".format(iface_fname, pp_values))
+
+            msg = {
+                "service": self.hutcfg.service_short_name(self.usercfg.username),
+                "request": {
+                    "method": iface_fname,
+                    "params": eval_values
+                }
+            }
+
+            self.call_service(msg)
+
+        else:
+            raise AssertionError("Must run with either --file or --interactive flag")
+
+        return 0
 
 
 class DeployCmd(HutCmd, UserCmd):
@@ -517,7 +579,7 @@ class DeployCmd(HutCmd, UserCmd):
         service = Service(self.hutcfg, self.usercfg.username)
 
         # run the contract regardless
-        rpc.generate_contract()
+        rpc.generate_contract_file()
 
         if self.local:
             # call build+push first using Docker builder
