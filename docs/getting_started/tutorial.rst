@@ -7,7 +7,7 @@ StackHut turns classes into cloud APIs, so you can call your functions over HTTP
 
 This tutorial briefly describes how you can develop, test and deploy a simple service on StackHut. This one will only take a few minutes, but services can be as complex as you like. Firstly, check you've installed the StackHut dependencies as described in :ref:`getting_started_installation`. 
 
-You don't need an account to develop and run services locally, however if you wish to deploy online you need to register on the `StackHut website <www.stackhut.com>`_ and log in locally, as described later in this tutorial.
+You don't need an account to develop and run services locally, however if you wish to deploy online you need to register on the `StackHut website <https://www.stackhut.com>`_ and log in locally, as described later in this tutorial.
 
 Further information on creating a service can be found in :ref:`creating_toolkit` and :ref:`creating_structure`.
 
@@ -141,7 +141,7 @@ To deploy your service live on the cloud you need to create an account first and
 Create an Account
 """""""""""""""""
 
-Go to the `StackHut website <www.stackhut.com>`_ and click the link on the front-page that says *Sign up with GitHub*. This will use *OAuth* to authenticate and create a user on StackHut using your GitHub username and email. 
+Go to the `StackHut website <https://www.stackhut.com>`_ and click the link on the front-page that says *Sign up with GitHub*. This will use *OAuth* to authenticate and create a user on StackHut using your GitHub username and email. 
 
 .. note:: We only request access to your GitHub email address to set up the StackHut account and have no access to your repositories or SSH keys.
 
@@ -180,7 +180,7 @@ This couldn't be simpler: your code will be deployed and hosted on the high-avai
 This will upload your code, package it, build your service, and then deploy it to StackHut. The first time you run ``deploy`` it may take a couple of minutes to build, however subsequent builds will be faster.
 
 The service is live and ready to receive requests right now in the browser or from anywhere else via HTTP or our client libraries. 
-You can view your new API on your StackHut account, where you can test it and see your functions <www.stackhut.com/#/u/user/demo-python>`_ (replace ``user`` with your stackhut username).
+You can view your new API on your StackHut account, where you can test it and see your functions <https://www.stackhut.com/#/u/user/demo-python>`_ (replace ``user`` with your stackhut username).
 
 
 Using your Service
