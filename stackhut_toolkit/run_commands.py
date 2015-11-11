@@ -124,15 +124,15 @@ class RunService:
         host_store_dir = os.path.abspath(LocalBackend.local_store)
         os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
 
-        # call docker to run the same command but in the container
-        # use data vols for response output files
-        # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
         # Get port from kernel
         # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # s.bind(('', 0))
         # addr = s.getsockname()
 
+        # call docker to run the same command but in the container
+        # use data vols for response output files
         self.name = 'stackhut-{}'.format(random.randrange(10000))
+        # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
         res_flag = 'z' if OS_TYPE == 'SELINUX' else 'rw'
         verbose_mode = '-v' if args.verbose else None
         uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
@@ -155,7 +155,6 @@ class RunService:
         docker = get_docker()
         docker.run_docker_sh('stop', ['-t', '5', self.name])
         log.info("**** END SERVICE LOG ****")
-
 
     def start(self):
         log.info("**** START SERVICE LOG ****")
