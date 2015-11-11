@@ -23,6 +23,7 @@ requirements = [
     "colorlog",
     "werkzeug",
     "json-rpc",
+    "prompt_toolkit",
     "stackhut-client >= 0.1.1",
 ]
 

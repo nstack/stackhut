@@ -14,11 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import sys
-from . import __version__, COMMANDS
+from . import __version__
 from .common.commands import CmdRunner
 from .common import utils
 from .toolkit_utils import keen_client
 from .builder import get_docker
+
+from .commands import COMMANDS
+from .run_commands import COMMANDS as RUN_COMMANDS
 
 class ToolkitRunner(CmdRunner):
     def custom_error(self, e):
@@ -47,7 +50,7 @@ class ToolkitRunner(CmdRunner):
 def main():
     runner = ToolkitRunner("StackHut Toolkit", __version__)
     # register the sub-commands
-    runner.register_commands(COMMANDS)
+    runner.register_commands(COMMANDS + RUN_COMMANDS)
     # start
     retval = runner.start()
     return retval
