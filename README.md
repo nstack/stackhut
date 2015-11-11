@@ -39,7 +39,7 @@ You can call them using any of the client libraries or `curl` as described in th
 ## Useful Links
 
 * Homepage: https://www.stackhut.com
-* User Manual & Docs: https://docs.stackhut.com
+* User Manual & Docs: http://docs.stackhut.com
 * [GitHub Issues](https://github.com/stackhut/stackhut/issues)
 * [GitHub Wiki](https://github.com/stackhut/stackhut/wiki)
 
