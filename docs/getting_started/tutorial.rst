@@ -7,42 +7,12 @@ StackHut turns classes into cloud APIs, so you can call your functions over HTTP
 
 This tutorial briefly describes how you can develop, test and deploy a simple service on StackHut. This one will only take a few minutes, but services can be as complex as you like. Firstly, check you've installed the StackHut dependencies as described in :ref:`getting_started_installation`. 
 
-Further information on creating a service can be found in :ref:`creating_toolkit` and :ref:`creating_structure`.
+You don't need an account to develop and run services locally, however if you wish to deploy online you need to register on the `StackHut website <www.stackhut.com>`_ and log in locally, as described later in this tutorial.
 
+Further information on creating a service can be found in :ref:`creating_toolkit` and :ref:`creating_structure`.
 
 Creating a Service
 ------------------
-
-Create an Account
-^^^^^^^^^^^^^^^^^
-
-Go to the `StackHut website <www.stackhut.com>`_ and click the link on the front-page that says *Sign up with GitHub*. This will use *OAuth* to authenticate and create a user on StackHut using your GitHub username and email. 
-
-.. note:: We only request access to your GitHub email address to set up the StackHut account and have no access to your repositories or SSH keys.
-
-Upon completion you'll be asked to enter a password for your StackHut account. Thus your StackHut credentials will be,
-
-========    ===== 
-Param       Value 
-========    ===== 
-Username    Github Username 
-Email       GitHub email 
-Password    StackHut password
-========    ===== 
-
-Now that is done, we can login in to StackHut from the Toolkit. In your console, type
-
-.. code-block:: bash
-
-    [~]$ stackhut login
-    >> Username: mands
-    >> Password: **********
-    >> User mands logged in successfully
-
-and enter your username and password as created earlier. This will securely connect to StackHut and validate your login.
-
-To logout just run ``stackhut logout``.
-
 
 Initialise a Project
 ^^^^^^^^^^^^^^^^^^^^
@@ -165,6 +135,41 @@ When you do either, StackHut will run a local HTTP server on port 4001 which you
 
 Hosting on StackHut
 ^^^^^^^^^^^^^^^^^^^
+
+To deploy your service live on the cloud you need to create an account first and then login locally.
+
+Create an Account
+"""""""""""""""""
+
+Go to the `StackHut website <www.stackhut.com>`_ and click the link on the front-page that says *Sign up with GitHub*. This will use *OAuth* to authenticate and create a user on StackHut using your GitHub username and email. 
+
+.. note:: We only request access to your GitHub email address to set up the StackHut account and have no access to your repositories or SSH keys.
+
+Upon completion you'll be asked to enter a password for your StackHut account. Thus your StackHut credentials will be,
+
+========    ===== 
+Param       Value 
+========    ===== 
+Username    Github Username 
+Email       GitHub email 
+Password    StackHut password
+========    ===== 
+
+Now that is done, we can login in to StackHut from the Toolkit. In your console, type
+
+.. code-block:: bash
+
+    [~]$ stackhut login
+    >> Username: mands
+    >> Password: **********
+    >> User mands logged in successfully
+
+and enter your username and password as created earlier. This will securely connect to StackHut and validate your login.
+
+To logout just run ``stackhut logout``.
+
+Deploy your service
+"""""""""""""""""""
 
 This couldn't be simpler: your code will be deployed and hosted on the high-availability StackHut platform. Just run,
 
