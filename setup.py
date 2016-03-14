@@ -24,6 +24,7 @@ requirements = [
     "werkzeug",
     "json-rpc",
     "prompt_toolkit",
+    "pygments",
     "stackhut-client >= 0.1.1",
 ]
 
@@ -31,7 +32,7 @@ requirements = [
 test_requirements = []
 
 setup(
-    name='stackhut',
+    name='stackhut-toolkit',
     version='0.6.1',
     description="Deploy classes as Microservices",
     long_description=read('readme_pip.rst'),
