@@ -35,7 +35,6 @@ from . import __version__
 from .toolkit_utils import *
 from .builder import Service, bases, stacks, is_stack_supported, get_docker, OS_TYPE
 
-
 class UserCmd(BaseCmd):
     """User commands require the userconfig file"""
     def __init__(self, args):
@@ -271,154 +270,6 @@ class RemoteBuildCmd(HutCmd):
         return 0
 
 
-class RunContainerCmd(HutCmd, UserCmd):
-    """"Concrete Run Command within a container"""
-    name = 'runcontainer'
-    description = "Run StackHut service in a container"
-
-    @staticmethod
-    def register(sp):
-        sp.add_argument("port", nargs='?', default='4001', help="Port to host API on locally", type=int)
-        # sp.add_argument("--reqfile", '-r', help="Test request file")
-        sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
-        sp.add_argument("--privileged", '-p', action='store_true', help="Run as a privileged service")
-        sp.add_argument("--clone", '-c', metavar='URL', help="Clone a remote service at URL and run locally")
-
-    def __init__(self, args):
-        # self.reqfile = args.reqfile
-        self.port = args.port
-        self.force = args.force
-        self.privileged = args.privileged
-        self.clone = args.clone
-
-        # if clone, clone first
-        if self.clone:
-            from posixpath import basename
-            from urllib.parse import urlparse
-            dir = basename(urlparse(self.clone).path)
-
-            try:
-                sh.git.clone(self.clone)
-            except sh.ErrorReturnCode_128:
-                raise RuntimeError("Service '{}' already exists, can't clone".format(dir))
-
-            log.debug("Cloned service from {} into {}".format(self.clone, dir))
-            # update root dir
-            utils.change_root_dir(dir)
-
-        self.dir = utils.ROOT_DIR
-        super().__init__(args)
-
-    def sigterm_handler(self, signo, frame):
-        log.debug("Got shutdown signal".format(signo))
-        raise KeyboardInterrupt
-
-    def run(self):
-        super().run()
-
-        # Docker builder (if needed)
-        service = Service(self.hutcfg, self.usercfg.username)
-        service.build_push(force=self.force)
-
-        host_store_dir = os.path.abspath(LocalBackend.local_store)
-        os.mkdir(host_store_dir) if not os.path.exists(host_store_dir) else None
-
-        # docker setup
-        docker = get_docker()
-
-        from posixpath import basename
-        log.info("Running service '{}' on http://{}:{}".
-                 format(self.hutcfg.service_short_name(self.usercfg.username), docker.ip, self.port))
-        log.info("Test by running 'curl -H \"Content-Type: application/json\" -X POST -d @test_request.json "
-                 "http://{}:{}/run' from the '{}' dir".format(docker.ip, self.port, basename(utils.ROOT_DIR)))
-
-        # call docker to run the same command but in the container
-        # use data vols for response output files
-        # NOTE - SELINUX issues - can remove once Docker 1.7 becomes mainstream
-        import random
-
-        name = 'stackhut-{}'.format(random.randrange(10000))
-        res_flag = 'z' if OS_TYPE == 'SELINUX' else 'rw'
-        verbose_mode = '-v' if self.args.verbose else None
-        uid_gid = '{}:{}'.format(os.getuid(), os.getgid())
-        args = ['-p', '{}:4001'.format(self.port),
-                '-v', '{}:/workdir/{}:{}'.format(host_store_dir, LocalBackend.local_store, res_flag),
-                '--rm=true', '--name={}'.format(name),
-                '--privileged' if self.args.privileged else None,
-                '--entrypoint=/usr/bin/env', service.full_name, 'stackhut-runner', verbose_mode,
-                'runcontainer', '--uid', uid_gid, '--author', self.usercfg.username]
-        # filter out None args
-        args = [x for x in args if x is not None]
-
-        log.info("**** START SERVICE LOG ****")
-
-        # setup shutdown handlers - needed for freeze?
-        import signal
-        signal.signal(signal.SIGTERM, self.sigterm_handler)
-        signal.signal(signal.SIGINT, self.sigterm_handler)
-
-        try:
-            out = docker.run_docker_sh('run', args, _out=lambda x: print(x, end=''))
-
-            # if self.reqfile:
-            #     host_req_file = os.path.abspath(self.reqfile)
-            #     log.debug("Send file using reqs here")
-        except KeyboardInterrupt:
-            log.debug("Shutting down service container, press again to force-quit...")
-            # out.kill()
-            docker.run_docker_sh('stop', ['-t', '5', name])
-
-        log.info("**** END SERVICE LOG ****")
-        log.info("Run completed successfully")
-        return 0
-
-
-class RunCmd(RunContainerCmd):
-    """"Alias for runcontainer"""
-    name = 'run'
-
-    # @staticmethod
-    # def register(sp):
-    #     sp.add_argument("port", nargs='?', default='4001', help="Port to host API on locally", type=int)
-    #     # sp.add_argument("--reqfile", '-r', help="Test request file")
-    #     sp.add_argument("--force", '-f', action='store_true', help="Force rebuild of image")
-    #     sp.add_argument("--privileged", '-p', action='store_true', help="Run as a privileged service")
-
-
-
-class RunHostCmd(HutCmd, UserCmd):
-    """Concrete Run Command using Local system for dev on Host OS"""
-    name = 'runhost'
-    description = "Run StackHut service on host OS"
-
-    @staticmethod
-    def register(sp):
-        sp.add_argument("port", nargs='?', default='4001', help="Port to host API on locally", type=int)
-
-    def __init__(self, args):
-        super().__init__(args)
-        self.port = args.port
-
-    def run(self):
-        toolkit_stack = stacks[self.hutcfg.stack]
-        toolkit_stack.copy_shim()
-        rpc.generate_contract()
-
-        try:
-            backend = LocalBackend(self.hutcfg, self.usercfg.username, port=self.port)
-            with ServiceRunner(backend, self.hutcfg) as runner:
-                log.info("Running service '{}' on http://127.0.0.1:{}".format(backend.service_short_name, self.port))
-                runner.run()
-        # surface errors caused by service configuration
-        except ConfigError as err:
-            log.error('Exception while running service: %s', str(err))
-        finally:
-            # cleanup project directory before exit
-            toolkit_stack.del_shim()
-            os.remove(rpc.REQ_FIFO) if os.path.exists(rpc.REQ_FIFO) else None
-            os.remove(rpc.RESP_FIFO) if os.path.exists(rpc.RESP_FIFO) else None
-
-
 class DeployCmd(HutCmd, UserCmd):
     name = 'deploy'
     description = "Deploy service to StackHut"
@@ -438,32 +289,20 @@ class DeployCmd(HutCmd, UserCmd):
         self.dev = args.dev
 
     def create_methods(self):
+        # build the internal AST
+        contract = rpc.load_contract_file()
+        for i in contract.interfaces.values():
+            for f in i.functions.values():
+                f.signature = rpc.render_signature(f)
+                log.debug("Signature for {} is \"{}\"".format(f.full_name, f.signature))
+
+        # load JSON file and remove the common.barrister element
         with open(CONTRACTFILE, 'r') as f:
-            contract = json.load(f)
-
-        # remove the common.barrister element
-        interfaces = [x for x in contract if 'barrister_version' not in x and x['type'] == 'interface']
-
-        def render_param(param):
-            # main render function
-            array_t = "[]" if param.get('is_array') else ''
-            name_type_t = param_t = "{}{}".format(array_t, param['type'])
-            if 'name' in param:
-                return "{} {}".format(param['name'], name_type_t)
-            else:
-                return name_type_t
-
-        def render_params(params):
-            return [render_param(p) for p in params]
-
-        def render_signature(method):
-            params_t = str.join(', ', render_params(method['params']))
-            return "{}({}) {}".format(method['name'], params_t, render_param(method['returns']))
-
+            interfaces = [x for x in json.load(f) if x['type'] == 'interface']
+        # add sig to the JSON struct
         for i in interfaces:
             for f in i['functions']:
-                f['signature'] = render_signature(f)
-                log.debug("Signature for {}.{} is \"{}\"".format(i['name'], f['name'], f['signature']))
+                f['signature'] = contract.interface(i['name']).function(f['name']).signature
 
         return interfaces
 
@@ -483,7 +322,7 @@ class DeployCmd(HutCmd, UserCmd):
         service = Service(self.hutcfg, self.usercfg.username)
 
         # run the contract regardless
-        rpc.generate_contract()
+        rpc.generate_contract_file()
 
         if self.local:
             # call build+push first using Docker builder
@@ -561,7 +400,7 @@ COMMANDS = [
     # visible
     LoginCmd, LogoutCmd, InfoCmd,
     InitCmd,
-    HutBuildCmd, RunContainerCmd, RunCmd, RunHostCmd, DeployCmd,
+    HutBuildCmd, DeployCmd,
     # hidden
     StackBuildCmd, RemoteBuildCmd
 ]

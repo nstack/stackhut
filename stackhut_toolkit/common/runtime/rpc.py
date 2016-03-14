@@ -18,6 +18,7 @@ import os
 import json
 import uuid
 import signal
+from enum import Enum
 import sh
 
 from ..barrister import err_response, ERR_PARSE, ERR_INVALID_REQ, ERR_METHOD_NOT_FOUND, \
@@ -30,8 +31,36 @@ IDLFILE = 'api.idl'
 REQ_FIFO = '.req.json'
 RESP_FIFO = '.resp.json'
 
+"""
+High-level interface into the IDL file
+- based on the JSON compiled output that is parsed into an AST
+- used from runtime introspection
+"""
+class ContactTypes(Enum):
+    int  = 1
+    string  = 2
+    bool    = 3
+    array   = 4
+    obj     = 5
 
-def generate_contract():
+
+def render_signature(func):
+    def render_params(p):
+        pp_p = "{} {}".format(p.type, p.name)
+        return '[]' + pp_p if p.is_array else pp_p
+
+    params_t = str.join(', ', [render_params(p) for p in func.params])
+    if func.returns is not None:
+        return "{}({}) {}".format(func.name, params_t, render_params(func.returns))
+    else:
+        return "{}({}) {}".format(func.name, params_t)
+
+
+
+def load_contract_file():
+    return contract_from_file(CONTRACTFILE)
+
+def generate_contract_file():
     """
     Generate the IDL -> JSON Contract file
     main interface into barrister parser
@@ -41,7 +70,7 @@ def generate_contract():
 
     with open(IDLFILE, 'r') as idl_file, open(CONTRACTFILE, "w") as contract_file:
         parsed = parse(idl_file, IDLFILE)
-        contract_file.write(json.dumps(parsed))
+        contract_file.write(json.dumps(parsed, indent=4))
 
 
 ####################################################################################################
