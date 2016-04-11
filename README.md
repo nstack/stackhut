@@ -1,7 +1,7 @@
 # StackHut Platform
 ## Deploy classes as Microservices
 
-**Notice:** *The classical python "StackHut Toolkit" is deprecated, in favor of a new OCaml implementation. This here is kept for historical purpose, and will not receive any significant work/love any more. We will have a new open-source implementation that you can follow available shortly.*
+**Notice:** *The classical python "StackHut Toolkit" is deprecated, in favor of a more robust, compiled implementation. This here is kept for historical purpose, and unfortunetly will not receive any significant work/love going forwards. We will however have a new open-source implementation that you can follow available shortly.*
 
 [![image](https://img.shields.io/pypi/v/stackhut.svg)](https://pypi.python.org/pypi/stackhut)
 [![Documentation Status](https://readthedocs.org/projects/stackhut/badge/?version=latest)](http://stackhut.readthedocs.org/?badge=latest)
