@@ -6,6 +6,8 @@
 Welcome to StackHut's documentation!
 ====================================
 
+.. note:: The classical python "StackHut Toolkit" is deprecated, in favor of a more robust, compiled implementation. This here is kept for historical purpose, and unfortunetly will not receive any significant work/love going forwards. We will however have a new open-source implementation that you can follow available shortly.
+
 Thank you for browsing our documentation. Please let us know at docs@stackhut.com if anything is unclear or you find a mistake. Better still, submit a pull-request using the link at the top-right. 
 
 Check out :ref:`getting_started_index` for a quick guide to both using and creating APIs on StackHut.
